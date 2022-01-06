@@ -46,11 +46,15 @@ void PFMProject10AudioProcessorEditor::timerCallback()
 {
     if ( audioProcessor.fifo.pull(buffer) )
     {
-        audioProcessor.fifo.pull(buffer);
-        
         //test
-//        if (timerTestInt > 0)
-//            --timerTestInt;
-//        repaint();
+        if (timerTestInt > 0)
+        {
+            --timerTestInt;
+            repaint();
+        }
+        else
+        {
+            stopTimer();
+        }
     }
 }
