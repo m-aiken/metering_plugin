@@ -15,11 +15,13 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
+    startTimerHz(1); // testing at 1 per second
     setSize (400, 300);
 }
 
 PFMProject10AudioProcessorEditor::~PFMProject10AudioProcessorEditor()
 {
+    stopTimer();
 }
 
 //==============================================================================
@@ -30,11 +32,25 @@ void PFMProject10AudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::white);
     g.setFont (15.0f);
-    g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+
+    g.drawFittedText (static_cast<juce::String>(timerTestInt), getLocalBounds(), juce::Justification::centred, 1);
 }
 
 void PFMProject10AudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+}
+
+void PFMProject10AudioProcessorEditor::timerCallback()
+{
+    if ( audioProcessor.fifo.pull(buffer) )
+    {
+        audioProcessor.fifo.pull(buffer);
+        
+        //test
+//        if (timerTestInt > 0)
+//            --timerTestInt;
+//        repaint();
+    }
 }

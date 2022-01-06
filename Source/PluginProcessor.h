@@ -9,6 +9,49 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <array>
+
+//==============================================================================
+
+template<typename T>
+struct Fifo
+{
+    void prepare(int numSamples, int numChannels)
+    {
+        for ( auto& buffer : buffers)
+        {
+            buffer.setSize(numChannels, numSamples, false, true, true);
+            buffer.clear();
+        }
+    }
+    
+    bool push(const T& t)
+    {
+        auto write = fifo.write(1);
+        if ( write.blockSize1 > 0 )
+        {
+            buffers[write.startIndex1] = t;
+            return true;
+        }
+        return false;
+    }
+    
+    bool pull(T& t)
+    {
+        auto read = fifo.read(1);
+        if ( read.blockSize1 > 0 )
+        {
+            t = buffers[read.startIndex1];
+            return true;
+        }
+        return false;
+    }
+    
+private:
+    static constexpr int Capacity = 5;
+    std::array<T, Capacity> buffers;
+    juce::AbstractFifo fifo{Capacity};
+};
 
 //==============================================================================
 /**
@@ -52,6 +95,8 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    Fifo<juce::AudioBuffer<float>> fifo;
 
 private:
     //==============================================================================
