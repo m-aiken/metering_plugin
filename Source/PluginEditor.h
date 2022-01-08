@@ -19,9 +19,12 @@ struct Meter : juce::Component
         auto bounds = getLocalBounds();
         auto h = bounds.getHeight();
         
+        g.setColour(juce::Colours::white);
+        g.fillRect(bounds);
+        
         g.setColour(juce::Colours::lightblue);
-        // gainToDecibels default range: 0.f to -100.f (default negativeInf)
-        auto jmap = juce::jmap<float>(level, -100.f, 0.f, h, 0);
+        // jmap args ( sourceValue, sourceRangeMin, sourceRangeMax, targetRangeMin, targetRangeMax)
+        auto jmap = juce::jmap<float>(level, negativeInf, maxDb, h, 0);
         g.fillRect(bounds.withHeight(h * jmap).withY(jmap));
     }
     
@@ -32,7 +35,10 @@ struct Meter : juce::Component
     }
     
 private:
-    float level{0};
+    float level = 0.f;
+    // gainToDecibels default range: 0.f to -100.f (default negativeInf)
+    float negativeInf = -100.f;
+    float maxDb = 0.f;
 };
 //==============================================================================
 /**
