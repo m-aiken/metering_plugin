@@ -27,7 +27,7 @@ struct Meter : juce::Component
     
     void update(float& newLevel)
     {
-        level = juce::Decibels::gainToDecibels(newLevel);
+        level = newLevel;
         repaint();
     }
     

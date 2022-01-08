@@ -46,7 +46,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
     if ( audioProcessor.fifo.pull(incomingBuffer) )
     {
         auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
-        
-        monoMeter.update(rms);
+        auto rmsDb = juce::Decibels::gainToDecibels(rms);
+        monoMeter.update(rmsDb);
     }
 }
