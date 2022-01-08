@@ -47,7 +47,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
     {
         while ( audioProcessor.fifo.pull(incomingBuffer) )
         {
-            // do nothing else - just looping through until incomingBuffer = recent available buffer
+            // do nothing else - just looping through until incomingBuffer = most recent available buffer
         }
         
         auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
