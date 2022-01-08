@@ -65,7 +65,7 @@
           uiLastY_Normal="41" uiopen_Normal="1">
     <PLUGIN name="PFMProject10" format="VST3" category="Fx" manufacturer="Matt Aiken"
             version="1.0.0" file="/Users/mattaiken/Library/Audio/Plug-Ins/VST3/PFMProject10.vst3"
-            uniqueId="f799a92e" isInstrument="0" fileTime="17e2c6849c0" infoUpdateTime="17e2c6ab947"
+            uniqueId="f799a92e" isInstrument="0" fileTime="17e2c6849c0" infoUpdateTime="17e3a2993f6"
             numInputs="2" numOutputs="2" isShell="0" uid="acf746ae"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
     <LAYOUT>
@@ -77,11 +77,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="20" x="0.45125" y="0.2384615384615385" uiLastX_Normal="1849"
-          uiLastY_Normal="-96" uiopen_Normal="1">
+  <FILTER uid="20" x="0.45125" y="0.2384615384615385" uiLastX_Normal="1715"
+          uiLastY_Normal="0" uiopen_Normal="1">
     <PLUGIN name="AUAudioFilePlayer" format="AudioUnit" category="Generator"
             manufacturer="Apple" version="1.6.0" file="AudioUnit:Generators/augn,afpl,appl"
-            uniqueId="6163676e" isInstrument="0" fileTime="0" infoUpdateTime="17e2c6ab947"
+            uniqueId="6163676e" isInstrument="0" fileTime="0" infoUpdateTime="17e3a2993f6"
             numInputs="0" numOutputs="2" isShell="0" uid="6163676e"/>
     <STATE>572.hAGaoMGcv.C1AHv.DTfAGfPBJr.Gc3wGgvUag4VclE1XzUmbkIGUjEFcg8EDarVPUAkbkMWYzAUYxMWZyQWYtQ2TzEFcksTY4c0b0IFc4AWYWYWYxMWZu4FUzkGbk8EDOXVZrUVKxUlYkIWYtMVYyQkag0VYRDFbvwFPgxvzM3vCPDQFXYTZrUlSg0VYWIUYmk1atMmWIM2TkwVYiQWYjYTZrU1WP3zKUMWYxM2KsEFczEVZqUlauPza24FauEFYy8hR0wVZg4FHLE1Yk8RPxMFaocFZz8hR0wVZg4FHLE1YkARKf.yLt.hSuMFc0Imak4RavMSnRP8DTTgEWfQFZ3kTkcVZu4FQuU1bL81avokTkcVZu4FQgQWXeAADIM2TkwVYiQWYjIUYmk1atokTkcVZu4lSg0VYH7DDvA...........PLEJQ6e...v.8o...F...kXw...fA..fC.1...X....DSgRz9G....wTnDs+A..A................................................................Heg......PBZ4TY2AhTkcVZu4VBRDlYvwFD.HQX0claQCBDVYTZrUFHwfUUtQWZzwVYjA.B.jA.l.vJ.jD.QAPV.3E.vAPc.nG.6APe.PH.MBPk.PJ.0Cv8A.P.ODfFAzR.3DPNAvZ.sF.tAja.9F.vATb.HGvy........BD..........h...................AfM</STATE>
     <LAYOUT>

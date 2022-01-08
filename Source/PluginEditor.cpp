@@ -43,8 +43,13 @@ void PFMProject10AudioProcessorEditor::resized()
 
 void PFMProject10AudioProcessorEditor::timerCallback()
 {
-    if ( audioProcessor.fifo.pull(incomingBuffer) )
+    if ( audioProcessor.fifo.getNumAvailable() > 0 )
     {
+        while ( audioProcessor.fifo.pull(incomingBuffer) )
+        {
+            // do nothing else - just looping through until incomingBuffer = recent available buffer
+        }
+        
         auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
         auto rmsDb = juce::Decibels::gainToDecibels(rms);
         monoMeter.update(rmsDb);

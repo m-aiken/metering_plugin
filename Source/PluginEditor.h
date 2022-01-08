@@ -19,10 +19,10 @@ struct Meter : juce::Component
         auto bounds = getLocalBounds();
         auto h = bounds.getHeight();
         
-        g.setColour(juce::Colours::white);
+        g.setColour(juce::Colours::lightgrey);
         g.fillRect(bounds);
         
-        g.setColour(juce::Colours::lightblue);
+        g.setColour(juce::Colours::green);
         // jmap args ( sourceValue, sourceRangeMin, sourceRangeMax, targetRangeMin, targetRangeMax)
         auto jmap = juce::jmap<float>(level, negativeInf, maxDb, h, 0);
         g.fillRect(bounds.withHeight(h * jmap).withY(jmap));
