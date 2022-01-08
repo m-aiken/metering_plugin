@@ -15,7 +15,9 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    startTimerHz(1); // testing at 1 per second
+    startTimerHz(30);
+    
+    addAndMakeVisible(monoMeter);
     setSize (400, 300);
 }
 
@@ -27,34 +29,29 @@ PFMProject10AudioProcessorEditor::~PFMProject10AudioProcessorEditor()
 //==============================================================================
 void PFMProject10AudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-
-    g.setColour (juce::Colours::white);
-    g.setFont (15.0f);
-
-    g.drawFittedText (static_cast<juce::String>(timerTestInt), getLocalBounds(), juce::Justification::centred, 1);
+    g.fillAll(juce::Colours::black);
 }
 
 void PFMProject10AudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+    auto bounds = getLocalBounds();
+    auto container = bounds.reduced(150, 50);
+    monoMeter.setBounds(container);
 }
 
 void PFMProject10AudioProcessorEditor::timerCallback()
 {
-    if ( audioProcessor.fifo.pull(buffer) )
+    if ( audioProcessor.fifo.getNumAvailable() > 0 )
     {
-        //test
-        if (timerTestInt > 0)
+        while ( audioProcessor.fifo.pull(incomingBuffer) )
         {
-            --timerTestInt;
-            repaint();
+            // do nothing else - just looping through until incomingBuffer = most recent available buffer
         }
-        else
-        {
-            stopTimer();
-        }
+        
+        auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
+        auto rmsDb = juce::Decibels::gainToDecibels(rms);
+        monoMeter.update(rmsDb);
     }
 }

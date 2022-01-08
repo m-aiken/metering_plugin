@@ -47,6 +47,11 @@ struct Fifo
         return false;
     }
     
+    int getNumAvailable() const
+    {
+        return fifo.getNumReady();
+    }
+    
 private:
     static constexpr int Capacity = 5;
     std::array<T, Capacity> buffers;
