@@ -14,18 +14,21 @@ void DbScale::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
     
+    int textHeight = 8;
+    
     g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
     
     for ( int i = 0; i < ticks.size(); ++i)
     {
         auto dbStr = juce::String(ticks[i].db);
         
-        g.drawText(dbStr,                                     // text
-                   bounds.getX(),                             // x
-                   ticks[i].y + yOffset,                      // y
-                   bounds.getWidth(),                         // width
-                   1,                                         // height
-                   juce::Justification::horizontallyCentred); // justification
+        g.drawFittedText((ticks[i].db > 0 ? '+' + dbStr : dbStr),   // text
+                         bounds.getX(),                             // x
+                         ticks[i].y + (yOffset - (textHeight / 2)), // y
+                         bounds.getWidth(),                         // width
+                         textHeight,                                // height
+                         juce::Justification::horizontallyCentred,  // justification
+                         1);                                        // maxLines
     }
 }
 
