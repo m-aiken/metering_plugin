@@ -11,34 +11,32 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+#define MaxDecibels 6.f
+#define NegativeInfinity -48.f
+
 //==============================================================================
+struct Tick
+{
+    int y = 0;
+    float db = 0.f;
+};
+
+struct DbScale : juce::Component
+{
+    void paint(juce::Graphics& g) override;
+    int yOffset = 0;
+    std::vector<Tick> ticks;
+};
+
 struct Meter : juce::Component
 {
-    void paint(juce::Graphics& g) override
-    {
-        auto bounds = getLocalBounds();
-        auto h = bounds.getHeight();
-        
-        g.setColour(juce::Colours::lightgrey);
-        g.fillRect(bounds);
-        
-        g.setColour(juce::Colours::green);
-        // jmap args ( sourceValue, sourceRangeMin, sourceRangeMax, targetRangeMin, targetRangeMax)
-        auto jmap = juce::jmap<float>(level, negativeInf, maxDb, h, 0);
-        g.fillRect(bounds.withHeight(h * jmap).withY(jmap));
-    }
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+    void update(const float& newLevel);
     
-    void update(float& newLevel)
-    {
-        level = newLevel;
-        repaint();
-    }
-    
+    std::vector<Tick> ticks;
 private:
     float level = 0.f;
-    // gainToDecibels default range: 0.f to -100.f (default negativeInf)
-    float negativeInf = -100.f;
-    float maxDb = 0.f;
 };
 //==============================================================================
 /**
@@ -63,6 +61,7 @@ private:
     juce::AudioBuffer<float> incomingBuffer;
     
     Meter monoMeter;
+    DbScale dbScale;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PFMProject10AudioProcessorEditor)
 };
