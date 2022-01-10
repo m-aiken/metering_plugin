@@ -32,7 +32,7 @@ struct Meter : juce::Component
 {
     void paint(juce::Graphics& g) override;
     void resized() override;
-    void update(float& newLevel);
+    void update(const float& newLevel);
     
     std::vector<Tick> ticks;
 private:

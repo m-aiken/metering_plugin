@@ -48,19 +48,19 @@ void Meter::resized()
     ticks.clear();
     int h = getHeight();
     
-    for ( int i = (int)NegativeInfinity; i <= (int)MaxDecibels; ++i ) // <= maxDb to include max value
+    for ( int i = static_cast<int>(NegativeInfinity); i <= static_cast<int>(MaxDecibels); ++i ) // <= maxDb to include max value
     {
         Tick tick;
         if ( i % 6 == 0 )
         {
-            tick.db = (float)i;
+            tick.db = static_cast<float>(i);
             tick.y = juce::jmap<int>(i, NegativeInfinity, MaxDecibels, h, 0);
             ticks.push_back(tick);
         }
     }
 }
 
-void Meter::update(float& newLevel)
+void Meter::update(const float& newLevel)
 {
     level = newLevel;
     repaint();
