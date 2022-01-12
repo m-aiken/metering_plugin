@@ -85,7 +85,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
 #endif
 
-    setSize (400, 300);
+    setSize (600, 400);
 }
 
 PFMProject10AudioProcessorEditor::~PFMProject10AudioProcessorEditor()
@@ -104,14 +104,14 @@ void PFMProject10AudioProcessorEditor::resized()
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
     
-    auto meterHeight = 200;
+    auto meterHeight = 300;
     
     // setBounds args (int x, int y, int width, int height)
     monoMeter.setBounds(20, 20, 30, meterHeight);
     
     dbScale.ticks = monoMeter.ticks;
     dbScale.yOffset = monoMeter.getY();
-    dbScale.setBounds(monoMeter.getRight(), 0, 30, 240);
+    dbScale.setBounds(monoMeter.getRight(), 0, 30, 350);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);

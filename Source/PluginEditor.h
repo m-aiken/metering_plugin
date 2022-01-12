@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-#define MaxDecibels 6.f
+#define MaxDecibels 12.f
 #define NegativeInfinity -48.f
 
 //==============================================================================
