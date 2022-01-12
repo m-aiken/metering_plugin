@@ -22,8 +22,10 @@ PFMProject10AudioProcessor::PFMProject10AudioProcessor()
                        )
 #endif
 {
+#if defined(GAIN_TEST_ACTIVE)
     gainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Gain"));
     jassert(gainParam != nullptr);
+#endif
 }
 
 PFMProject10AudioProcessor::~PFMProject10AudioProcessor()
@@ -99,6 +101,7 @@ void PFMProject10AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     // initialisation that you need..
     fifo.prepare(samplesPerBlock, getTotalNumOutputChannels());
     
+#if defined(GAIN_TEST_ACTIVE)
     juce::dsp::ProcessSpec monoSpec;
     monoSpec.sampleRate = sampleRate;
     monoSpec.maximumBlockSize = samplesPerBlock;
@@ -121,6 +124,7 @@ void PFMProject10AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     
     gain.prepare(spec);
     gain.setRampDurationSeconds(0.05);
+#endif
 }
 
 void PFMProject10AudioProcessor::releaseResources()
@@ -176,7 +180,7 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    
+#if defined(GAIN_TEST_ACTIVE)
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         for ( int sampleIdx = 0; sampleIdx < buffer.getNumSamples(); ++sampleIdx )
@@ -190,6 +194,7 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     auto block = juce::dsp::AudioBlock<float>(buffer);
     auto context = juce::dsp::ProcessContextReplacing<float>(block);
     gain.process(context);
+#endif
     
     fifo.push(buffer);
 }
@@ -218,7 +223,7 @@ void PFMProject10AudioProcessor::setStateInformation (const void* data, int size
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
-
+#if defined(GAIN_TEST_ACTIVE)
 juce::AudioProcessorValueTreeState::ParameterLayout PFMProject10AudioProcessor::getParameterLayout()
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
@@ -230,7 +235,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout PFMProject10AudioProcessor::
     
     return layout;
 }
-
+#endif
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

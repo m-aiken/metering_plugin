@@ -63,8 +63,10 @@ private:
     Meter monoMeter;
     DbScale dbScale;
     
+#if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
-    juce::AudioProcessorValueTreeState::SliderAttachment gainAttachment;
+    juce::AudioProcessorValueTreeState::SliderAttachment gainAttachment{audioProcessor.apvts, "Gain", gainSlider};
+#endif
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PFMProject10AudioProcessorEditor)
 };
