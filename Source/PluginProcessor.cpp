@@ -22,6 +22,8 @@ PFMProject10AudioProcessor::PFMProject10AudioProcessor()
                        )
 #endif
 {
+    gainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Gain"));
+    jassert(gainParam != nullptr);
 }
 
 PFMProject10AudioProcessor::~PFMProject10AudioProcessor()
@@ -96,6 +98,29 @@ void PFMProject10AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     fifo.prepare(samplesPerBlock, getTotalNumOutputChannels());
+    
+    juce::dsp::ProcessSpec monoSpec;
+    monoSpec.sampleRate = sampleRate;
+    monoSpec.maximumBlockSize = samplesPerBlock;
+    monoSpec.numChannels = 1;
+    
+    // one osc per channel to maintain seperate state
+    for ( int channel = 0; channel < getTotalNumOutputChannels(); ++channel )
+    {
+        sineOscs.push_back(juce::dsp::Oscillator<float>());
+        
+        sineOscs[channel].prepare(monoSpec);
+        sineOscs[channel].initialise([](float f) { return std::sin(f); });
+        sineOscs[channel].setFrequency(440);
+    }
+    
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
+    
+    gain.prepare(spec);
+    gain.setRampDurationSeconds(0.05);
 }
 
 void PFMProject10AudioProcessor::releaseResources()
@@ -151,14 +176,21 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    /*
+    
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
+        for ( int sampleIdx = 0; sampleIdx < buffer.getNumSamples(); ++sampleIdx )
+        {
+            auto newVal = sineOscs[channel].processSample(buffer.getSample(channel, sampleIdx));
+            buffer.setSample(channel, sampleIdx, newVal);
+        }
     }
-    */
+    
+    gain.setGainDecibels(gainParam->get());
+    auto block = juce::dsp::AudioBlock<float>(buffer);
+    auto context = juce::dsp::ProcessContextReplacing<float>(block);
+    gain.process(context);
+    
     fifo.push(buffer);
 }
 
@@ -185,6 +217,18 @@ void PFMProject10AudioProcessor::setStateInformation (const void* data, int size
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout PFMProject10AudioProcessor::getParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Gain",
+                                                           "Gain",
+                                                           juce::NormalisableRange<float>(NegativeInfinity, MaxDecibels, 1.f, 1.f),
+                                                           0.f));
+    
+    return layout;
 }
 
 //==============================================================================

@@ -62,6 +62,9 @@ private:
     
     Meter monoMeter;
     DbScale dbScale;
-
+    
+    juce::Slider gainSlider;
+    juce::AudioProcessorValueTreeState::SliderAttachment gainAttachment;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PFMProject10AudioProcessorEditor)
 };

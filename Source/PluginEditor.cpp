@@ -71,7 +71,7 @@ void Meter::update(const float& newLevel)
 
 //==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p), gainAttachment(audioProcessor.apvts, "Gain", gainSlider)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -79,6 +79,11 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     
     addAndMakeVisible(monoMeter);
     addAndMakeVisible(dbScale);
+    
+    addAndMakeVisible(gainSlider);
+    gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+    //gainSlider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 20);
+    
     setSize (400, 300);
 }
 
@@ -106,6 +111,7 @@ void PFMProject10AudioProcessorEditor::resized()
     dbScale.ticks = monoMeter.ticks;
     dbScale.yOffset = monoMeter.getY();
     dbScale.setBounds(monoMeter.getRight(), 0, 30, 240);
+    gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
 }
 
 void PFMProject10AudioProcessorEditor::timerCallback()

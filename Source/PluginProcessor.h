@@ -101,7 +101,16 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
+    static juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout();
+    
+    juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters", getParameterLayout() };
+    
     Fifo<juce::AudioBuffer<float>> fifo;
+    
+    std::vector<juce::dsp::Oscillator<float>> sineOscs;
+    
+    juce::dsp::Gain<float> gain;
+    juce::AudioParameterFloat* gainParam { nullptr };
 
 private:
     //==============================================================================
