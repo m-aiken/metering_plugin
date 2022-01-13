@@ -102,25 +102,14 @@ void PFMProject10AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     fifo.prepare(samplesPerBlock, getTotalNumOutputChannels());
     
 #if defined(GAIN_TEST_ACTIVE)
-    juce::dsp::ProcessSpec monoSpec;
-    monoSpec.sampleRate = sampleRate;
-    monoSpec.maximumBlockSize = samplesPerBlock;
-    monoSpec.numChannels = 1;
-    
-    // one osc per channel to maintain seperate state
-    for ( int channel = 0; channel < getTotalNumOutputChannels(); ++channel )
-    {
-        sineOscs.push_back(juce::dsp::Oscillator<float>());
-        
-        sineOscs[channel].prepare(monoSpec);
-        sineOscs[channel].initialise([](float f) { return std::sin(f); });
-        sineOscs[channel].setFrequency(440);
-    }
-    
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
+    
+    sineOsc.prepare(spec);
+    sineOsc.initialise([](float f) { return std::sin(f); });
+    sineOsc.setFrequency(440 / getTotalNumInputChannels()); // (freq / inputChannels) to account for per-inputChannel buffer.setSample in processBlock
     
     gain.prepare(spec);
     gain.setRampDurationSeconds(0.05);
@@ -168,28 +157,19 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
 #if defined(GAIN_TEST_ACTIVE)
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    for ( int sampleIdx = 0; sampleIdx < buffer.getNumSamples(); ++sampleIdx )
     {
-        for ( int sampleIdx = 0; sampleIdx < buffer.getNumSamples(); ++sampleIdx )
+        for (int channel = 0; channel < totalNumInputChannels; ++channel)
         {
-            auto newVal = sineOscs[channel].processSample(buffer.getSample(channel, sampleIdx));
+            auto newVal = sineOsc.processSample(buffer.getSample(channel, sampleIdx));
             buffer.setSample(channel, sampleIdx, newVal);
         }
     }
-    
+
     gain.setGainDecibels(gainParam->get());
     auto block = juce::dsp::AudioBlock<float>(buffer);
     auto context = juce::dsp::ProcessContextReplacing<float>(block);

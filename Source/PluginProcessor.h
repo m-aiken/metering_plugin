@@ -110,7 +110,7 @@ public:
     
     juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters", getParameterLayout() };
     
-    std::vector<juce::dsp::Oscillator<float>> sineOscs;
+    juce::dsp::Oscillator<float> sineOsc;
 
     juce::dsp::Gain<float> gain;
     juce::AudioParameterFloat* gainParam { nullptr };
