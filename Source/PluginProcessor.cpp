@@ -109,7 +109,7 @@ void PFMProject10AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     
     sineOsc.prepare(spec);
     sineOsc.initialise([](float f) { return std::sin(f); });
-    sineOsc.setFrequency(440 / getTotalNumInputChannels()); // (freq / inputChannels) to account for per-inputChannel buffer.setSample in processBlock
+    sineOsc.setFrequency(440);
     
     gain.prepare(spec);
     gain.setRampDurationSeconds(0.05);
@@ -163,9 +163,10 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 #if defined(GAIN_TEST_ACTIVE)
     for ( int sampleIdx = 0; sampleIdx < buffer.getNumSamples(); ++sampleIdx )
     {
+        auto newVal = sineOsc.processSample(buffer.getSample(0, sampleIdx));
+        
         for (int channel = 0; channel < totalNumInputChannels; ++channel)
         {
-            auto newVal = sineOsc.processSample(buffer.getSample(channel, sampleIdx));
             buffer.setSample(channel, sampleIdx, newVal);
         }
     }
