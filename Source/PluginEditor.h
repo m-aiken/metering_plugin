@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-#define MaxDecibels 6.f
+#define MaxDecibels 12.f
 #define NegativeInfinity -48.f
 
 //==============================================================================
@@ -62,6 +62,11 @@ private:
     
     Meter monoMeter;
     DbScale dbScale;
-
+    
+#if defined(GAIN_TEST_ACTIVE)
+    juce::Slider gainSlider;
+    juce::AudioProcessorValueTreeState::SliderAttachment gainAttachment{audioProcessor.apvts, "Gain", gainSlider};
+#endif
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PFMProject10AudioProcessorEditor)
 };

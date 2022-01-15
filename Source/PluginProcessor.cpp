@@ -22,6 +22,10 @@ PFMProject10AudioProcessor::PFMProject10AudioProcessor()
                        )
 #endif
 {
+#if defined(GAIN_TEST_ACTIVE)
+    gainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Gain"));
+    jassert(gainParam != nullptr);
+#endif
 }
 
 PFMProject10AudioProcessor::~PFMProject10AudioProcessor()
@@ -96,6 +100,20 @@ void PFMProject10AudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     fifo.prepare(samplesPerBlock, getTotalNumOutputChannels());
+    
+#if defined(GAIN_TEST_ACTIVE)
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
+    
+    sineOsc.prepare(spec);
+    sineOsc.initialise([](float f) { return std::sin(f); });
+    sineOsc.setFrequency(440);
+    
+    gain.prepare(spec);
+    gain.setRampDurationSeconds(0.05);
+#endif
 }
 
 void PFMProject10AudioProcessor::releaseResources()
@@ -139,26 +157,26 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    /*
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+#if defined(GAIN_TEST_ACTIVE)
+    for ( int sampleIdx = 0; sampleIdx < buffer.getNumSamples(); ++sampleIdx )
     {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
+        auto newVal = sineOsc.processSample(buffer.getSample(0, sampleIdx));
+        
+        for (int channel = 0; channel < totalNumInputChannels; ++channel)
+        {
+            buffer.setSample(channel, sampleIdx, newVal);
+        }
     }
-    */
+
+    gain.setGainDecibels(gainParam->get());
+    auto block = juce::dsp::AudioBlock<float>(buffer);
+    auto context = juce::dsp::ProcessContextReplacing<float>(block);
+    gain.process(context);
+#endif
+    
     fifo.push(buffer);
 }
 
@@ -186,7 +204,19 @@ void PFMProject10AudioProcessor::setStateInformation (const void* data, int size
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
-
+#if defined(GAIN_TEST_ACTIVE)
+juce::AudioProcessorValueTreeState::ParameterLayout PFMProject10AudioProcessor::getParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+    
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Gain",
+                                                           "Gain",
+                                                           juce::NormalisableRange<float>(NegativeInfinity, MaxDecibels, 1.f, 1.f),
+                                                           0.f));
+    
+    return layout;
+}
+#endif
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

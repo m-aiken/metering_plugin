@@ -11,6 +11,8 @@
 #include <JuceHeader.h>
 #include <array>
 
+#define GAIN_TEST_ACTIVE
+
 //==============================================================================
 
 template<typename T>
@@ -102,6 +104,17 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     
     Fifo<juce::AudioBuffer<float>> fifo;
+    
+#if defined(GAIN_TEST_ACTIVE)
+    static juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout();
+    
+    juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters", getParameterLayout() };
+    
+    juce::dsp::Oscillator<float> sineOsc;
+
+    juce::dsp::Gain<float> gain;
+    juce::AudioParameterFloat* gainParam { nullptr };
+#endif
 
 private:
     //==============================================================================
