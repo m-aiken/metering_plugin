@@ -75,6 +75,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
+    valHolder.setThreshold(-9.f);
+    
     startTimerHz(30);
     
     addAndMakeVisible(monoMeter);
@@ -130,5 +132,14 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
         auto rmsDb = juce::Decibels::gainToDecibels(rms, NegativeInfinity);
         monoMeter.update(rmsDb);
+        
+        valHolder.now = juce::Time::currentTimeMillis();
+        if ( valHolder.now - valHolder.peakTime > valHolder.holdTime )
+        {
+            valHolder.updateHeldValue(rmsDb);
+        }
+        
+//        juce::String test = valHolder.getIsOverThreshold() ? "true" : "false";
+//        DBG(test);
     }
 }
