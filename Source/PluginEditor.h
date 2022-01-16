@@ -15,31 +15,21 @@
 #define NegativeInfinity -48.f
 
 //==============================================================================
-struct ValueHolder
+struct ValueHolder : juce::Timer
 {
-    void setThreshold(const float threshold) { mThreshold = threshold; }
-    void updateHeldValue(const float input)
-    {
-        currentValue = input;
-        
-        if (input > mThreshold)
-        {
-            isOverThreshold = true;
-            peakTime = juce::Time::currentTimeMillis();
-            if (input > heldValue)
-                heldValue = input;
-        }
-        else
-        {
-            isOverThreshold = false;
-        }
-    }
+    ValueHolder();
+    ~ValueHolder();
     
-    void setHoldTime(const long long ms) { holdTime = ms; }
-    float getCurrentValue() const { return currentValue; }
-    float getHeldValue() const { return heldValue; }
-    bool getIsOverThreshold() const { return isOverThreshold; }
+    void setThreshold(const float threshold);
+    void updateHeldValue(const float input);
+    void setHoldTime(const long long ms);
+    float getCurrentValue() const;
+    float getHeldValue() const;
+    bool getIsOverThreshold() const;
     
+    void timerCallback() override;
+    
+private:
     float currentValue = NegativeInfinity;
     float heldValue = NegativeInfinity;
     float mThreshold = 0.f;
