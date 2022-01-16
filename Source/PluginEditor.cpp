@@ -10,6 +10,45 @@
 #include "PluginEditor.h"
 
 //==============================================================================
+ValueHolder::ValueHolder() { startTimerHz(30); }
+ValueHolder::~ValueHolder() { stopTimer(); }
+
+void ValueHolder::setThreshold(const float threshold) { mThreshold = threshold; }
+
+void ValueHolder::updateHeldValue(const float input)
+{
+    currentValue = input;
+    
+    if (input > mThreshold)
+    {
+        isOverThreshold = true;
+        peakTime = juce::Time::currentTimeMillis();
+        if (input > heldValue)
+            heldValue = input;
+    }
+    else
+    {
+        isOverThreshold = false;
+        heldValue = NegativeInfinity;
+    }
+}
+
+void ValueHolder::setHoldTime(const long long ms) { holdTime = ms; }
+float ValueHolder::getCurrentValue() const { return currentValue; }
+float ValueHolder::getHeldValue() const { return heldValue; }
+bool ValueHolder::getIsOverThreshold() const { return isOverThreshold; }
+
+void ValueHolder::timerCallback()
+{
+    now = juce::Time::currentTimeMillis();
+    if ( now - peakTime > holdTime )
+        isOverThreshold = currentValue > mThreshold;
+    
+//    juce::String thresholdBoolTest = getIsOverThreshold() ? "true" : "false";
+//    DBG(thresholdBoolTest);
+}
+
+//==============================================================================
 void DbScale::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
@@ -75,6 +114,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
+    valHolder.setThreshold(-9.f);
+    
     startTimerHz(30);
     
     addAndMakeVisible(monoMeter);
@@ -130,5 +171,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
         auto rmsDb = juce::Decibels::gainToDecibels(rms, NegativeInfinity);
         monoMeter.update(rmsDb);
+        
+        valHolder.updateHeldValue(rmsDb);
     }
 }
