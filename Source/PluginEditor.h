@@ -17,8 +17,8 @@
 //==============================================================================
 struct ValueHolder
 {
-    void setThreshold(float threshold) { mThreshold = threshold; }
-    void updateHeldValue(float input)
+    void setThreshold(const float threshold) { mThreshold = threshold; }
+    void updateHeldValue(const float input)
     {
         currentValue = input;
         
@@ -35,7 +35,7 @@ struct ValueHolder
         }
     }
     
-    void setHoldTime(long long ms) { holdTime = ms; }
+    void setHoldTime(const long long ms) { holdTime = ms; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
     bool getIsOverThreshold() const { return isOverThreshold; }

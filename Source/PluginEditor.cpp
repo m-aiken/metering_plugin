@@ -139,7 +139,9 @@ void PFMProject10AudioProcessorEditor::timerCallback()
             valHolder.updateHeldValue(rmsDb);
         }
         
-//        juce::String test = valHolder.getIsOverThreshold() ? "true" : "false";
-//        DBG(test);
+//        juce::String thresholdBoolTest = valHolder.getIsOverThreshold() ? "true" : "false";
+//        DBG(thresholdBoolTest);
+//        DBG(valHolder.currentValue);
+//        DBG(valHolder.heldValue);
     }
 }
