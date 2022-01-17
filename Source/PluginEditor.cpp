@@ -13,9 +13,9 @@
 ValueHolder::ValueHolder() { startTimerHz(30); }
 ValueHolder::~ValueHolder() { stopTimer(); }
 
-void ValueHolder::setThreshold(const float threshold) { mThreshold = threshold; }
+void ValueHolder::setThreshold(const float& threshold) { mThreshold = threshold; }
 
-void ValueHolder::updateHeldValue(const float input)
+void ValueHolder::updateHeldValue(const float& input)
 {
     currentValue = input;
     
@@ -26,14 +26,9 @@ void ValueHolder::updateHeldValue(const float input)
         if (input > heldValue)
             heldValue = input;
     }
-    else
-    {
-        isOverThreshold = false;
-        heldValue = NegativeInfinity;
-    }
 }
 
-void ValueHolder::setHoldTime(const long long ms) { holdTime = ms; }
+void ValueHolder::setHoldTime(const long long& ms) { holdTime = ms; }
 float ValueHolder::getCurrentValue() const { return currentValue; }
 float ValueHolder::getHeldValue() const { return heldValue; }
 bool ValueHolder::getIsOverThreshold() const { return isOverThreshold; }
@@ -42,10 +37,39 @@ void ValueHolder::timerCallback()
 {
     now = juce::Time::currentTimeMillis();
     if ( now - peakTime > holdTime )
-        isOverThreshold = currentValue > mThreshold;
+    {
+        isOverThreshold = currentValue > mThreshold ? true : false;
+        heldValue = NegativeInfinity;
+    }
+}
+
+//==============================================================================
+void TextMeter::paint(juce::Graphics& g)
+{
+    juce::String str;
     
-//    juce::String thresholdBoolTest = getIsOverThreshold() ? "true" : "false";
-//    DBG(thresholdBoolTest);
+    if ( valueHolder.getIsOverThreshold() )
+    {
+        str = juce::String(valueHolder.getHeldValue(), 1);
+        g.fillAll(juce::Colour(230u, 33u, 51u)); // red background
+    }
+    else
+    {
+        str = juce::String(valueHolder.getCurrentValue(), 1);
+    }
+    
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setFont(14.0f);
+    g.drawFittedText(str,                                      // text
+                     getLocalBounds(),                         // area
+                     juce::Justification::horizontallyCentred, // justification
+                     1);                                       // max num lines
+}
+
+void TextMeter::update(const float& input)
+{
+    valueHolder.updateHeldValue(input);
+    repaint();
 }
 
 //==============================================================================
@@ -114,12 +138,12 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    valHolder.setThreshold(-9.f);
-    
     startTimerHz(30);
     
+    addAndMakeVisible(textMeter);
     addAndMakeVisible(monoMeter);
     addAndMakeVisible(dbScale);
+    
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -145,14 +169,17 @@ void PFMProject10AudioProcessorEditor::resized()
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
     
-    auto meterHeight = 300;
-    
     // setBounds args (int x, int y, int width, int height)
-    monoMeter.setBounds(20, 20, 30, meterHeight);
+    textMeter.setBounds(20, 20, 40, 20);
+    
+    auto meterHeight = 300;
+    monoMeter.setBounds(20, textMeter.getBottom(), 40, meterHeight);
     
     dbScale.ticks = monoMeter.ticks;
     dbScale.yOffset = monoMeter.getY();
     dbScale.setBounds(monoMeter.getRight(), 0, 30, 350);
+    
+    
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
@@ -172,6 +199,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto rmsDb = juce::Decibels::gainToDecibels(rms, NegativeInfinity);
         monoMeter.update(rmsDb);
         
-        valHolder.updateHeldValue(rmsDb);
+//        valHolder.updateHeldValue(rmsDb);
+        textMeter.update(rmsDb);
     }
 }

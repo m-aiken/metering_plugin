@@ -20,9 +20,9 @@ struct ValueHolder : juce::Timer
     ValueHolder();
     ~ValueHolder();
     
-    void setThreshold(const float threshold);
-    void updateHeldValue(const float input);
-    void setHoldTime(const long long ms);
+    void setThreshold(const float& threshold);
+    void updateHeldValue(const float& input);
+    void setHoldTime(const long long& ms);
     float getCurrentValue() const;
     float getHeldValue() const;
     bool getIsOverThreshold() const;
@@ -32,11 +32,21 @@ struct ValueHolder : juce::Timer
 private:
     float currentValue = NegativeInfinity;
     float heldValue = NegativeInfinity;
-    float mThreshold = 0.f;
+    float mThreshold = -9.f;
     bool isOverThreshold = false;
     long long now = juce::Time::currentTimeMillis();
     long long peakTime = 0;
     long long holdTime = 500;
+};
+
+//==============================================================================
+struct TextMeter : juce::Component
+{
+    void paint(juce::Graphics& g) override;
+    void update(const float& input);
+    
+private:
+    ValueHolder valueHolder;
 };
 
 //==============================================================================
@@ -87,7 +97,8 @@ private:
     
     Meter monoMeter;
     DbScale dbScale;
-    ValueHolder valHolder;
+//    ValueHolder valHolder;
+    TextMeter textMeter;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
