@@ -199,7 +199,6 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto rmsDb = juce::Decibels::gainToDecibels(rms, NegativeInfinity);
         monoMeter.update(rmsDb);
         
-//        valHolder.updateHeldValue(rmsDb);
         textMeter.update(rmsDb);
     }
 }

@@ -95,10 +95,9 @@ private:
     
     juce::AudioBuffer<float> incomingBuffer;
     
+    TextMeter textMeter;
     Meter monoMeter;
     DbScale dbScale;
-//    ValueHolder valHolder;
-    TextMeter textMeter;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
