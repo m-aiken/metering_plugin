@@ -10,11 +10,28 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-ValueHolder::ValueHolder() { startTimerHz(30); }
-ValueHolder::~ValueHolder() { stopTimer(); }
+void DecayingValueHolder::updateHeldValue(const float& input)
+{
+    if (input > currentValue)
+    {
+        currentValue = input;
+        peakTime = juce::Time::currentTimeMillis();
+    }
+}
 
-void ValueHolder::setThreshold(const float& threshold) { mThreshold = threshold; }
+void DecayingValueHolder::timerCallback()
+{
+    now = juce::Time::currentTimeMillis();
+    if ( now - peakTime > holdTime )
+    {
+        if (currentValue > NegativeInfinity)
+            currentValue -= (decayRate / timerFrequency);
+        
+        DBG(currentValue);
+    }
+}
 
+//==============================================================================
 void ValueHolder::updateHeldValue(const float& input)
 {
     currentValue = input;
@@ -28,17 +45,12 @@ void ValueHolder::updateHeldValue(const float& input)
     }
 }
 
-void ValueHolder::setHoldTime(const long long& ms) { holdTime = ms; }
-float ValueHolder::getCurrentValue() const { return currentValue; }
-float ValueHolder::getHeldValue() const { return heldValue; }
-bool ValueHolder::getIsOverThreshold() const { return isOverThreshold; }
-
 void ValueHolder::timerCallback()
 {
     now = juce::Time::currentTimeMillis();
     if ( now - peakTime > holdTime )
     {
-        isOverThreshold = currentValue > mThreshold ? true : false;
+        isOverThreshold = currentValue > mThreshold;
         heldValue = NegativeInfinity;
     }
 }
@@ -69,6 +81,7 @@ void TextMeter::paint(juce::Graphics& g)
 void TextMeter::update(const float& input)
 {
     valueHolder.updateHeldValue(input);
+    decayingValueHolder.updateHeldValue(input);
     repaint();
 }
 

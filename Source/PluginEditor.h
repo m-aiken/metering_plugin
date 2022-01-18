@@ -15,17 +15,43 @@
 #define NegativeInfinity -48.f
 
 //==============================================================================
+struct DecayingValueHolder : juce::Timer
+{
+    DecayingValueHolder() { startTimerHz(timerFrequency); }
+    ~DecayingValueHolder() { stopTimer(); }
+    
+    void updateHeldValue(const float& input);
+    void setHoldTime(const long long& ms) { holdTime = ms; }
+    void setDecayRate(const float& dbPerSecond) { decayRate = dbPerSecond; }
+    float getCurrentValue() const { return currentValue; }
+    float getHeldValue() const { return heldValue; }
+
+    void timerCallback() override;
+    
+private:
+    int timerFrequency = 30;
+    
+    float currentValue = NegativeInfinity;
+    float heldValue = NegativeInfinity;
+    float decayRate = 20.f;
+
+    long long now = juce::Time::currentTimeMillis();
+    long long peakTime = 0;
+    long long holdTime = 500;
+};
+
+//==============================================================================
 struct ValueHolder : juce::Timer
 {
-    ValueHolder();
-    ~ValueHolder();
+    ValueHolder() { startTimerHz(30); }
+    ~ValueHolder() { stopTimer(); }
     
-    void setThreshold(const float& threshold);
+    void setThreshold(const float& threshold) { mThreshold = threshold; }
     void updateHeldValue(const float& input);
-    void setHoldTime(const long long& ms);
-    float getCurrentValue() const;
-    float getHeldValue() const;
-    bool getIsOverThreshold() const;
+    void setHoldTime(const long long& ms) { holdTime = ms; }
+    float getCurrentValue() const { return currentValue; }
+    float getHeldValue() const { return heldValue; }
+    bool getIsOverThreshold() const { return isOverThreshold; }
     
     void timerCallback() override;
     
@@ -47,6 +73,7 @@ struct TextMeter : juce::Component
     
 private:
     ValueHolder valueHolder;
+    DecayingValueHolder decayingValueHolder;
 };
 
 //==============================================================================
