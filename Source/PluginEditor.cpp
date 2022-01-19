@@ -10,11 +10,41 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-ValueHolder::ValueHolder() { startTimerHz(30); }
-ValueHolder::~ValueHolder() { stopTimer(); }
+void ValueHolderBase::timerCallback()
+{
+    now = juce::Time::currentTimeMillis();
+    if ( now - peakTime > holdTime )
+        handleOverHoldTime();
+}
 
-void ValueHolder::setThreshold(const float& threshold) { mThreshold = threshold; }
+//==============================================================================
+void DecayingValueHolder::updateHeldValue(const float& input)
+{
+    if (input > currentValue)
+    {
+        currentValue = input;
+        peakTime = juce::Time::currentTimeMillis();
+    }
+}
 
+void DecayingValueHolder::setDecayRate(const float& dbPerSecond)
+{
+    decayRatePerFrame = dbPerSecond / timerFrequency;
+}
+
+void DecayingValueHolder::handleOverHoldTime()
+{
+    currentValue = juce::jlimit(NegativeInfinity,
+                                MaxDecibels,
+                                currentValue - decayRatePerFrame);
+        
+    if ( currentValue == NegativeInfinity )
+        setDecayRate(initDecayRate); // reset decayRatePerFrame
+    else
+        decayRatePerFrame *= 1.03f;
+}
+
+//==============================================================================
 void ValueHolder::updateHeldValue(const float& input)
 {
     currentValue = input;
@@ -28,19 +58,10 @@ void ValueHolder::updateHeldValue(const float& input)
     }
 }
 
-void ValueHolder::setHoldTime(const long long& ms) { holdTime = ms; }
-float ValueHolder::getCurrentValue() const { return currentValue; }
-float ValueHolder::getHeldValue() const { return heldValue; }
-bool ValueHolder::getIsOverThreshold() const { return isOverThreshold; }
-
-void ValueHolder::timerCallback()
+void ValueHolder::handleOverHoldTime()
 {
-    now = juce::Time::currentTimeMillis();
-    if ( now - peakTime > holdTime )
-    {
-        isOverThreshold = currentValue > mThreshold ? true : false;
-        heldValue = NegativeInfinity;
-    }
+    isOverThreshold = currentValue > mThreshold;
+    heldValue = NegativeInfinity;
 }
 
 //==============================================================================
@@ -69,6 +90,7 @@ void TextMeter::paint(juce::Graphics& g)
 void TextMeter::update(const float& input)
 {
     valueHolder.updateHeldValue(input);
+    decayingValueHolder.updateHeldValue(input);
     repaint();
 }
 

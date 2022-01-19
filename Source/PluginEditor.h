@@ -15,28 +15,61 @@
 #define NegativeInfinity -48.f
 
 //==============================================================================
-struct ValueHolder : juce::Timer
+struct ValueHolderBase : juce::Timer
 {
-    ValueHolder();
-    ~ValueHolder();
+    ValueHolderBase() { startTimerHz(30); }
+    ~ValueHolderBase() { stopTimer(); }
     
-    void setThreshold(const float& threshold);
-    void updateHeldValue(const float& input);
-    void setHoldTime(const long long& ms);
-    float getCurrentValue() const;
-    float getHeldValue() const;
-    bool getIsOverThreshold() const;
+    void setHoldTime(const long long& ms) { holdTime = ms; }
+    float getCurrentValue() const { return currentValue; }
+    float getHeldValue() const { return heldValue; }
     
     void timerCallback() override;
+    virtual void handleOverHoldTime() = 0;
     
+    friend struct DecayingValueHolder;
+    friend struct ValueHolder;
 private:
     float currentValue = NegativeInfinity;
     float heldValue = NegativeInfinity;
-    float mThreshold = -9.f;
-    bool isOverThreshold = false;
+   
     long long now = juce::Time::currentTimeMillis();
     long long peakTime = 0;
     long long holdTime = 500;
+};
+
+//==============================================================================
+struct DecayingValueHolder : ValueHolderBase
+{
+    DecayingValueHolder() { setDecayRate(initDecayRate); }
+    ~DecayingValueHolder() { }
+    
+    void updateHeldValue(const float& input);
+    void setDecayRate(const float& dbPerSecond);
+    
+    void handleOverHoldTime() override;
+    
+private:
+    int timerFrequency = 30;
+    float initDecayRate = 20.f;
+    float decayRatePerFrame;
+};
+
+//==============================================================================
+struct ValueHolder : ValueHolderBase
+{
+    ValueHolder() { }
+    ~ValueHolder() { }
+    
+    void setThreshold(const float& threshold) { mThreshold = threshold; }
+    void updateHeldValue(const float& input);
+    bool getIsOverThreshold() const { return isOverThreshold; }
+    
+    void handleOverHoldTime() override;
+    
+private:
+    float mThreshold = -9.f;
+    bool isOverThreshold = false;
 };
 
 //==============================================================================
@@ -47,6 +80,7 @@ struct TextMeter : juce::Component
     
 private:
     ValueHolder valueHolder;
+    DecayingValueHolder decayingValueHolder;
 };
 
 //==============================================================================
