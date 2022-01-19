@@ -41,17 +41,17 @@ private:
 //==============================================================================
 struct DecayingValueHolder : ValueHolderBase
 {
-    DecayingValueHolder() { initializeDecayRate(); }
+    DecayingValueHolder() { setDecayRate(initDecayRate); }
     ~DecayingValueHolder() { }
     
     void updateHeldValue(const float& input);
-    void initializeDecayRate() { decayRatePerFrame = dbPerSecond / timerFrequency; }
+    void setDecayRate(const float& dbPerSecond);
     
     void handleOverHoldTime() override;
     
 private:
     int timerFrequency = 30;
-    float dbPerSecond = 20.f;
+    float initDecayRate = 20.f;
     float decayRatePerFrame;
 };
 
