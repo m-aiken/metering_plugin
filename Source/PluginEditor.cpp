@@ -27,7 +27,7 @@ void DecayingValueHolder::timerCallback()
         if (currentValue > NegativeInfinity)
             currentValue -= (decayRate / timerFrequency);
         
-        DBG(currentValue);
+//        DBG(currentValue);
     }
 }
 
