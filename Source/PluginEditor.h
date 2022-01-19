@@ -44,7 +44,7 @@ struct DecayingValueHolder : ValueHolderBase, juce::Timer
 private:
     int timerFrequency = 30;
     float decayRate = 20.f;
-    float decayExp = 1.2f;
+    float decayExp = 1.02f;
 };
 
 //==============================================================================

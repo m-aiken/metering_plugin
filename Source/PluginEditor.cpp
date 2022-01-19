@@ -24,10 +24,20 @@ void DecayingValueHolder::timerCallback()
     now = juce::Time::currentTimeMillis();
     if ( now - peakTime > holdTime )
     {
-        if (currentValue > NegativeInfinity)
+        if (currentValue - (decayRate / timerFrequency) > NegativeInfinity)
+        {
             currentValue -= (decayRate / timerFrequency);
-        
-//        DBG(currentValue);
+            decayRate *= decayExp;
+        }
+        else
+        {
+            currentValue = NegativeInfinity;
+            setDecayRate(20.f);
+        }
+    }
+    else
+    {
+        setDecayRate(20.f);
     }
 }
 
