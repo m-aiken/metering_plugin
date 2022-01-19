@@ -10,17 +10,14 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-DecayingValueHolder::DecayingValueHolder()
+void ValueHolderBase::timerCallback()
 {
-    startTimerHz(timerFrequency);
-    setDecayRate(decayRate);
+    now = juce::Time::currentTimeMillis();
+    if ( now - peakTime > holdTime )
+        handleOverHoldTime();
 }
 
-DecayingValueHolder::~DecayingValueHolder()
-{
-    stopTimer();
-}
-
+//==============================================================================
 void DecayingValueHolder::updateHeldValue(const float& input)
 {
     if (input > currentValue)
@@ -35,22 +32,16 @@ void DecayingValueHolder::setDecayRate(const float& dbPerSecond)
     decayRatePerFrame = dbPerSecond / timerFrequency;
 }
 
-void DecayingValueHolder::timerCallback()
+void DecayingValueHolder::handleOverHoldTime()
 {
-    now = juce::Time::currentTimeMillis();
-    if ( now - peakTime > holdTime )
-    {
-        currentValue = juce::jlimit(NegativeInfinity,
-                                    MaxDecibels,
-                                    currentValue - decayRatePerFrame);
+    currentValue = juce::jlimit(NegativeInfinity,
+                                MaxDecibels,
+                                currentValue - decayRatePerFrame);
         
-        if ( currentValue == NegativeInfinity )
-            setDecayRate(decayRate); // reset decayRatePerFrame
-        else
-            decayRatePerFrame *= 1.03f;
-    }
+    if ( currentValue == NegativeInfinity )
+        setDecayRate(initDecayRate); // reset decayRatePerFrame
     else
-        setDecayRate(decayRate);
+        decayRatePerFrame *= 1.03f;
 }
 
 //==============================================================================
@@ -67,14 +58,10 @@ void ValueHolder::updateHeldValue(const float& input)
     }
 }
 
-void ValueHolder::timerCallback()
+void ValueHolder::handleOverHoldTime()
 {
-    now = juce::Time::currentTimeMillis();
-    if ( now - peakTime > holdTime )
-    {
-        isOverThreshold = currentValue > mThreshold;
-        heldValue = NegativeInfinity;
-    }
+    isOverThreshold = currentValue > mThreshold;
+    heldValue = NegativeInfinity;
 }
 
 //==============================================================================

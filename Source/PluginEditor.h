@@ -15,11 +15,16 @@
 #define NegativeInfinity -48.f
 
 //==============================================================================
-struct ValueHolderBase
+struct ValueHolderBase : juce::Timer
 {
+    ValueHolderBase() { startTimerHz(30); }
+    ~ValueHolderBase() { stopTimer(); }
     void setHoldTime(const long long& ms) { holdTime = ms; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
+    
+    void timerCallback() override;
+    virtual void handleOverHoldTime() = 0;
     
 protected:
     float currentValue = NegativeInfinity;
@@ -31,33 +36,33 @@ protected:
 };
 
 //==============================================================================
-struct DecayingValueHolder : ValueHolderBase, juce::Timer
+struct DecayingValueHolder : ValueHolderBase
 {
-    DecayingValueHolder();
-    ~DecayingValueHolder();
+    DecayingValueHolder() { setDecayRate(initDecayRate); }
+    ~DecayingValueHolder() { }
     
     void updateHeldValue(const float& input);
     void setDecayRate(const float& dbPerSecond);
     
-    void timerCallback() override;
+    void handleOverHoldTime() override;
     
 private:
     int timerFrequency = 30;
-    float decayRate = 20.f;
+    float initDecayRate = 20.f;
     float decayRatePerFrame;
 };
 
 //==============================================================================
-struct ValueHolder : ValueHolderBase, juce::Timer
+struct ValueHolder : ValueHolderBase
 {
-    ValueHolder() { startTimerHz(30); }
-    ~ValueHolder() { stopTimer(); }
+    ValueHolder() { }
+    ~ValueHolder() { }
     
     void setThreshold(const float& threshold) { mThreshold = threshold; }
     void updateHeldValue(const float& input);
     bool getIsOverThreshold() const { return isOverThreshold; }
     
-    void timerCallback() override;
+    void handleOverHoldTime() override;
     
 private:
     float mThreshold = -9.f;
