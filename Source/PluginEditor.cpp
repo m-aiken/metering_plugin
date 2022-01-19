@@ -10,6 +10,17 @@
 #include "PluginEditor.h"
 
 //==============================================================================
+DecayingValueHolder::DecayingValueHolder()
+{
+    startTimerHz(timerFrequency);
+    setDecayRate(decayRate);
+}
+
+DecayingValueHolder::~DecayingValueHolder()
+{
+    stopTimer();
+}
+
 void DecayingValueHolder::updateHeldValue(const float& input)
 {
     if (input > currentValue)
@@ -19,26 +30,27 @@ void DecayingValueHolder::updateHeldValue(const float& input)
     }
 }
 
+void DecayingValueHolder::setDecayRate(const float& dbPerSecond)
+{
+    decayRatePerFrame = dbPerSecond / timerFrequency;
+}
+
 void DecayingValueHolder::timerCallback()
 {
     now = juce::Time::currentTimeMillis();
     if ( now - peakTime > holdTime )
     {
-        if (currentValue - (decayRate / timerFrequency) > NegativeInfinity)
-        {
-            currentValue -= (decayRate / timerFrequency);
-            decayRate *= decayExp;
-        }
+        currentValue = juce::jlimit(NegativeInfinity,
+                                    MaxDecibels,
+                                    currentValue - decayRatePerFrame);
+        
+        if ( currentValue == NegativeInfinity )
+            setDecayRate(decayRate); // reset decayRatePerFrame
         else
-        {
-            currentValue = NegativeInfinity;
-            setDecayRate(20.f);
-        }
+            decayRatePerFrame *= 1.03f;
     }
     else
-    {
-        setDecayRate(20.f);
-    }
+        setDecayRate(decayRate);
 }
 
 //==============================================================================

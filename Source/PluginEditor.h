@@ -33,18 +33,18 @@ protected:
 //==============================================================================
 struct DecayingValueHolder : ValueHolderBase, juce::Timer
 {
-    DecayingValueHolder() { startTimerHz(timerFrequency); }
-    ~DecayingValueHolder() { stopTimer(); }
+    DecayingValueHolder();
+    ~DecayingValueHolder();
     
     void updateHeldValue(const float& input);
-    void setDecayRate(const float& dbPerSecond) { decayRate = dbPerSecond; }
+    void setDecayRate(const float& dbPerSecond);
     
     void timerCallback() override;
     
 private:
     int timerFrequency = 30;
     float decayRate = 20.f;
-    float decayExp = 1.02f;
+    float decayRatePerFrame;
 };
 
 //==============================================================================
