@@ -27,11 +27,6 @@ void DecayingValueHolder::updateHeldValue(const float& input)
     }
 }
 
-void DecayingValueHolder::setDecayRate(const float& dbPerSecond)
-{
-    decayRatePerFrame = dbPerSecond / timerFrequency;
-}
-
 void DecayingValueHolder::handleOverHoldTime()
 {
     currentValue = juce::jlimit(NegativeInfinity,
@@ -39,7 +34,7 @@ void DecayingValueHolder::handleOverHoldTime()
                                 currentValue - decayRatePerFrame);
         
     if ( currentValue == NegativeInfinity )
-        setDecayRate(initDecayRate); // reset decayRatePerFrame
+        initializeDecayRate(); // reset decayRatePerFrame
     else
         decayRatePerFrame *= 1.03f;
 }
