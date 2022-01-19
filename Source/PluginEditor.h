@@ -19,6 +19,7 @@ struct ValueHolderBase : juce::Timer
 {
     ValueHolderBase() { startTimerHz(30); }
     ~ValueHolderBase() { stopTimer(); }
+    
     void setHoldTime(const long long& ms) { holdTime = ms; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
@@ -26,7 +27,9 @@ struct ValueHolderBase : juce::Timer
     void timerCallback() override;
     virtual void handleOverHoldTime() = 0;
     
-protected:
+    friend struct DecayingValueHolder;
+    friend struct ValueHolder;
+private:
     float currentValue = NegativeInfinity;
     float heldValue = NegativeInfinity;
    
