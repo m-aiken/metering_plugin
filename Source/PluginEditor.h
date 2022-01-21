@@ -106,6 +106,8 @@ struct Meter : juce::Component
     std::vector<Tick> ticks;
 private:
     float level = 0.f;
+    
+    DecayingValueHolder fallingTick;
 };
 //==============================================================================
 /**
