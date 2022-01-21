@@ -15,6 +15,8 @@ void ValueHolderBase::timerCallback()
     now = juce::Time::currentTimeMillis();
     if ( now - peakTime > holdTime )
         handleOverHoldTime();
+    else
+        resetDecay();
 }
 
 //==============================================================================
@@ -41,7 +43,7 @@ void DecayingValueHolder::handleOverHoldTime()
     if ( currentValue == NegativeInfinity )
         setDecayRate(initDecayRate); // reset decayRatePerFrame
     else
-        decayRatePerFrame *= 1.03f;
+        decayRatePerFrame *= 1.04f;
 }
 
 //==============================================================================
@@ -90,7 +92,6 @@ void TextMeter::paint(juce::Graphics& g)
 void TextMeter::update(const float& input)
 {
     valueHolder.updateHeldValue(input);
-    decayingValueHolder.updateHeldValue(input);
     repaint();
 }
 
