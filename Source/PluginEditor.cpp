@@ -15,8 +15,6 @@ void ValueHolderBase::timerCallback()
     now = juce::Time::currentTimeMillis();
     if ( now - peakTime > holdTime )
         handleOverHoldTime();
-    else
-        resetDecay();
 }
 
 //==============================================================================

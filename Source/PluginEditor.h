@@ -26,7 +26,6 @@ struct ValueHolderBase : juce::Timer
     
     void timerCallback() override;
     virtual void handleOverHoldTime() = 0;
-    virtual void resetDecay() { }
     
     friend struct DecayingValueHolder;
     friend struct ValueHolder;
@@ -49,7 +48,6 @@ struct DecayingValueHolder : ValueHolderBase
     void setDecayRate(const float& dbPerSecond);
     
     void handleOverHoldTime() override;
-    void resetDecay() override { setDecayRate(initDecayRate); }
     
 private:
     int timerFrequency = 30;
