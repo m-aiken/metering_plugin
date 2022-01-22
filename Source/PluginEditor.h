@@ -15,6 +15,47 @@
 #define NegativeInfinity -48.f
 
 //==============================================================================
+template<typename T>
+struct Averager
+{
+    Averager(size_t numElements, T initialValue)
+    {
+        resize(numElements, initialValue);
+    }
+
+    void clear(T initialValue)
+    {
+        container.assign(getSize(), initialValue);
+    }
+    
+    void resize(size_t s, T initialValue)
+    {
+        container.assign(s, initialValue);
+        average = getAverage();
+    }
+
+    void add(T t)
+    {
+        container.push_back(t);
+        average = getAverage();
+    }
+    
+    float getAverage() const
+    {
+        return static_cast<float>(std::accumulate(container.begin(), container.end(), 0) / getSize());
+    }
+    
+    size_t getSize() const
+    {
+        return container.size();
+    }
+    
+private:
+    std::vector<T> container;
+    float average = 0.f;
+};
+
+//==============================================================================
 struct ValueHolderBase : juce::Timer
 {
     ValueHolderBase() { startTimerHz(30); }
