@@ -51,7 +51,7 @@ struct DecayingValueHolder : ValueHolderBase
     
 private:
     int timerFrequency = 30;
-    float initDecayRate = 20.f;
+    float initDecayRate = 30.f;
     float decayRatePerFrame;
 };
 
@@ -80,7 +80,6 @@ struct TextMeter : juce::Component
     
 private:
     ValueHolder valueHolder;
-    DecayingValueHolder decayingValueHolder;
 };
 
 //==============================================================================
@@ -106,6 +105,8 @@ struct Meter : juce::Component
     std::vector<Tick> ticks;
 private:
     float level = 0.f;
+    
+    DecayingValueHolder fallingTick;
 };
 //==============================================================================
 /**

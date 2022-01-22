@@ -41,7 +41,7 @@ void DecayingValueHolder::handleOverHoldTime()
     if ( currentValue == NegativeInfinity )
         setDecayRate(initDecayRate); // reset decayRatePerFrame
     else
-        decayRatePerFrame *= 1.03f;
+        decayRatePerFrame *= 1.04f;
 }
 
 //==============================================================================
@@ -90,7 +90,6 @@ void TextMeter::paint(juce::Graphics& g)
 void TextMeter::update(const float& input)
 {
     valueHolder.updateHeldValue(input);
-    decayingValueHolder.updateHeldValue(input);
     repaint();
 }
 
@@ -129,6 +128,22 @@ void Meter::paint(juce::Graphics& g)
     g.setColour(juce::Colours::limegreen); // meter colour
     auto jmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     g.fillRect(bounds.withHeight(h * jmap).withY(jmap));
+    
+    // falling tick
+    auto yellow = juce::Colour(217, 193, 56);
+    g.setColour(yellow);
+    
+    auto ftJmap = juce::jmap<float>(fallingTick.getCurrentValue(),
+                                    NegativeInfinity,
+                                    MaxDecibels,
+                                    h,
+                                    0);
+    
+    g.drawLine(bounds.getX(),     // startX
+               ftJmap,            // startY
+               bounds.getRight(), // endX
+               ftJmap,            // endY
+               3.f);              // line thickness
 }
 
 void Meter::resized()
@@ -151,6 +166,7 @@ void Meter::resized()
 void Meter::update(const float& newLevel)
 {
     level = newLevel;
+    fallingTick.updateHeldValue(newLevel);
     repaint();
 }
 
