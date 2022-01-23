@@ -26,32 +26,36 @@ struct Averager
     void clear(T initialValue)
     {
         container.assign(getSize(), initialValue);
+        computeAverage();
     }
     
     void resize(size_t s, T initialValue)
     {
-        container.assign(s, initialValue);
-        average = getAverage();
+        container.resize(s, initialValue);
+        clear(initialValue);
     }
 
     void add(T t)
     {
-        container.push_back(t);
-        average = getAverage();
+        runningTotal -= static_cast<float>(container[writeIndex]);
+        container[writeIndex] = t;
+        runningTotal += static_cast<float>(container[writeIndex]);
+        
+        writeIndex = (writeIndex + 1) % getSize();
+        
+        computeAverage();
     }
     
-    float getAverage() const
-    {
-        return static_cast<float>(std::accumulate(container.begin(), container.end(), 0) / getSize());
-    }
+    float getAverage() const { return average; }
     
-    size_t getSize() const
-    {
-        return container.size();
-    }
+    size_t getSize() const { return container.size(); }
+    
+    void computeAverage() { average = runningTotal / getSize(); }
     
 private:
     std::vector<T> container;
+    int writeIndex = 0;
+    float runningTotal = 0.f;
     float average = 0.f;
 };
 
@@ -148,6 +152,8 @@ private:
     float level = 0.f;
     
     DecayingValueHolder fallingTick;
+
+//    Averager<float> avg{12, 0.f};
 };
 //==============================================================================
 /**
