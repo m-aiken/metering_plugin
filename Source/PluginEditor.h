@@ -26,6 +26,10 @@ struct Averager
     void clear(T initialValue)
     {
         container.assign(getSize(), initialValue);
+        
+        auto initSum = std::accumulate(container.begin(), container.end(), 0);
+        runningTotal = static_cast<float>(initSum);
+        
         computeAverage();
     }
     
@@ -37,26 +41,30 @@ struct Averager
 
     void add(T t)
     {
-        runningTotal -= static_cast<float>(container[writeIndex]);
-        container[writeIndex] = t;
-        runningTotal += static_cast<float>(container[writeIndex]);
+        auto idx = writeIndex.load();
+        auto sum = runningTotal.load();
         
-        writeIndex = (writeIndex + 1) % getSize();
+        sum -= static_cast<float>(container[idx]);
+        container[idx] = t;
+        sum += static_cast<float>(container[idx]);
+        runningTotal = sum;
+        
+        writeIndex = (idx + 1) % getSize();
         
         computeAverage();
     }
     
-    float getAverage() const { return average; }
+    float getAverage() const { return average.load(); }
     
     size_t getSize() const { return container.size(); }
     
-    void computeAverage() { average = runningTotal / getSize(); }
+    void computeAverage() { average = runningTotal.load() / getSize(); }
     
 private:
     std::vector<T> container;
-    int writeIndex = 0;
-    float runningTotal = 0.f;
-    float average = 0.f;
+    std::atomic<int> writeIndex = 0;
+    std::atomic<float> runningTotal = 0.f;
+    std::atomic<float> average = 0.f;
 };
 
 //==============================================================================
