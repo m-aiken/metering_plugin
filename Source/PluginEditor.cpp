@@ -168,6 +168,9 @@ void Meter::update(const float& newLevel)
     level = newLevel;
     fallingTick.updateHeldValue(newLevel);
     repaint();
+    
+//    avg.add(level);
+//    DBG(avg.getAverage());
 }
 
 //==============================================================================
