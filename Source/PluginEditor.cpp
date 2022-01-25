@@ -168,9 +168,49 @@ void Meter::update(const float& newLevel)
     level = newLevel;
     fallingTick.updateHeldValue(newLevel);
     repaint();
+}
+
+//==============================================================================
+MacroMeter::MacroMeter()
+{
+    addAndMakeVisible(textMeter);
+    addAndMakeVisible(averageMeter);
+    addAndMakeVisible(instantMeter);
+}
+
+void MacroMeter::resized()
+{
+    auto bounds = getLocalBounds();
+    auto h = bounds.getHeight();
+    auto textBoxHeight = static_cast<int>(h * 0.06);
+    auto meterHeight = h - textBoxHeight;
     
-//    avg.add(level);
-//    DBG(avg.getAverage());
+    auto w = bounds.getWidth();
+    
+    // setBounds args (int x, int y, int width, int height)
+    textMeter.setBounds(0,
+                        0,
+                        w,
+                        textBoxHeight);
+    
+    averageMeter.setBounds(0,
+                           textMeter.getBottom(),
+                           static_cast<int>(w * 0.8),
+                           meterHeight);
+    
+    instantMeter.setBounds(averageMeter.getRight() + static_cast<int>(w * 0.05),
+                           textMeter.getBottom(),
+                           static_cast<int>(w * 0.15),
+                           meterHeight);
+}
+
+void MacroMeter::update(const float& input)
+{
+    averager.add(input);
+    
+    textMeter.update(input);
+    averageMeter.update(averager.getAverage());
+    instantMeter.update(input);
 }
 
 //==============================================================================
@@ -181,10 +221,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     // editor's size to whatever you need it to be.
     startTimerHz(30);
     
-    addAndMakeVisible(textMeter);
-    addAndMakeVisible(monoMeter);
+    addAndMakeVisible(macroMeter);
     addAndMakeVisible(dbScale);
-    
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -211,16 +249,11 @@ void PFMProject10AudioProcessorEditor::resized()
     // subcomponents in your editor..
     
     // setBounds args (int x, int y, int width, int height)
-    textMeter.setBounds(20, 20, 40, 20);
+    macroMeter.setBounds(20, 20, 40, 320);
     
-    auto meterHeight = 300;
-    monoMeter.setBounds(20, textMeter.getBottom(), 40, meterHeight);
-    
-    dbScale.ticks = monoMeter.ticks;
-    dbScale.yOffset = monoMeter.getY();
-    dbScale.setBounds(monoMeter.getRight(), 0, 30, 350);
-    
-    
+    dbScale.ticks = macroMeter.getTicks();
+    dbScale.yOffset = macroMeter.getY() + macroMeter.getTickYoffset();
+    dbScale.setBounds(macroMeter.getRight(), 0, 30, 350);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
@@ -238,8 +271,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         
         auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
         auto rmsDb = juce::Decibels::gainToDecibels(rms, NegativeInfinity);
-        monoMeter.update(rmsDb);
-        
-        textMeter.update(rmsDb);
+
+        macroMeter.update(rmsDb);
     }
 }
