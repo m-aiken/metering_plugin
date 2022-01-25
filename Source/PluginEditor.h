@@ -160,9 +160,27 @@ private:
     float level = 0.f;
     
     DecayingValueHolder fallingTick;
-
-//    Averager<float> avg{12, 0.f};
 };
+
+//==============================================================================
+struct MacroMeter : juce::Component
+{
+    MacroMeter();
+
+    void resized() override;
+    void update(const float& input);
+    
+    std::vector<Tick> getTicks() { return instantMeter.ticks; }
+    int getTickYoffset() { return textMeter.getHeight(); }
+    
+private:
+    TextMeter textMeter;
+    Meter averageMeter;
+    Meter instantMeter;
+    
+    Averager<float> averager{12, NegativeInfinity};
+};
+
 //==============================================================================
 /**
 */
@@ -185,8 +203,7 @@ private:
     
     juce::AudioBuffer<float> incomingBuffer;
     
-    TextMeter textMeter;
-    Meter monoMeter;
+    MacroMeter macroMeter;
     DbScale dbScale;
     
 #if defined(GAIN_TEST_ACTIVE)
