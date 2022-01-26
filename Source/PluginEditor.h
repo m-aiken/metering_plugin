@@ -187,13 +187,14 @@ struct StereoMeter : juce::Component
 {
     StereoMeter(const juce::String& labelText);
     
+    void paint(juce::Graphics& g) override;
     void resized() override;
-    void update(const float& inputLeft, const float& inputRight);
+    void update(const float& inputL, const float& inputR);
     
 private:
-    MacroMeter macroMeterLeft{0};
+    MacroMeter macroMeterL{0};
     DbScale dbScale;
-    MacroMeter macroMeterRight{1};
+    MacroMeter macroMeterR{1};
     
     juce::String label;
 };
@@ -219,10 +220,7 @@ private:
     PFMProject10AudioProcessor& audioProcessor;
     
     juce::AudioBuffer<float> incomingBuffer;
-    
-//    MacroMeter macroMeter;
-//    DbScale dbScale;
-    
+        
     StereoMeter stereoMeterRms{"RMS"};
     
 #if defined(GAIN_TEST_ACTIVE)
