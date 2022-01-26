@@ -165,7 +165,7 @@ private:
 //==============================================================================
 struct MacroMeter : juce::Component
 {
-    MacroMeter();
+    MacroMeter(const int& channel);
 
     void resized() override;
     void update(const float& input);
@@ -179,6 +179,23 @@ private:
     Meter instantMeter;
     
     Averager<float> averager{12, NegativeInfinity};
+    
+    int channel;
+};
+
+struct StereoMeter : juce::Component
+{
+    StereoMeter(const juce::String& labelText);
+    
+    void resized() override;
+    void update(const float& inputLeft, const float& inputRight);
+    
+private:
+    MacroMeter macroMeterLeft{0};
+    DbScale dbScale;
+    MacroMeter macroMeterRight{1};
+    
+    juce::String label;
 };
 
 //==============================================================================
@@ -203,8 +220,10 @@ private:
     
     juce::AudioBuffer<float> incomingBuffer;
     
-    MacroMeter macroMeter;
-    DbScale dbScale;
+//    MacroMeter macroMeter;
+//    DbScale dbScale;
+    
+    StereoMeter stereoMeterRms{"RMS"};
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;

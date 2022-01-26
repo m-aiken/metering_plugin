@@ -171,7 +171,8 @@ void Meter::update(const float& newLevel)
 }
 
 //==============================================================================
-MacroMeter::MacroMeter()
+MacroMeter::MacroMeter(const int& channel)
+    : channel(channel)
 {
     addAndMakeVisible(textMeter);
     addAndMakeVisible(averageMeter);
@@ -188,20 +189,36 @@ void MacroMeter::resized()
     auto w = bounds.getWidth();
     
     // setBounds args (int x, int y, int width, int height)
-    textMeter.setBounds(0,
-                        0,
-                        w,
-                        textBoxHeight);
+    textMeter.setBounds(0, 0, w, textBoxHeight);
     
-    averageMeter.setBounds(0,
-                           textMeter.getBottom(),
-                           static_cast<int>(w * 0.8),
-                           meterHeight);
+    auto averageMeterWidth = static_cast<int>(w * 0.8);
+    auto instantMeterWidth = static_cast<int>(w * 0.15);
+    auto meterPadding = static_cast<int>(w * 0.05);
     
-    instantMeter.setBounds(averageMeter.getRight() + static_cast<int>(w * 0.05),
-                           textMeter.getBottom(),
-                           static_cast<int>(w * 0.15),
-                           meterHeight);
+    auto avgMeterX = (channel == 0 ? 0 : instantMeterWidth + meterPadding);
+    
+    auto averageMeterRect = juce::Rectangle<int>(avgMeterX,
+                                                 textMeter.getBottom(),
+                                                 averageMeterWidth,
+                                                 meterHeight);
+    
+    auto instMeterX = channel == 0 ? averageMeterWidth + meterPadding : 0;
+    
+    auto instantMeterRect = juce::Rectangle<int>(instMeterX,
+                                                 textMeter.getBottom(),
+                                                 instantMeterWidth,
+                                                 meterHeight);
+    
+    if (channel == 0)
+    {
+        averageMeter.setBounds(averageMeterRect);
+        instantMeter.setBounds(instantMeterRect);
+    }
+    else
+    {
+        instantMeter.setBounds(instantMeterRect);
+        averageMeter.setBounds(averageMeterRect);
+    }
 }
 
 void MacroMeter::update(const float& input)
@@ -214,6 +231,34 @@ void MacroMeter::update(const float& input)
 }
 
 //==============================================================================
+StereoMeter::StereoMeter(const juce::String& labelText)
+    : label(labelText)
+{
+    addAndMakeVisible(macroMeterLeft);
+    addAndMakeVisible(dbScale);
+    addAndMakeVisible(macroMeterRight);
+}
+
+void StereoMeter::resized()
+{
+//    auto bounds = getLocalBounds();
+    // setBounds args (int x, int y, int width, int height)
+    macroMeterLeft.setBounds(0, 20, 40, 320);
+    
+    dbScale.ticks = macroMeterLeft.getTicks();
+    dbScale.yOffset = macroMeterLeft.getY() + macroMeterLeft.getTickYoffset();
+    dbScale.setBounds(macroMeterLeft.getRight(), 0, 30, 350);
+    
+    macroMeterRight.setBounds(dbScale.getRight(), 20, 40, 320);
+}
+
+void StereoMeter::update(const float& inputLeft, const float& inputRight)
+{
+    macroMeterLeft.update(inputLeft);
+    macroMeterRight.update(inputRight);
+}
+
+//==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
@@ -221,8 +266,10 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     // editor's size to whatever you need it to be.
     startTimerHz(30);
     
-    addAndMakeVisible(macroMeter);
-    addAndMakeVisible(dbScale);
+//    addAndMakeVisible(macroMeter);
+//    addAndMakeVisible(dbScale);
+    
+    addAndMakeVisible(stereoMeterRms);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -249,11 +296,13 @@ void PFMProject10AudioProcessorEditor::resized()
     // subcomponents in your editor..
     
     // setBounds args (int x, int y, int width, int height)
-    macroMeter.setBounds(20, 20, 40, 320);
+//    macroMeter.setBounds(20, 20, 40, 320);
+//
+//    dbScale.ticks = macroMeter.getTicks();
+//    dbScale.yOffset = macroMeter.getY() + macroMeter.getTickYoffset();
+//    dbScale.setBounds(macroMeter.getRight(), 0, 30, 350);
     
-    dbScale.ticks = macroMeter.getTicks();
-    dbScale.yOffset = macroMeter.getY() + macroMeter.getTickYoffset();
-    dbScale.setBounds(macroMeter.getRight(), 0, 30, 350);
+    stereoMeterRms.setBounds(20, 0, 110, 350);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
@@ -269,9 +318,23 @@ void PFMProject10AudioProcessorEditor::timerCallback()
             // do nothing else - just looping through until incomingBuffer = most recent available buffer
         }
         
-        auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
-        auto rmsDb = juce::Decibels::gainToDecibels(rms, NegativeInfinity);
+//        auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
+//        auto rmsDb = juce::Decibels::gainToDecibels(rms, NegativeInfinity);
 
-        macroMeter.update(rmsDb);
+//        macroMeter.update(rmsDb);
+        
+        auto rmsLeft = incomingBuffer.getRMSLevel(0, // channel
+                                                  0,
+                                                  incomingBuffer.getNumSamples());
+        
+        auto rmsRight = incomingBuffer.getRMSLevel(1,
+                                                   0,
+                                                   incomingBuffer.getNumSamples());
+        
+        auto rmsDbLeft = juce::Decibels::gainToDecibels(rmsLeft, NegativeInfinity);
+        
+        auto rmsDbRight = juce::Decibels::gainToDecibels(rmsRight, NegativeInfinity);
+        
+        stereoMeterRms.update(rmsDbLeft, rmsDbRight);
     }
 }
