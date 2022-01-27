@@ -121,7 +121,7 @@ struct ValueHolder : ValueHolderBase
     void handleOverHoldTime() override;
     
 private:
-    float mThreshold = -9.f;
+    float mThreshold = -1.f;
     bool isOverThreshold = false;
 };
 
@@ -197,6 +197,8 @@ private:
     MacroMeter macroMeterR{1};
     
     juce::String label;
+    
+    float dbScaleLabelCrossover = 0.94f;
 };
 
 //==============================================================================
@@ -222,6 +224,7 @@ private:
     juce::AudioBuffer<float> incomingBuffer;
         
     StereoMeter stereoMeterRms{"RMS"};
+    StereoMeter stereoMeterPeak{"PEAK"};
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
