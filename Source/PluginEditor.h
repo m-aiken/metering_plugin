@@ -163,9 +163,16 @@ private:
 };
 
 //==============================================================================
+enum class Channel
+{
+    Left,
+    Right
+};
+
+//==============================================================================
 struct MacroMeter : juce::Component
 {
-    MacroMeter(const int& channel);
+    MacroMeter(const Channel& channel);
 
     void resized() override;
     void update(const float& input);
@@ -180,7 +187,7 @@ private:
     
     Averager<float> averager{12, NegativeInfinity};
     
-    int channel;
+    Channel channel;
 };
 
 struct StereoMeter : juce::Component
@@ -192,9 +199,9 @@ struct StereoMeter : juce::Component
     void update(const float& inputL, const float& inputR);
     
 private:
-    MacroMeter macroMeterL{0};
+    MacroMeter macroMeterL{ Channel::Left };
     DbScale dbScale;
-    MacroMeter macroMeterR{1};
+    MacroMeter macroMeterR{ Channel::Right };
     
     juce::String label;
     

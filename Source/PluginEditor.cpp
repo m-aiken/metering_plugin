@@ -171,7 +171,7 @@ void Meter::update(const float& newLevel)
 }
 
 //==============================================================================
-MacroMeter::MacroMeter(const int& channel)
+MacroMeter::MacroMeter(const Channel& channel)
     : channel(channel)
 {
     addAndMakeVisible(textMeter);
@@ -195,21 +195,21 @@ void MacroMeter::resized()
     auto instantMeterWidth = static_cast<int>(w * 0.20f);
     auto meterPadding = static_cast<int>(w * 0.05f);
     
-    auto avgMeterX = (channel == 0 ? 0 : instantMeterWidth + meterPadding);
+    auto avgMeterX = (channel == Channel::Left ? 0 : instantMeterWidth + meterPadding);
     
     auto averageMeterRect = juce::Rectangle<int>(avgMeterX,
                                                  textMeter.getBottom(),
                                                  averageMeterWidth,
                                                  meterHeight);
     
-    auto instMeterX = channel == 0 ? averageMeterWidth + meterPadding : 0;
+    auto instMeterX = channel == Channel::Left ? averageMeterWidth + meterPadding : 0;
     
     auto instantMeterRect = juce::Rectangle<int>(instMeterX,
                                                  textMeter.getBottom(),
                                                  instantMeterWidth,
                                                  meterHeight);
     
-    if (channel == 0)
+    if (channel == Channel::Left)
     {
         averageMeter.setBounds(averageMeterRect);
         instantMeter.setBounds(instantMeterRect);
