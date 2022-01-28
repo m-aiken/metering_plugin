@@ -97,7 +97,7 @@ void TextMeter::update(const float& input)
 void DbScale::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
-    
+
     int textHeight = 8;
     
     g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
@@ -171,7 +171,8 @@ void Meter::update(const float& newLevel)
 }
 
 //==============================================================================
-MacroMeter::MacroMeter()
+MacroMeter::MacroMeter(const Channel& channel)
+    : channel(channel)
 {
     addAndMakeVisible(textMeter);
     addAndMakeVisible(averageMeter);
@@ -182,26 +183,42 @@ void MacroMeter::resized()
 {
     auto bounds = getLocalBounds();
     auto h = bounds.getHeight();
-    auto textBoxHeight = static_cast<int>(h * 0.06);
+    auto textBoxHeight = static_cast<int>(h * 0.06f);
     auto meterHeight = h - textBoxHeight;
     
     auto w = bounds.getWidth();
     
     // setBounds args (int x, int y, int width, int height)
-    textMeter.setBounds(0,
-                        0,
-                        w,
-                        textBoxHeight);
+    textMeter.setBounds(0, 0, w, textBoxHeight);
     
-    averageMeter.setBounds(0,
-                           textMeter.getBottom(),
-                           static_cast<int>(w * 0.8),
-                           meterHeight);
+    auto averageMeterWidth = static_cast<int>(w * 0.75f);
+    auto instantMeterWidth = static_cast<int>(w * 0.20f);
+    auto meterPadding = static_cast<int>(w * 0.05f);
     
-    instantMeter.setBounds(averageMeter.getRight() + static_cast<int>(w * 0.05),
-                           textMeter.getBottom(),
-                           static_cast<int>(w * 0.15),
-                           meterHeight);
+    auto avgMeterX = (channel == Channel::Left ? 0 : instantMeterWidth + meterPadding);
+    
+    auto averageMeterRect = juce::Rectangle<int>(avgMeterX,
+                                                 textMeter.getBottom(),
+                                                 averageMeterWidth,
+                                                 meterHeight);
+    
+    auto instMeterX = channel == Channel::Left ? averageMeterWidth + meterPadding : 0;
+    
+    auto instantMeterRect = juce::Rectangle<int>(instMeterX,
+                                                 textMeter.getBottom(),
+                                                 instantMeterWidth,
+                                                 meterHeight);
+    
+    if (channel == Channel::Left)
+    {
+        averageMeter.setBounds(averageMeterRect);
+        instantMeter.setBounds(instantMeterRect);
+    }
+    else
+    {
+        instantMeter.setBounds(instantMeterRect);
+        averageMeter.setBounds(averageMeterRect);
+    }
 }
 
 void MacroMeter::update(const float& input)
@@ -214,22 +231,84 @@ void MacroMeter::update(const float& input)
 }
 
 //==============================================================================
+StereoMeter::StereoMeter(const juce::String& labelText)
+    : label(labelText)
+{
+    addAndMakeVisible(macroMeterL);
+    addAndMakeVisible(dbScale);
+    addAndMakeVisible(macroMeterR);
+}
+
+void StereoMeter::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    auto h = bounds.getHeight();
+    auto w = bounds.getWidth();
+    auto labelContainerY = static_cast<int>(h * dbScaleLabelCrossover);
+    auto labelContainerH = static_cast<int>(h - labelContainerY);
+    
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    
+    std::vector<juce::String> labels{"L", label, "R"};
+    std::vector<int> xPositions{0, static_cast<int>(w / 3), static_cast<int>(w - (w / 3))};
+    
+    for (auto i = 0; i < labels.size(); ++i)
+    {
+        g.drawFittedText(labels[i],                                // text
+                         xPositions[i],                            // x
+                         labelContainerY,                          // y
+                         static_cast<int>(w / 3),                  // width
+                         labelContainerH,                          // height
+                         juce::Justification::horizontallyCentred, // justification
+                         1);                                       // max num lines
+    }
+}
+
+void StereoMeter::resized()
+{
+    auto bounds = getLocalBounds();
+    auto h = bounds.getHeight();
+    auto w = bounds.getWidth();
+    auto meterWidth = static_cast<int>(w * 0.35f);
+    auto meterHeight = static_cast<int>(h * 0.92f);
+    
+    auto dbScaleWidth = w - (meterWidth * 2);
+    
+    macroMeterL.setBounds(0, 0, meterWidth, meterHeight);
+    
+    dbScale.ticks = macroMeterL.getTicks();
+    dbScale.yOffset = macroMeterL.getY() + macroMeterL.getTickYoffset();
+    dbScale.setBounds(macroMeterL.getRight(),
+                      0,
+                      dbScaleWidth,
+                      static_cast<int>(h * dbScaleLabelCrossover));
+    
+    macroMeterR.setBounds(dbScale.getRight(), 0, meterWidth, meterHeight);
+}
+
+void StereoMeter::update(const float& inputL, const float& inputR)
+{
+    macroMeterL.update(inputL);
+    macroMeterR.update(inputR);
+}
+
+//==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     startTimerHz(30);
-    
-    addAndMakeVisible(macroMeter);
-    addAndMakeVisible(dbScale);
+        
+    addAndMakeVisible(stereoMeterRms);
+    addAndMakeVisible(stereoMeterPeak);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
 #endif
 
-    setSize (600, 400);
+    setSize (800, 600);
 }
 
 PFMProject10AudioProcessorEditor::~PFMProject10AudioProcessorEditor()
@@ -247,13 +326,21 @@ void PFMProject10AudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
-    
+    auto bounds = getLocalBounds();
+    auto width = bounds.getWidth();
+    auto margin = 10;
+    auto stereoMeterWidth = 100;
+    auto stereoMeterHeight = 350;
     // setBounds args (int x, int y, int width, int height)
-    macroMeter.setBounds(20, 20, 40, 320);
+    stereoMeterRms.setBounds(margin,
+                             margin,
+                             stereoMeterWidth,
+                             stereoMeterHeight);
     
-    dbScale.ticks = macroMeter.getTicks();
-    dbScale.yOffset = macroMeter.getY() + macroMeter.getTickYoffset();
-    dbScale.setBounds(macroMeter.getRight(), 0, 30, 350);
+    stereoMeterPeak.setBounds(width - (stereoMeterWidth + margin),
+                              margin,
+                              stereoMeterWidth,
+                              stereoMeterHeight);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
@@ -269,9 +356,18 @@ void PFMProject10AudioProcessorEditor::timerCallback()
             // do nothing else - just looping through until incomingBuffer = most recent available buffer
         }
         
-        auto rms = incomingBuffer.getRMSLevel(0, 0, incomingBuffer.getNumSamples());
-        auto rmsDb = juce::Decibels::gainToDecibels(rms, NegativeInfinity);
-
-        macroMeter.update(rmsDb);
+        auto numSamples = incomingBuffer.getNumSamples();
+                
+        auto rmsL = incomingBuffer.getRMSLevel(0, 0, numSamples);
+        auto rmsR = incomingBuffer.getRMSLevel(1, 0, numSamples);
+        auto rmsDbL = juce::Decibels::gainToDecibels(rmsL, NegativeInfinity);
+        auto rmsDbR = juce::Decibels::gainToDecibels(rmsR, NegativeInfinity);
+        stereoMeterRms.update(rmsDbL, rmsDbR);
+        
+        auto peakL = incomingBuffer.getMagnitude(0, 0, numSamples);
+        auto peakR = incomingBuffer.getMagnitude(1, 0, numSamples);
+        auto peakDbL = juce::Decibels::gainToDecibels(peakL, NegativeInfinity);
+        auto peakDbR = juce::Decibels::gainToDecibels(peakR, NegativeInfinity);
+        stereoMeterPeak.update(peakDbL, peakDbR);
     }
 }

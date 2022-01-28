@@ -121,7 +121,7 @@ struct ValueHolder : ValueHolderBase
     void handleOverHoldTime() override;
     
 private:
-    float mThreshold = -9.f;
+    float mThreshold = -1.f;
     bool isOverThreshold = false;
 };
 
@@ -163,9 +163,16 @@ private:
 };
 
 //==============================================================================
+enum class Channel
+{
+    Left,
+    Right
+};
+
+//==============================================================================
 struct MacroMeter : juce::Component
 {
-    MacroMeter();
+    MacroMeter(const Channel& channel);
 
     void resized() override;
     void update(const float& input);
@@ -179,6 +186,26 @@ private:
     Meter instantMeter;
     
     Averager<float> averager{12, NegativeInfinity};
+    
+    Channel channel;
+};
+
+struct StereoMeter : juce::Component
+{
+    StereoMeter(const juce::String& labelText);
+    
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+    void update(const float& inputL, const float& inputR);
+    
+private:
+    MacroMeter macroMeterL{ Channel::Left };
+    DbScale dbScale;
+    MacroMeter macroMeterR{ Channel::Right };
+    
+    juce::String label;
+    
+    float dbScaleLabelCrossover = 0.94f;
 };
 
 //==============================================================================
@@ -202,9 +229,9 @@ private:
     PFMProject10AudioProcessor& audioProcessor;
     
     juce::AudioBuffer<float> incomingBuffer;
-    
-    MacroMeter macroMeter;
-    DbScale dbScale;
+        
+    StereoMeter stereoMeterRms{"RMS"};
+    StereoMeter stereoMeterPeak{"PEAK"};
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
