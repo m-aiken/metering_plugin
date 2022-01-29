@@ -16,6 +16,36 @@
 
 //==============================================================================
 template<typename T>
+struct CircularBuffer
+{
+    using DataType = std::vector<T>;
+    
+    CircularBuffer(size_t numElements, T initialValue)
+    {
+        resize(numElements, initialValue);
+    }
+    
+    void resize(size_t s, T fillValue) { buffer.resize(s, fillValue); }
+    void clear(T fillValue) { buffer.assign(getSize(), fillValue); }
+    
+    void write(T t)
+    {
+        auto idx = writeIndex.load();
+        buffer[idx] = t;
+        writeIndex = (idx + 1) % getSize();
+    }
+    
+    DataType& getData() { return buffer; }
+    size_t getReadIndex() const { return (writeIndex.load() + 1) % getSize(); }
+    size_t getSize() const { return buffer.size(); }
+    
+private:
+    DataType buffer;
+    std::atomic<int> writeIndex = 0;
+};
+
+//==============================================================================
+template<typename T>
 struct Averager
 {
     Averager(size_t numElements, T initialValue)
