@@ -32,11 +32,27 @@ struct CircularBuffer
     {
         auto idx = writeIndex.load();
         buffer[idx] = t;
-        writeIndex = (idx + 1) % getSize();
+        
+        // increment writeIndex
+        if ( idx == getSize() - 1 ) // end of container, circle back to start
+            writeIndex = 0;
+        else
+            writeIndex = idx + 1;
     }
     
     DataType& getData() { return buffer; }
-    size_t getReadIndex() const { return (writeIndex.load() + 1) % getSize(); }
+    
+    size_t getReadIndex() const
+    {
+        auto idx = writeIndex.load();
+        // writeIndex + 1 is oldest item in container
+        // last possible read/write index is size - 1
+        // if writeIndex == size - 1 writeIndex is at end of container, readIndex should be 0
+        if ( idx == getSize() - 1 )
+            return 0;
+        return idx + 1;
+    }
+    
     size_t getSize() const { return buffer.size(); }
     
 private:
