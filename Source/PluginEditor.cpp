@@ -10,6 +10,90 @@
 #include "PluginEditor.h"
 
 //==============================================================================
+void Histogram::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    auto height = bounds.getHeight();
+    g.fillAll(juce::Colours::red);
+    
+    g.setColour(juce::Colours::black);
+    
+    auto& data = circularBuffer.getData();
+    auto readIdx = circularBuffer.getReadIndex();
+    auto bufferSize = circularBuffer.getSize();
+
+    juce::Path p;
+    
+    auto x = 0;
+    
+    for ( auto i = readIdx; i < bufferSize; ++i )
+    {
+        auto scaledValue = juce::jmap<float>(data[i],
+                                             NegativeInfinity,
+                                             MaxDecibels,
+                                             height,
+                                             0);
+        
+        if ( x == 0 )
+//            p.startNewSubPath(x, data[i]);
+            p.startNewSubPath(x, scaledValue);
+        else
+//            p.lineTo(x, data[i]);
+            p.lineTo(x, scaledValue);
+        
+        ++x;
+    }
+    
+    for ( auto j = 0; j < bufferSize - readIdx; ++j )
+    {
+        auto scaledValue = juce::jmap<float>(data[j],
+                                             NegativeInfinity,
+                                             MaxDecibels,
+                                             height,
+                                             0);
+        
+        p.lineTo(x, scaledValue);
+//        p.lineTo(x, data[j]);
+        ++x;
+    }
+    
+    p.closeSubPath();
+//    g.fillRect(bounds);
+    g.fillPath(p);
+}
+
+void Histogram::resized()
+{
+    
+}
+
+void Histogram::update(const float& inputL)
+{
+    circularBuffer.write(inputL);
+    repaint();
+    
+    /*
+    if ( readIdx == 0 )
+    {
+        auto x = 0;
+        for ( auto& y : data )
+        {
+            if ( x == 0 )
+                p.startNewSubPath(x, y);
+            else
+                p.lineTo(x, y);
+            
+            ++x;
+        }
+    }
+    else
+    {
+     */
+        
+    //}
+}
+
+//==============================================================================
 void ValueHolderBase::timerCallback()
 {
     now = juce::Time::currentTimeMillis();
@@ -303,6 +387,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
     
+    addAndMakeVisible(histogram);
+    
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
@@ -342,6 +428,11 @@ void PFMProject10AudioProcessorEditor::resized()
                               stereoMeterWidth,
                               stereoMeterHeight);
     
+    histogram.setBounds(margin,
+                        stereoMeterRms.getBottom() + margin,
+                        width - (margin * 2),
+                        220);
+    
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
 #endif
@@ -369,5 +460,8 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto peakDbL = juce::Decibels::gainToDecibels(peakL, NegativeInfinity);
         auto peakDbR = juce::Decibels::gainToDecibels(peakR, NegativeInfinity);
         stereoMeterPeak.update(peakDbL, peakDbR);
+        
+        //DBG(rmsDbL);
+        histogram.update(rmsDbL);
     }
 }

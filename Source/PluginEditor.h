@@ -57,6 +57,18 @@ private:
 };
 
 //==============================================================================
+struct Histogram : juce::Component
+{
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+//    void update(const float& inputL, const float& inputR);
+    void update(const float& inputL);
+    
+private:
+    CircularBuffer<float> circularBuffer{780, 0.f};
+};
+
+//==============================================================================
 template<typename T>
 struct Averager
 {
@@ -274,6 +286,8 @@ private:
         
     StereoMeter stereoMeterRms{"RMS"};
     StereoMeter stereoMeterPeak{"PEAK"};
+    
+    Histogram histogram;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
