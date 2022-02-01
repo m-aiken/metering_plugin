@@ -65,7 +65,7 @@ struct Histogram : juce::Component
     void update(const float& inputL);
     
 private:
-    CircularBuffer<float> circularBuffer{780, 0.f};
+    CircularBuffer<float> circularBuffer{780, NegativeInfinity};
 };
 
 //==============================================================================

@@ -14,16 +14,17 @@ void Histogram::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
     auto height = bounds.getHeight();
-    g.fillAll(juce::Colours::red);
+
+    g.fillAll(juce::Colours::lightgrey);
     
-    g.setColour(juce::Colours::black);
+    g.setColour(juce::Colours::green);
     
     auto& data = circularBuffer.getData();
     auto readIdx = circularBuffer.getReadIndex();
     auto bufferSize = circularBuffer.getSize();
 
     juce::Path p;
-    
+    /*
     auto x = 0;
     
     for ( auto i = readIdx; i < bufferSize; ++i )
@@ -35,17 +36,16 @@ void Histogram::paint(juce::Graphics& g)
                                              0);
         
         if ( x == 0 )
-//            p.startNewSubPath(x, data[i]);
             p.startNewSubPath(x, scaledValue);
         else
-//            p.lineTo(x, data[i]);
             p.lineTo(x, scaledValue);
         
         ++x;
     }
-    
-    for ( auto j = 0; j < bufferSize - readIdx; ++j )
+
+    for ( auto j = 0; j < readIdx; ++j )
     {
+        
         auto scaledValue = juce::jmap<float>(data[j],
                                              NegativeInfinity,
                                              MaxDecibels,
@@ -53,13 +53,47 @@ void Histogram::paint(juce::Graphics& g)
                                              0);
         
         p.lineTo(x, scaledValue);
-//        p.lineTo(x, data[j]);
+
+        ++x;
+    }
+
+    //p.closeSubPath();
+    
+//    g.fillPath(p);
+    g.strokePath(p, juce::PathStrokeType(2.f));
+//    g.fillPath(p);
+    */
+    p.startNewSubPath(0, height);
+    
+    auto x = 1;
+    
+    for ( auto i = readIdx; i < bufferSize; ++i )
+    {
+        auto scaledValue = juce::jmap<float>(data[i], NegativeInfinity, MaxDecibels, height, 0);
+        
+        p.lineTo(x, scaledValue);
+        
+        ++x;
+    }
+
+    for ( auto j = 0; j < readIdx; ++j )
+    {
+        
+        auto scaledValue = juce::jmap<float>(data[j], NegativeInfinity, MaxDecibels, height, 0);
+        
+        if ( j != readIdx - 1 )
+            p.lineTo(x, scaledValue);
+
         ++x;
     }
     
+    p.lineTo(780, height);
+
     p.closeSubPath();
-//    g.fillRect(bounds);
+    
     g.fillPath(p);
+//    g.strokePath(p, juce::PathStrokeType(2.f));
+//    g.fillPath(p);
 }
 
 void Histogram::resized()
@@ -69,7 +103,9 @@ void Histogram::resized()
 
 void Histogram::update(const float& inputL)
 {
+    //DBG(inputL);
     circularBuffer.write(inputL);
+    
     repaint();
     
     /*
