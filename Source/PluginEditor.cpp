@@ -15,59 +15,22 @@ void Histogram::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto height = bounds.getHeight();
 
-    g.fillAll(juce::Colours::lightgrey);
+    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
     
-    g.setColour(juce::Colours::green);
+    g.setColour(juce::Colour(114u, 212u, 102u));
     
     auto& data = circularBuffer.getData();
     auto readIdx = circularBuffer.getReadIndex();
     auto bufferSize = circularBuffer.getSize();
 
     juce::Path p;
-    /*
-    auto x = 0;
     
-    for ( auto i = readIdx; i < bufferSize; ++i )
-    {
-        auto scaledValue = juce::jmap<float>(data[i],
-                                             NegativeInfinity,
-                                             MaxDecibels,
-                                             height,
-                                             0);
-        
-        if ( x == 0 )
-            p.startNewSubPath(x, scaledValue);
-        else
-            p.lineTo(x, scaledValue);
-        
-        ++x;
-    }
-
-    for ( auto j = 0; j < readIdx; ++j )
-    {
-        
-        auto scaledValue = juce::jmap<float>(data[j],
-                                             NegativeInfinity,
-                                             MaxDecibels,
-                                             height,
-                                             0);
-        
-        p.lineTo(x, scaledValue);
-
-        ++x;
-    }
-
-    //p.closeSubPath();
-    
-//    g.fillPath(p);
-    g.strokePath(p, juce::PathStrokeType(2.f));
-//    g.fillPath(p);
-    */
+    // manually setting first and last pixel's column (x) outside of the loops
     p.startNewSubPath(0, height);
     
     auto x = 1;
     
-    for ( auto i = readIdx; i < bufferSize; ++i )
+    for ( auto i = readIdx; i < bufferSize - 1; ++i )
     {
         auto scaledValue = juce::jmap<float>(data[i], NegativeInfinity, MaxDecibels, height, 0);
         
@@ -81,13 +44,12 @@ void Histogram::paint(juce::Graphics& g)
         
         auto scaledValue = juce::jmap<float>(data[j], NegativeInfinity, MaxDecibels, height, 0);
         
-        if ( j != readIdx - 1 )
-            p.lineTo(x, scaledValue);
+        p.lineTo(x, scaledValue);
 
         ++x;
     }
     
-    p.lineTo(780, height);
+    p.lineTo(bufferSize - 1, height);
 
     p.closeSubPath();
     
@@ -96,37 +58,12 @@ void Histogram::paint(juce::Graphics& g)
 //    g.fillPath(p);
 }
 
-void Histogram::resized()
+void Histogram::update(const float& inputL, const float& inputR)
 {
-    
-}
-
-void Histogram::update(const float& inputL)
-{
-    //DBG(inputL);
-    circularBuffer.write(inputL);
+    auto average = (inputL + inputR) / 2;
+    circularBuffer.write(average);
     
     repaint();
-    
-    /*
-    if ( readIdx == 0 )
-    {
-        auto x = 0;
-        for ( auto& y : data )
-        {
-            if ( x == 0 )
-                p.startNewSubPath(x, y);
-            else
-                p.lineTo(x, y);
-            
-            ++x;
-        }
-    }
-    else
-    {
-     */
-        
-    //}
 }
 
 //==============================================================================
@@ -192,7 +129,7 @@ void TextMeter::paint(juce::Graphics& g)
     if ( valueHolder.getIsOverThreshold() )
     {
         str = juce::String(valueHolder.getHeldValue(), 1);
-        g.fillAll(juce::Colour(230u, 33u, 51u)); // red background
+        g.fillAll(juce::Colour(196u, 55u, 55u)); // red background
     }
     else
     {
@@ -242,10 +179,10 @@ void Meter::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto h = bounds.getHeight();
     
-    g.setColour(juce::Colours::lightgrey); // background colour
+    g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background colour
     g.fillRect(bounds);
     
-    g.setColour(juce::Colours::limegreen); // meter colour
+    g.setColour(juce::Colour(114u, 212u, 102u)); // meter colour
     auto jmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     g.fillRect(bounds.withHeight(h * jmap).withY(jmap));
     
@@ -423,7 +360,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
     
-    addAndMakeVisible(histogram);
+    addAndMakeVisible(rmsHistogram);
+    addAndMakeVisible(peakHistogram);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -464,10 +402,15 @@ void PFMProject10AudioProcessorEditor::resized()
                               stereoMeterWidth,
                               stereoMeterHeight);
     
-    histogram.setBounds(margin,
-                        stereoMeterRms.getBottom() + margin,
-                        width - (margin * 2),
-                        220);
+    rmsHistogram.setBounds(margin,
+                           stereoMeterRms.getBottom() + margin,
+                           width - (margin * 2),
+                           105);
+    
+    peakHistogram.setBounds(margin,
+                            rmsHistogram.getBottom() + margin,
+                            width - (margin * 2),
+                            105);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
@@ -497,7 +440,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto peakDbR = juce::Decibels::gainToDecibels(peakR, NegativeInfinity);
         stereoMeterPeak.update(peakDbL, peakDbR);
         
-        //DBG(rmsDbL);
-        histogram.update(rmsDbL);
+        rmsHistogram.update(rmsDbL, rmsDbR);
+        peakHistogram.update(peakDbL, peakDbR);
     }
 }

@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-#define MaxDecibels 12.f
+#define MaxDecibels 6.f
 #define NegativeInfinity -48.f
 
 //==============================================================================
@@ -60,9 +60,7 @@ private:
 struct Histogram : juce::Component
 {
     void paint(juce::Graphics& g) override;
-    void resized() override;
-//    void update(const float& inputL, const float& inputR);
-    void update(const float& inputL);
+    void update(const float& inputL, const float& inputR);
     
 private:
     CircularBuffer<float> circularBuffer{780, NegativeInfinity};
@@ -287,7 +285,7 @@ private:
     StereoMeter stereoMeterRms{"RMS"};
     StereoMeter stereoMeterPeak{"PEAK"};
     
-    Histogram histogram;
+    Histogram rmsHistogram, peakHistogram;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
