@@ -15,9 +15,16 @@ void Histogram::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto height = bounds.getHeight();
 
-    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
+    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
     
-    g.setColour(juce::Colour(114u, 212u, 102u));
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setFont(16.0f);
+    g.drawFittedText(label,                              // text
+                     bounds,                             // area
+                     juce::Justification::centredBottom, // justification
+                     1);                                 // max num lines
+    
+    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
     
     auto& data = circularBuffer.getData();
     auto readIdx = circularBuffer.getReadIndex();
@@ -50,12 +57,10 @@ void Histogram::paint(juce::Graphics& g)
     }
     
     p.lineTo(bufferSize - 1, height);
-
     p.closeSubPath();
-    
     g.fillPath(p);
-//    g.strokePath(p, juce::PathStrokeType(2.f));
-//    g.fillPath(p);
+    
+    
 }
 
 void Histogram::update(const float& inputL, const float& inputR)
@@ -182,7 +187,7 @@ void Meter::paint(juce::Graphics& g)
     g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background colour
     g.fillRect(bounds);
     
-    g.setColour(juce::Colour(114u, 212u, 102u)); // meter colour
+    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
     auto jmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     g.fillRect(bounds.withHeight(h * jmap).withY(jmap));
     
