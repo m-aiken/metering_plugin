@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
-#define MaxDecibels 12.f
+#define MaxDecibels 6.f
 #define NegativeInfinity -48.f
 
 //==============================================================================
@@ -54,6 +54,19 @@ struct CircularBuffer
 private:
     DataType buffer;
     std::atomic<int> writeIndex = 0;
+};
+
+//==============================================================================
+struct Histogram : juce::Component
+{
+    Histogram(const juce::String& _label) : label(_label) { }
+    void paint(juce::Graphics& g) override;
+    void update(const float& inputL, const float& inputR);
+    
+private:
+    CircularBuffer<float> circularBuffer{780, NegativeInfinity};
+    
+    juce::String label;
 };
 
 //==============================================================================
@@ -274,6 +287,9 @@ private:
         
     StereoMeter stereoMeterRms{"RMS"};
     StereoMeter stereoMeterPeak{"PEAK"};
+    
+    Histogram rmsHistogram{"RMS"};
+    Histogram peakHistogram{"PEAK"};
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
