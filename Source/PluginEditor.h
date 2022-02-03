@@ -15,6 +15,16 @@
 #define NegativeInfinity -48.f
 
 //==============================================================================
+struct Goniometer : juce::Component
+{
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+    //void update(const float& inputL, const float& inputR);
+private:
+    juce::Image canvas;
+};
+
+//==============================================================================
 template<typename T>
 struct CircularBuffer
 {
@@ -290,6 +300,8 @@ private:
     
     Histogram rmsHistogram{"RMS"};
     Histogram peakHistogram{"PEAK"};
+    
+    Goniometer gonio;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;

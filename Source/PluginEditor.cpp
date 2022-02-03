@@ -10,6 +10,59 @@
 #include "PluginEditor.h"
 
 //==============================================================================
+void Goniometer::paint(juce::Graphics& g)
+{
+    g.drawImage(this->canvas, getLocalBounds().toFloat());
+}
+
+void Goniometer::resized()
+{
+    auto bounds = getLocalBounds();
+    auto height = bounds.getHeight();
+    auto width = bounds.getWidth();
+    auto offset = 4;
+    
+    canvas = juce::Image(juce::Image::RGB, width, height, true);
+    
+    juce::Graphics g (canvas);
+    
+    g.setColour(juce::Colour(201u, 209u, 217u).withAlpha(0.1f)); // trans grey
+    
+    g.drawEllipse(bounds.getX() + (offset / 2),
+                  bounds.getY() + (offset / 2),
+                  width - offset,
+                  height - offset,
+                  2.f);
+    
+    // drawLine args = startX, startY, endX, endY, lineThickness
+    // vertical
+    g.drawLine(width / 2,
+               height * 0.05,
+               width / 2,
+               height * 0.95,
+               2.f);
+    // horizontal
+    g.drawLine(width * 0.05,
+               height / 2,
+               width * 0.95,
+               height / 2,
+               2.f);
+    // diagonal 1
+    g.drawLine(width * 0.2,
+               height * 0.8,
+               width * 0.8,
+               height * 0.2,
+               2.f);
+    
+    // diagonal 1
+    g.drawLine(width * 0.2,
+               height * 0.2,
+               width * 0.8,
+               height * 0.8,
+               2.f);
+}
+
+//==============================================================================
 void Histogram::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
@@ -368,6 +421,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(rmsHistogram);
     addAndMakeVisible(peakHistogram);
     
+    addAndMakeVisible(gonio);
+    
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
@@ -396,6 +451,8 @@ void PFMProject10AudioProcessorEditor::resized()
     auto margin = 10;
     auto stereoMeterWidth = 100;
     auto stereoMeterHeight = 350;
+    
+    auto goniometerDims = 250;
     // setBounds args (int x, int y, int width, int height)
     stereoMeterRms.setBounds(margin,
                              margin,
@@ -416,6 +473,12 @@ void PFMProject10AudioProcessorEditor::resized()
                             rmsHistogram.getBottom() + margin,
                             width - (margin * 2),
                             105);
+    
+    // rmsHist Top = 370
+    gonio.setBounds((width / 2) - (goniometerDims / 2),
+                    (rmsHistogram.getY() - goniometerDims) / 2,
+                    goniometerDims,
+                    goniometerDims);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
