@@ -47,29 +47,47 @@ void Goniometer::paint(juce::Graphics& g)
 
 void Goniometer::resized()
 {
+    using namespace juce;
+    
     auto bounds = getLocalBounds();
-    auto h = bounds.getHeight();
-    auto w = bounds.getWidth();
+    auto height = bounds.getHeight();
+    auto width = bounds.getWidth();
     auto offset = 4;
     
-    canvas = juce::Image(juce::Image::RGB, w, h, true);
+    canvas = Image(Image::RGB, width, height, true);
     
-    juce::Graphics g (canvas);
+    Graphics g (canvas);
     
-    g.setColour(juce::Colour(201u, 209u, 217u).withAlpha(0.1f)); // trans grey
+    g.setColour(Colour(201u, 209u, 217u).withAlpha(0.1f)); // trans grey
     
     g.drawEllipse(bounds.getX() + (offset / 2),
                   bounds.getY() + (offset / 2),
-                  w - offset,
-                  h - offset,
+                  width - offset,
+                  height - offset,
                   2.f);
     
-    g.setColour(juce::Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
-    // drawLine args = startX, startY, endX, endY, lineThickness
-    g.drawLine(w * 0.5,  h * 0.05, w * 0.5,  h * 0.95, 2.f); // vertical
-    g.drawLine(w * 0.05, h * 0.5,  w * 0.95, h * 0.5,  2.f); // horizontal
-    g.drawLine(w * 0.25, h * 0.75, w * 0.75, h * 0.25, 2.f); // diagonal 1
-    g.drawLine(w * 0.25, h * 0.25, w * 0.75, h * 0.75, 2.f); // diagonal 2
+    auto centre = bounds.getCentre();
+    
+    // inner lines
+    g.setColour(Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
+    Path innerLinePath;
+    
+    Rectangle<float> line;
+    line.setLeft(centre.getX() - 1);
+    line.setRight(centre.getX() + 1);
+    line.setTop(bounds.getY() + 10.f);
+    line.setBottom(centre.getY());
+    
+    innerLinePath.addRectangle(line);
+
+    auto angle = 0.f;
+    for ( auto i = 0; i < 8; ++i)
+    {
+        angle = degreesToRadians( i * 45.f );
+        auto affineT = AffineTransform().rotated(angle, centre.getX(), centre.getY());
+        innerLinePath.applyTransform(affineT);
+        g.fillPath(innerLinePath);
+    }
 }
 
 void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
