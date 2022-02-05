@@ -52,12 +52,17 @@ void Goniometer::resized()
     auto bounds = getLocalBounds();
     auto height = bounds.getHeight();
     auto width = bounds.getWidth();
-    auto offset = 4;
+    auto offset = 50;
     
     canvas = Image(Image::RGB, width, height, true);
     
     Graphics g (canvas);
     
+    /*
+    // bounding box test
+    g.setColour(Colours::red);
+    g.drawRect(0, 0, width, height);
+    */
     g.setColour(Colour(201u, 209u, 217u).withAlpha(0.1f)); // trans grey
     
     g.drawEllipse(bounds.getX() + (offset / 2),
@@ -70,24 +75,70 @@ void Goniometer::resized()
     
     // inner lines
     g.setColour(Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
-    Path innerLinePath;
+    Path p;
     
-    Rectangle<float> line;
-    line.setLeft(centre.getX() - 1);
-    line.setRight(centre.getX() + 1);
-    line.setTop(bounds.getY() + 10.f);
-    line.setBottom(centre.getY());
-    
-    innerLinePath.addRectangle(line);
+    Rectangle<float> r;
+    r.setLeft(centre.getX() - 1);
+    r.setRight(centre.getX() + 1);
+    r.setTop(bounds.getY() + (offset / 2));
+    r.setBottom(centre.getY());
+    p.addRectangle(r);
 
+//    std::vector<String> labels { "M", "R", "-S", "", "", "", "+S", "L" };
     auto angle = 0.f;
     for ( auto i = 0; i < 8; ++i)
     {
         angle = degreesToRadians( i * 45.f );
         auto affineT = AffineTransform().rotated(angle, centre.getX(), centre.getY());
-        innerLinePath.applyTransform(affineT);
-        g.fillPath(innerLinePath);
+        p.applyTransform(affineT);
+        
+        g.fillPath(p);
     }
+    
+    // labels
+    auto textHeight = 10.f;
+    auto boxWidth = 10.f;
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    
+    g.drawFittedText("M",                                  // text
+                     bounds.getCentreX() - (boxWidth / 2), // x
+                     textHeight,                           // y
+                     boxWidth,                             // width
+                     textHeight,                           // height
+                     Justification::centredBottom,         // justification
+                     1);                                   // max num lines
+    
+    g.drawFittedText("-S",                                   // text
+                     width - 20,                             // x
+                     bounds.getCentreY() - (textHeight / 2), // y
+                     boxWidth,                               // width
+                     textHeight,                             // height
+                     Justification::centredBottom,           // justification
+                     1);                                     // max num lines
+    
+    g.drawFittedText("S",                                    // text
+                     10,                                     // x
+                     bounds.getCentreY() - (textHeight / 2), // y
+                     boxWidth,                               // width
+                     textHeight,                             // height
+                     Justification::centredBottom,           // justification
+                     1);                                     // max num lines
+    
+    g.drawFittedText("L",                          // text
+                     width * 0.17,                 // x
+                     height * 0.17,                // y
+                     boxWidth,                     // width
+                     textHeight,                   // height
+                     Justification::centredBottom, // justification
+                     1);                           // max num lines
+    
+    g.drawFittedText("R",                          // text
+                     width * 0.79,                 // x
+                     height * 0.17,                // y
+                     boxWidth,                     // width
+                     textHeight,                   // height
+                     Justification::centredBottom, // justification
+                     1);                           // max num lines
 }
 
 void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
@@ -490,7 +541,7 @@ void PFMProject10AudioProcessorEditor::resized()
     auto stereoMeterWidth = 100;
     auto stereoMeterHeight = 350;
     
-    auto goniometerDims = 250;
+    auto goniometerDims = 270;
     // setBounds args (int x, int y, int width, int height)
     stereoMeterRms.setBounds(margin,
                              margin,
