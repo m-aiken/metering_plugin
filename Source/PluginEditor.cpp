@@ -12,17 +12,47 @@
 //==============================================================================
 void Goniometer::paint(juce::Graphics& g)
 {
-    g.drawImage(this->canvas, getLocalBounds().toFloat());
+    using namespace juce;
+    
+    auto bounds = getLocalBounds();
+    auto maxWidthHeight = bounds.getWidth() * 0.7f;
+    auto centreXY = bounds.getCentreX();
+    
+    g.drawImage(this->canvas, bounds.toFloat());
+    
+    g.setColour(Colour(96u, 188u, 224u));
+    
+    Path p;
+    
+    auto numSamples = buffer.getNumSamples();
+    
+    for (auto i = 0; i < numSamples; ++i)
+    {
+        auto mid = ( buffer.getSample(0, i) + buffer.getSample(1, i) ) *    Decibels::decibelsToGain(-3.f);
+        auto side = ( buffer.getSample(0, i) - buffer.getSample(1, i) ) *   Decibels::decibelsToGain(-3.f);
+            
+        auto midNorm = jmap<float>(mid, 0.f, 1.f, centreXY, maxWidthHeight);
+        auto sideNorm = jmap<float>(side, 0.f, 1.f, centreXY, maxWidthHeight);
+        
+        if ( i == 0 )
+            p.startNewSubPath(centreXY, centreXY);
+        else if ( i == numSamples - 1)
+            p.closeSubPath();
+        else
+            p.lineTo(sideNorm, midNorm);
+    }
+    
+    g.fillPath(p);
 }
 
 void Goniometer::resized()
 {
     auto bounds = getLocalBounds();
-    auto height = bounds.getHeight();
-    auto width = bounds.getWidth();
+    auto h = bounds.getHeight();
+    auto w = bounds.getWidth();
     auto offset = 4;
     
-    canvas = juce::Image(juce::Image::RGB, width, height, true);
+    canvas = juce::Image(juce::Image::RGB, w, h, true);
     
     juce::Graphics g (canvas);
     
@@ -30,36 +60,26 @@ void Goniometer::resized()
     
     g.drawEllipse(bounds.getX() + (offset / 2),
                   bounds.getY() + (offset / 2),
-                  width - offset,
-                  height - offset,
+                  w - offset,
+                  h - offset,
                   2.f);
     
+    g.setColour(juce::Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
     // drawLine args = startX, startY, endX, endY, lineThickness
-    // vertical
-    g.drawLine(width / 2,
-               height * 0.05,
-               width / 2,
-               height * 0.95,
-               2.f);
-    // horizontal
-    g.drawLine(width * 0.05,
-               height / 2,
-               width * 0.95,
-               height / 2,
-               2.f);
-    // diagonal 1
-    g.drawLine(width * 0.2,
-               height * 0.8,
-               width * 0.8,
-               height * 0.2,
-               2.f);
+    g.drawLine(w * 0.5,  h * 0.05, w * 0.5,  h * 0.95, 2.f); // vertical
+    g.drawLine(w * 0.05, h * 0.5,  w * 0.95, h * 0.5,  2.f); // horizontal
+    g.drawLine(w * 0.25, h * 0.75, w * 0.75, h * 0.25, 2.f); // diagonal 1
+    g.drawLine(w * 0.25, h * 0.25, w * 0.75, h * 0.75, 2.f); // diagonal 2
+}
+
+void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
+{
+    if ( incomingBuffer.getNumSamples() >= 265 )
+        buffer = incomingBuffer;
+    else
+        buffer.applyGain(juce::Decibels::decibelsToGain(-3.f));
     
-    // diagonal 1
-    g.drawLine(width * 0.2,
-               height * 0.2,
-               width * 0.8,
-               height * 0.8,
-               2.f);
+    repaint();
 }
 
 //==============================================================================
@@ -510,5 +530,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         
         rmsHistogram.update(rmsDbL, rmsDbR);
         peakHistogram.update(peakDbL, peakDbR);
+        
+        gonio.update(incomingBuffer);
     }
 }

@@ -19,9 +19,10 @@ struct Goniometer : juce::Component
 {
     void paint(juce::Graphics& g) override;
     void resized() override;
-    //void update(const float& inputL, const float& inputR);
+    void update(juce::AudioBuffer<float>& incomingBuffer);
 private:
     juce::Image canvas;
+    juce::AudioBuffer<float> buffer;
 };
 
 //==============================================================================
