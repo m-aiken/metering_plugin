@@ -58,11 +58,11 @@ void Goniometer::resized()
     
     Graphics g (canvas);
     
-    /*
+    
     // bounding box test
     g.setColour(Colours::red);
     g.drawRect(0, 0, width, height);
-    */
+    
     g.setColour(Colour(201u, 209u, 217u).withAlpha(0.1f)); // trans grey
     
     g.drawEllipse(bounds.getX() + (offset / 2),
@@ -74,7 +74,7 @@ void Goniometer::resized()
     auto centre = bounds.getCentre();
     
     // inner lines
-    g.setColour(Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
+//    g.setColour(Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
     Path p;
     
     Rectangle<float> r;
@@ -83,62 +83,37 @@ void Goniometer::resized()
     r.setTop(bounds.getY() + (offset / 2));
     r.setBottom(centre.getY());
     p.addRectangle(r);
+    
+    Path labelPath;
+    Rectangle<float> labelRect;
+    labelRect.setSize(20.f, 20.f);
+    
+    labelRect.setLeft(centre.getX() - 20);
+    labelRect.setRight(centre.getX() + 20);
+    labelRect.setTop(bounds.getY());
+    labelRect.setBottom(bounds.getY() + 50);
+    
+    labelPath.addRectangle(labelRect);
+    
 
-//    std::vector<String> labels { "M", "R", "-S", "", "", "", "+S", "L" };
+    std::vector<String> labels { "M", "R", "-S", "", "", "", "+S", "L" };
     auto angle = 0.f;
     for ( auto i = 0; i < 8; ++i)
     {
+        g.setColour(Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
         angle = degreesToRadians( i * 45.f );
         auto affineT = AffineTransform().rotated(angle, centre.getX(), centre.getY());
         p.applyTransform(affineT);
-        
         g.fillPath(p);
+        
+        //labels
+        labelPath.applyTransform(affineT);
+//        g.setColour(Colour(13u, 17u, 23u));
+        g.setColour(Colours::red);
+        g.fillPath(labelPath);
+        g.setColour(Colours::white);
+        g.drawText(labels[i], labelRect.transformedBy(affineT), Justification::centred);
     }
-    
-    // labels
-    auto textHeight = 10.f;
-    auto boxWidth = 10.f;
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
-    
-    g.drawFittedText("M",                                  // text
-                     bounds.getCentreX() - (boxWidth / 2), // x
-                     textHeight,                           // y
-                     boxWidth,                             // width
-                     textHeight,                           // height
-                     Justification::centredBottom,         // justification
-                     1);                                   // max num lines
-    
-    g.drawFittedText("-S",                                   // text
-                     width - 20,                             // x
-                     bounds.getCentreY() - (textHeight / 2), // y
-                     boxWidth,                               // width
-                     textHeight,                             // height
-                     Justification::centredBottom,           // justification
-                     1);                                     // max num lines
-    
-    g.drawFittedText("S",                                    // text
-                     10,                                     // x
-                     bounds.getCentreY() - (textHeight / 2), // y
-                     boxWidth,                               // width
-                     textHeight,                             // height
-                     Justification::centredBottom,           // justification
-                     1);                                     // max num lines
-    
-    g.drawFittedText("L",                          // text
-                     width * 0.17,                 // x
-                     height * 0.17,                // y
-                     boxWidth,                     // width
-                     textHeight,                   // height
-                     Justification::centredBottom, // justification
-                     1);                           // max num lines
-    
-    g.drawFittedText("R",                          // text
-                     width * 0.79,                 // x
-                     height * 0.17,                // y
-                     boxWidth,                     // width
-                     textHeight,                   // height
-                     Justification::centredBottom, // justification
-                     1);                           // max num lines
 }
 
 void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
