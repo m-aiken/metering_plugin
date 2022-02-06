@@ -50,70 +50,75 @@ void Goniometer::resized()
     using namespace juce;
     
     auto bounds = getLocalBounds();
+    auto centre = bounds.getCentre();
     auto height = bounds.getHeight();
     auto width = bounds.getWidth();
-    auto offset = 50;
+    auto padding = width / 10;
+    auto diameter = width - (padding * 2);
+    
+    auto backgroundColour = Colour(13u, 17u, 23u);
+    auto textColour = Colour(201u, 209u, 217u);
+    auto ellipseColour = Colour(201u, 209u, 217u).withAlpha(0.1f);
+    auto lineColour = Colour(201u, 209u, 217u).withAlpha(0.025f);
     
     canvas = Image(Image::RGB, width, height, true);
     
     Graphics g (canvas);
     
-    
-    // bounding box test
-    g.setColour(Colours::red);
-    g.drawRect(0, 0, width, height);
-    
-    g.setColour(Colour(201u, 209u, 217u).withAlpha(0.1f)); // trans grey
-    
-    g.drawEllipse(bounds.getX() + (offset / 2),
-                  bounds.getY() + (offset / 2),
-                  width - offset,
-                  height - offset,
-                  2.f);
-    
-    auto centre = bounds.getCentre();
-    
     // inner lines
-//    g.setColour(Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
-    Path p;
-    
-    Rectangle<float> r;
-    r.setLeft(centre.getX() - 1);
-    r.setRight(centre.getX() + 1);
-    r.setTop(bounds.getY() + (offset / 2));
-    r.setBottom(centre.getY());
-    p.addRectangle(r);
+    Path linePath;
+    Rectangle<float> lineRect;
+    lineRect.setLeft(centre.getX() - 1);
+    lineRect.setRight(centre.getX() + 1);
+    lineRect.setTop(padding);
+    lineRect.setBottom(centre.getY());
+    linePath.addRectangle(lineRect);
     
     Path labelPath;
     Rectangle<float> labelRect;
-    labelRect.setSize(20.f, 20.f);
-    
-    labelRect.setLeft(centre.getX() - 20);
-    labelRect.setRight(centre.getX() + 20);
-    labelRect.setTop(bounds.getY());
-    labelRect.setBottom(bounds.getY() + 50);
-    
+    labelRect.setLeft(centre.getX() - (padding / 2));
+    labelRect.setRight(centre.getX() + (padding / 2));
+    labelRect.setTop(0);
+    labelRect.setBottom(padding);
     labelPath.addRectangle(labelRect);
     
-
-    std::vector<String> labels { "M", "R", "-S", "", "", "", "+S", "L" };
-    auto angle = 0.f;
+    float angle;
+    
     for ( auto i = 0; i < 8; ++i)
     {
-        g.setColour(Colour(201u, 209u, 217u).withAlpha(0.025f)); // trans grey 2
         angle = degreesToRadians( i * 45.f );
         auto affineT = AffineTransform().rotated(angle, centre.getX(), centre.getY());
-        p.applyTransform(affineT);
-        g.fillPath(p);
         
-        //labels
+        // lines
+        linePath.applyTransform(affineT);
+        g.setColour(lineColour);
+        g.fillPath(linePath);
+        
+        // label boxes
         labelPath.applyTransform(affineT);
-//        g.setColour(Colour(13u, 17u, 23u));
-        g.setColour(Colours::red);
+        g.setColour(backgroundColour);
         g.fillPath(labelPath);
-        g.setColour(Colours::white);
+    }
+    
+    // draw labels separately - if drawn in the same loop as lines and text boxes 90 degrees doesn't draw??
+    std::vector<String> labels { "M", "R", "-S", "", "", "", "+S", "L" };
+    g.setColour(textColour);
+    for ( auto i = 0; i < 8; ++i)
+    {
+        angle = degreesToRadians( i * 45.f );
+        auto affineT = AffineTransform().rotated(angle, centre.getX(), centre.getY());
+        
         g.drawText(labels[i], labelRect.transformedBy(affineT), Justification::centred);
     }
+    
+    // draw ellipse last so that it overlaps label rectanges
+    g.setColour(ellipseColour);
+    
+    g.drawEllipse(padding,  // x
+                  padding,  // y
+                  diameter, // width
+                  diameter, // height
+                  2.f);     // line thickness
 }
 
 void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
@@ -516,7 +521,7 @@ void PFMProject10AudioProcessorEditor::resized()
     auto stereoMeterWidth = 100;
     auto stereoMeterHeight = 350;
     
-    auto goniometerDims = 270;
+    auto goniometerDims = 300;
     // setBounds args (int x, int y, int width, int height)
     stereoMeterRms.setBounds(margin,
                              margin,
