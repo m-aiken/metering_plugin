@@ -15,8 +15,10 @@ void Goniometer::paint(juce::Graphics& g)
     using namespace juce;
     
     auto bounds = getLocalBounds();
-    auto maxWidthHeight = bounds.getWidth() * 0.7f;
     auto centreXY = bounds.getCentreX();
+    auto width = bounds.getWidth();
+    auto padding = width / 10;
+    auto diameter = width - (padding * 2);
     
     g.drawImage(this->canvas, bounds.toFloat());
     
@@ -28,18 +30,30 @@ void Goniometer::paint(juce::Graphics& g)
     
     for (auto i = 0; i < numSamples; ++i)
     {
-        auto mid = ( buffer.getSample(0, i) + buffer.getSample(1, i) ) *    Decibels::decibelsToGain(-3.f);
-        auto side = ( buffer.getSample(0, i) - buffer.getSample(1, i) ) *   Decibels::decibelsToGain(-3.f);
-            
-        auto midNorm = jmap<float>(mid, 0.f, 1.f, centreXY, maxWidthHeight);
-        auto sideNorm = jmap<float>(side, 0.f, 1.f, centreXY, maxWidthHeight);
+        auto left = buffer.getSample(0, i);
+        auto right = buffer.getSample(1, i);
         
+        auto side = ( left - right ) * Decibels::decibelsToGain(-3.f);
+        auto mid = ( left + right ) * Decibels::decibelsToGain(-3.f);
+        
+        auto sideScaled = jmap<float>(side,              // source
+                                      0.f,               // source min
+                                      1.f,               // source max
+                                      centreXY,          // target min
+                                      diameter * 0.85f); // target max
+        
+        auto midScaled = jmap<float>(mid,               // source
+                                     0.f,               // source min
+                                     1.f,               // source max
+                                     centreXY,          // target min
+                                     diameter * 0.85f); // target max
+                
         if ( i == 0 )
             p.startNewSubPath(centreXY, centreXY);
         else if ( i == numSamples - 1)
             p.closeSubPath();
         else
-            p.lineTo(sideNorm, midNorm);
+            p.lineTo(sideScaled, midScaled);
     }
     
     g.fillPath(p);

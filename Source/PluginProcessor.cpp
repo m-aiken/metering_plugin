@@ -160,6 +160,9 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
+//    for ( int sampleIdx = 0; sampleIdx < buffer.getNumSamples(); ++sampleIdx )
+//        buffer.setSample(1, sampleIdx, 0.f);
+    
 #if defined(GAIN_TEST_ACTIVE)
     for ( int sampleIdx = 0; sampleIdx < buffer.getNumSamples(); ++sampleIdx )
     {
