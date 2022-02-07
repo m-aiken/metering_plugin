@@ -19,6 +19,7 @@ void Goniometer::paint(juce::Graphics& g)
     auto width = bounds.getWidth();
     auto padding = width / 10;
     auto diameter = width - (padding * 2);
+    auto radius = diameter / 2;
     
     g.drawImage(this->canvas, bounds.toFloat());
     
@@ -27,6 +28,13 @@ void Goniometer::paint(juce::Graphics& g)
     Path p;
     
     auto numSamples = buffer.getNumSamples();
+    
+    // mid/side value ranges
+    auto sideMin = ( 0.f - 1.f ) * Decibels::decibelsToGain(-3.f);
+    auto sideMax = ( 1.f - 0.f ) * Decibels::decibelsToGain(-3.f);
+    
+    auto midMin = ( 0.f + 1.f ) * Decibels::decibelsToGain(-3.f);
+    auto midMax = ( 1.f + 1.f ) * Decibels::decibelsToGain(-3.f);
     
     for (auto i = 0; i < numSamples; ++i)
     {
@@ -37,19 +45,19 @@ void Goniometer::paint(juce::Graphics& g)
         auto mid = ( left + right ) * Decibels::decibelsToGain(-3.f);
         
         auto sideScaled = jmap<float>(side,              // source
-                                      0.f,               // source min
-                                      1.f,               // source max
+                                      sideMin,           // source min
+                                      sideMax,           // source max
                                       centreXY,          // target min
-                                      diameter * 0.85f); // target max
+                                      radius);           // target max
         
         auto midScaled = jmap<float>(mid,               // source
-                                     0.f,               // source min
-                                     1.f,               // source max
+                                     midMin,            // source min
+                                     midMax,            // source max
                                      centreXY,          // target min
-                                     diameter * 0.85f); // target max
+                                     radius);           // target max
                 
         if ( i == 0 )
-            p.startNewSubPath(centreXY, centreXY);
+            p.startNewSubPath(sideScaled, midScaled);
         else if ( i == numSamples - 1)
             p.closeSubPath();
         else
