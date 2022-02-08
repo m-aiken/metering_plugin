@@ -15,7 +15,7 @@ void Goniometer::paint(juce::Graphics& g)
     using namespace juce;
     
     auto bounds = getLocalBounds();
-    auto centreXY = bounds.getCentreX();
+    auto centre = bounds.getCentre();
     auto width = bounds.getWidth();
     auto padding = width / 10;
     auto diameter = width - (padding * 2);
@@ -28,40 +28,25 @@ void Goniometer::paint(juce::Graphics& g)
     Path p;
     
     auto numSamples = buffer.getNumSamples();
-    
-    // mid/side value ranges
-    auto sideMin = ( 0.f - 1.f ) * Decibels::decibelsToGain(-3.f);
-    auto sideMax = ( 1.f - 0.f ) * Decibels::decibelsToGain(-3.f);
-    
-    auto midMin = ( 0.f + 1.f ) * Decibels::decibelsToGain(-3.f);
-    auto midMax = ( 1.f + 1.f ) * Decibels::decibelsToGain(-3.f);
-    
+    //DBG(numSamples);
     for (auto i = 0; i < numSamples; ++i)
     {
         auto left = buffer.getSample(0, i);
         auto right = buffer.getSample(1, i);
+
+        auto side = jlimit<float>(-1.f, 1.f, (left - right) * Decibels::decibelsToGain(-3.f));
         
-        auto side = ( left - right ) * Decibels::decibelsToGain(-3.f);
-        auto mid = ( left + right ) * Decibels::decibelsToGain(-3.f);
+        auto mid = jlimit<float>(-1.f, 1.f, (left + right) * Decibels::decibelsToGain(-3.f));
         
-        auto sideScaled = jmap<float>(side,              // source
-                                      sideMin,           // source min
-                                      sideMax,           // source max
-                                      centreXY,          // target min
-                                      radius);           // target max
+        Point<float> point(centre.getX() + radius * 0.5f * side,
+                           centre.getY() + radius * 0.5f * mid);
         
-        auto midScaled = jmap<float>(mid,               // source
-                                     midMin,            // source min
-                                     midMax,            // source max
-                                     centreXY,          // target min
-                                     radius);           // target max
-                
         if ( i == 0 )
-            p.startNewSubPath(sideScaled, midScaled);
+            p.startNewSubPath(point);
         else if ( i == numSamples - 1)
             p.closeSubPath();
         else
-            p.lineTo(sideScaled, midScaled);
+            p.lineTo(point);
     }
     
     g.fillPath(p);
@@ -572,7 +557,7 @@ void PFMProject10AudioProcessorEditor::resized()
                     goniometerDims);
     
 #if defined(GAIN_TEST_ACTIVE)
-    gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
+    gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
 #endif
 }
 
