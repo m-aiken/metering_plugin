@@ -28,7 +28,7 @@ void Goniometer::paint(juce::Graphics& g)
     Path p;
     
     auto numSamples = buffer.getNumSamples();
-    //DBG(numSamples);
+
     for (auto i = 0; i < numSamples; ++i)
     {
         auto left = buffer.getSample(0, i);
@@ -49,7 +49,7 @@ void Goniometer::paint(juce::Graphics& g)
             p.lineTo(point);
     }
     
-    g.fillPath(p);
+    g.strokePath(p, PathStrokeType(1.f));
 }
 
 void Goniometer::resized()

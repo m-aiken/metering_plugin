@@ -170,10 +170,12 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             buffer.setSample(channel, sampleIdx, newVal);
         }
         
-        //buffer.setSample(0, sampleIdx, newVal);
-        //buffer.setSample(1, sampleIdx, newVal * -1.f);
+        // out of phase test for goniometer
+//        buffer.setSample(1, sampleIdx, newVal * -1.f);
     }
-
+    // clear left/right test for goniometer
+//    buffer.clear(0, 0, buffer.getNumSamples());
+    
     gain.setGainDecibels(gainParam->get());
     auto block = juce::dsp::AudioBlock<float>(buffer);
     auto context = juce::dsp::ProcessContextReplacing<float>(block);
