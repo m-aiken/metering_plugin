@@ -43,8 +43,6 @@ void Goniometer::paint(juce::Graphics& g)
         
         if ( i == 0 )
             p.startNewSubPath(point);
-        else if ( i == numSamples - 1)
-            p.closeSubPath();
         else
             p.lineTo(point);
     }
