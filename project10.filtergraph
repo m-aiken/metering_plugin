@@ -5,7 +5,7 @@
     <PLUGIN name="Audio Input" descriptiveName="" format="Internal" category="I/O devices"
             manufacturer="JUCE" version="1.0" file="" uniqueId="246006c0"
             isInstrument="0" fileTime="0" infoUpdateTime="0" numInputs="0"
-            numOutputs="2" isShell="0" uid="246006c0"/>
+            numOutputs="4" isShell="0" uid="246006c0"/>
     <STATE>0.</STATE>
     <LAYOUT>
       <INPUTS>
@@ -39,7 +39,7 @@
     <STATE>0.</STATE>
     <LAYOUT>
       <INPUTS>
-        <BUS index="0" layout="L R"/>
+        <BUS index="0" layout="L R Ls Rs"/>
       </INPUTS>
       <OUTPUTS>
         <BUS index="0" layout="disabled"/>
@@ -61,11 +61,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="19" x="0.465" y="0.5480769230769231" uiLastX_Normal="2069"
-          uiLastY_Normal="41" uiopen_Normal="1">
+  <FILTER uid="19" x="0.465" y="0.5480769230769231" uiLastX_Normal="2249"
+          uiLastY_Normal="-102" uiopen_Normal="0">
     <PLUGIN name="PFMProject10" format="VST3" category="Fx" manufacturer="Matt Aiken"
             version="1.0.0" file="/Users/mattaiken/Library/Audio/Plug-Ins/VST3/PFMProject10.vst3"
-            uniqueId="f799a92e" isInstrument="0" fileTime="17e2c6849c0" infoUpdateTime="17e3a2993f6"
+            uniqueId="f799a92e" isInstrument="0" fileTime="17e2c6849c0" infoUpdateTime="17edbdd8678"
             numInputs="2" numOutputs="2" isShell="0" uid="acf746ae"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
     <LAYOUT>
@@ -77,13 +77,13 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="20" x="0.45125" y="0.2384615384615385" uiLastX_Normal="1715"
-          uiLastY_Normal="0" uiopen_Normal="1">
+  <FILTER uid="20" x="0.45" y="0.2365384615384615" uiLastX_Normal="1521"
+          uiLastY_Normal="25" uiopen_Normal="1">
     <PLUGIN name="AUAudioFilePlayer" format="AudioUnit" category="Generator"
             manufacturer="Apple" version="1.6.0" file="AudioUnit:Generators/augn,afpl,appl"
-            uniqueId="6163676e" isInstrument="0" fileTime="0" infoUpdateTime="17e3a2993f6"
+            uniqueId="6163676e" isInstrument="0" fileTime="0" infoUpdateTime="17edbdd8679"
             numInputs="0" numOutputs="2" isShell="0" uid="6163676e"/>
-    <STATE>572.hAGaoMGcv.C1AHv.DTfAGfPBJr.Gc3wGgvUag4VclE1XzUmbkIGUjEFcg8EDarVPUAkbkMWYzAUYxMWZyQWYtQ2TzEFcksTY4c0b0IFc4AWYWYWYxMWZu4FUzkGbk8EDOXVZrUVKxUlYkIWYtMVYyQkag0VYRDFbvwFPgxvzM3vCPDQFXYTZrUlSg0VYWIUYmk1atMmWIM2TkwVYiQWYjYTZrU1WP3zKUMWYxM2KsEFczEVZqUlauPza24FauEFYy8hR0wVZg4FHLE1Yk8RPxMFaocFZz8hR0wVZg4FHLE1YkARKf.yLt.hSuMFc0Imak4RavMSnRP8DTTgEWfQFZ3kTkcVZu4FQuU1bL81avokTkcVZu4FQgQWXeAADIM2TkwVYiQWYjIUYmk1atokTkcVZu4lSg0VYH7DDvA...........PLEJQ6e...v.8o...F...kXw...fA..fC.1...X....DSgRz9G....wTnDs+A..A................................................................Heg......PBZ4TY2AhTkcVZu4VBRDlYvwFD.HQX0claQCBDVYTZrUFHwfUUtQWZzwVYjA.B.jA.l.vJ.jD.QAPV.3E.vAPc.nG.6APe.PH.MBPk.PJ.0Cv8A.P.ODfFAzR.3DPNAvZ.sF.tAja.9F.vATb.HGvy........BD..........h...................AfM</STATE>
+    <STATE>921.hAGaoMGcv.C1AHv.DTfAGfPBJr.IkXxIpvUag4VclE1XzUmbkIGUjEFcg8EDarVPUAkbkMWYzAUYxMWZyQWYtQ2TzEFcksTY4c0b0IFc4AWYWYWYxMWZu4FUzkGbk8EDOXVZrUVKxUlYkIWYtMVYyQkag0VYRDFbvwFPhxfFR2fCO.AVFkFak4TXsU1URU1Yo8lay8EDN8RUyUlby8RagQGcgk1Zk41KD81ctw1agQ1bunTcrkVXtABSgcVYuDjbiwVZmgFcunTcrkVXtABSgcVYfzBHvLiKf3zaiQWcx4VYtzFbyDZDTKwDTTgEWfQFdIUYmk1atQzakMGSu8FbZIUYmk1atQTXzE1WP.QRyMUYrU1XzUFYRU1Yo8laZIUYmk1at4TXsUFBOAAb............DSgRz9G...LPeJ..fA..PIVL...X...3.fM...F....wTnDs+A...PLEJQ6e..P.................................................................xWH......jfVNU1cfHUYmk1atMcCNrAGcfgWIM2TkwVYiQWYjYTZrU1aPbE.u.PU.LG.kAfb.LG.u.Pa.DF.zA.c.DF.oAvZ.TF.tAvK.zD.0Avb.jF.iAvK.fD.DA.c.HG.gAvX.rF.yAvK.nD.0A.a.jF.gAfa..B.LAPX.bF.kAvK.LE.wAPc.jF.tA.c..B.aAPN.XC.qA.R.nG.f.vs..B.x..M.HF.oA.c.zE.u..L.PC.f.PK..B.SAPX.jF.tA.c..B.RAva.LG.kAfK.XF.rAPX.LVndPsDSPQEV.BFhfvSP.G...........fXBbEy+A....6TA..X...3ME+...F...TaTL..fA...Hl.Ww7e....hIvUL+G..D..................................................................TF......InkSkcGHRU1Yo8laIHQXlAGaP.fDgU2YtIMJo7.GVYTZrUFHwXkQowVYfHCVU4FcoQGakQF.H.PF.XB.q.PR.DE.YAfW..G.0Afd.rG.9Avf.vH.TBP4.bN.vCv+AnP.cD.JAjR.bFPmAfZ.uFfuB7l.wIfdBrm.tKv6Bnu.6O..CHv.GL.CCLw.Z........HP..........rB..................LvH</STATE>
     <LAYOUT>
       <INPUTS/>
       <OUTPUTS>
@@ -92,7 +92,9 @@
     </LAYOUT>
   </FILTER>
   <CONNECTION srcFilter="19" srcChannel="0" dstFilter="16" dstChannel="0"/>
+  <CONNECTION srcFilter="19" srcChannel="0" dstFilter="16" dstChannel="2"/>
   <CONNECTION srcFilter="19" srcChannel="1" dstFilter="16" dstChannel="1"/>
+  <CONNECTION srcFilter="19" srcChannel="1" dstFilter="16" dstChannel="3"/>
   <CONNECTION srcFilter="20" srcChannel="0" dstFilter="19" dstChannel="0"/>
   <CONNECTION srcFilter="20" srcChannel="1" dstFilter="19" dstChannel="1"/>
 </FILTERGRAPH>

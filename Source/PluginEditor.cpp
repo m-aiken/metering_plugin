@@ -10,6 +10,135 @@
 #include "PluginEditor.h"
 
 //==============================================================================
+void Goniometer::paint(juce::Graphics& g)
+{
+    using namespace juce;
+    
+    auto bounds = getLocalBounds();
+    auto centre = bounds.getCentre();
+    auto width = bounds.getWidth();
+    auto padding = width / 10;
+    auto diameter = width - (padding * 2);
+    auto radius = diameter / 2;
+    
+    g.drawImage(this->canvas, bounds.toFloat());
+    
+    g.setColour(Colour(96u, 188u, 224u));
+    
+    Path p;
+    
+    auto numSamples = buffer.getNumSamples();
+
+    for (auto i = 0; i < numSamples; ++i)
+    {
+        auto left = buffer.getSample(0, i);
+        auto right = buffer.getSample(1, i);
+
+        auto side = jlimit<float>(-1.f, 1.f, (left - right) * Decibels::decibelsToGain(-3.f));
+        
+        auto mid = jlimit<float>(-1.f, 1.f, (left + right) * Decibels::decibelsToGain(-3.f));
+        
+        Point<float> point(centre.getX() + radius * 0.5f * side,
+                           centre.getY() + radius * 0.5f * mid);
+        
+        if ( i == 0 )
+            p.startNewSubPath(point);
+        else if ( i == numSamples - 1)
+            p.closeSubPath();
+        else
+            p.lineTo(point);
+    }
+    
+    g.strokePath(p, PathStrokeType(1.f));
+}
+
+void Goniometer::resized()
+{
+    using namespace juce;
+    
+    auto bounds = getLocalBounds();
+    auto centre = bounds.getCentre();
+    auto height = bounds.getHeight();
+    auto width = bounds.getWidth();
+    auto padding = width / 10;
+    auto diameter = width - (padding * 2);
+    
+    auto backgroundColour = Colour(13u, 17u, 23u);
+    auto textColour = Colour(201u, 209u, 217u);
+    auto ellipseColour = Colour(201u, 209u, 217u).withAlpha(0.1f);
+    auto lineColour = Colour(201u, 209u, 217u).withAlpha(0.025f);
+    
+    canvas = Image(Image::RGB, width, height, true);
+    
+    Graphics g (canvas);
+    
+    // inner lines
+    Path linePath;
+    Rectangle<float> lineRect;
+    lineRect.setLeft(centre.getX() - 1);
+    lineRect.setRight(centre.getX() + 1);
+    lineRect.setTop(padding);
+    lineRect.setBottom(centre.getY());
+    linePath.addRectangle(lineRect);
+    
+    Path labelPath;
+    Rectangle<float> labelRect;
+    labelRect.setLeft(centre.getX() - (padding / 2));
+    labelRect.setRight(centre.getX() + (padding / 2));
+    labelRect.setTop(0);
+    labelRect.setBottom(padding);
+    labelPath.addRectangle(labelRect);
+    
+    float angle;
+    
+    for ( auto i = 0; i < 8; ++i)
+    {
+        angle = degreesToRadians( i * 45.f );
+        auto affineT = AffineTransform().rotated(angle, centre.getX(), centre.getY());
+        
+        // lines
+        linePath.applyTransform(affineT);
+        g.setColour(lineColour);
+        g.fillPath(linePath);
+        
+        // label boxes
+        labelPath.applyTransform(affineT);
+        g.setColour(backgroundColour);
+        g.fillPath(labelPath);
+    }
+    
+    // draw labels separately - if drawn in the same loop as lines and text boxes 90 degrees doesn't draw??
+    std::vector<String> labels { "M", "R", "-S", "", "", "", "+S", "L" };
+    g.setColour(textColour);
+    for ( auto i = 0; i < 8; ++i)
+    {
+        angle = degreesToRadians( i * 45.f );
+        auto affineT = AffineTransform().rotated(angle, centre.getX(), centre.getY());
+        
+        g.drawText(labels[i], labelRect.transformedBy(affineT), Justification::centred);
+    }
+    
+    // draw ellipse last so that it overlaps label rectanges
+    g.setColour(ellipseColour);
+    
+    g.drawEllipse(padding,  // x
+                  padding,  // y
+                  diameter, // width
+                  diameter, // height
+                  2.f);     // line thickness
+}
+
+void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
+{
+    if ( incomingBuffer.getNumSamples() >= 265 )
+        buffer = incomingBuffer;
+    else
+        buffer.applyGain(juce::Decibels::decibelsToGain(-3.f));
+    
+    repaint();
+}
+
+//==============================================================================
 void Histogram::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
@@ -368,6 +497,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(rmsHistogram);
     addAndMakeVisible(peakHistogram);
     
+    addAndMakeVisible(gonio);
+    
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
@@ -396,6 +527,8 @@ void PFMProject10AudioProcessorEditor::resized()
     auto margin = 10;
     auto stereoMeterWidth = 100;
     auto stereoMeterHeight = 350;
+    
+    auto goniometerDims = 300;
     // setBounds args (int x, int y, int width, int height)
     stereoMeterRms.setBounds(margin,
                              margin,
@@ -417,8 +550,14 @@ void PFMProject10AudioProcessorEditor::resized()
                             width - (margin * 2),
                             105);
     
+    // rmsHist Top = 370
+    gonio.setBounds((width / 2) - (goniometerDims / 2),
+                    (rmsHistogram.getY() - goniometerDims) / 2,
+                    goniometerDims,
+                    goniometerDims);
+    
 #if defined(GAIN_TEST_ACTIVE)
-    gainSlider.setBounds(dbScale.getRight(), monoMeter.getY() - 10, 20, meterHeight + 20);
+    gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
 #endif
 }
 
@@ -447,5 +586,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         
         rmsHistogram.update(rmsDbL, rmsDbR);
         peakHistogram.update(peakDbL, peakDbR);
+        
+        gonio.update(incomingBuffer);
     }
 }

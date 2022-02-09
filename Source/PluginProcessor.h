@@ -54,7 +54,7 @@ struct Fifo
     }
     
 private:
-    static constexpr int Capacity = 5;
+    static constexpr int Capacity = 10;
     std::array<T, Capacity> buffers;
     juce::AbstractFifo fifo{Capacity};
 };
