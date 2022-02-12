@@ -10,6 +10,65 @@
 #include "PluginEditor.h"
 
 //==============================================================================
+CorrelationMeter::CorrelationMeter(double _sampleRate) : sampleRate(_sampleRate)
+{
+    prepareFilters();
+}
+
+void CorrelationMeter::prepareFilters()
+{
+    using FilterDesign = juce::dsp::FilterDesign<float>;
+    using WindowingFunction = juce::dsp::WindowingFunction<float>;
+    
+    auto coefficientsPtr = FilterDesign::designFIRLowpassWindowMethod(100.f, // frequency
+                                                                      sampleRate, // sampleRate
+                                                                      1, // order
+                                                                      //WindowingFunction(300, WindowingFunction::WindowingMethod::hann)); // size & windowing method
+                                                                      WindowingFunction::WindowingMethod::hann); // windowing method
+    
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.numChannels = 1;
+    
+    for ( auto& filter : filters )
+    {
+        filter.prepare(spec);
+        filter.coefficients = coefficientsPtr;
+    }
+    
+    update(0.f, 0.f);
+}
+
+void CorrelationMeter::update(const float& inputL, const float& inputR)
+{
+    auto firstTerm = filters[0].processSample(inputL * inputR);
+    auto secondTerm = std::sqrt(std::pow(filters[1].processSample(inputL), 2) * std::pow(filters[2].processSample(inputR), 2));
+    filtered = firstTerm / secondTerm;
+    DBG(filtered);
+}
+
+void CorrelationMeter::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    auto width = bounds.getWidth();
+    auto height = bounds.getHeight();
+    auto padding = width / 10;
+    auto meterWidth = width - (padding * 2);
+    
+    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    
+    // meter
+    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
+    g.fillRect(bounds.getCentreX() - (meterWidth / 2), bounds.getY(), meterWidth, height);
+    
+    // labels
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    // draw fitted text args = text, x, y, width, height, justification, maxNumLines
+    g.drawFittedText("-1", 0, 0, padding, height, juce::Justification::centred, 1);
+    g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);
+}
+
+//==============================================================================
 void Goniometer::paint(juce::Graphics& g)
 {
     using namespace juce;
@@ -483,7 +542,7 @@ void StereoMeter::update(const float& inputL, const float& inputR)
 
 //==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p), correlationMtr(p.getSampleRate())
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -496,6 +555,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(peakHistogram);
     
     addAndMakeVisible(gonio);
+    
+    addAndMakeVisible(correlationMtr);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -554,6 +615,11 @@ void PFMProject10AudioProcessorEditor::resized()
                     goniometerDims,
                     goniometerDims);
     
+    correlationMtr.setBounds(gonio.getX(),
+                             gonio.getBottom(),
+                             goniometerDims,
+                             20);
+    
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
 #endif
@@ -586,5 +652,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         peakHistogram.update(peakDbL, peakDbR);
         
         gonio.update(incomingBuffer);
+        
+        correlationMtr.update(rmsL, rmsR);
     }
 }

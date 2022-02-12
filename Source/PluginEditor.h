@@ -15,6 +15,22 @@
 #define NegativeInfinity -48.f
 
 //==============================================================================
+struct CorrelationMeter : juce::Component
+{
+    CorrelationMeter(double _sampleRate);
+    void prepareFilters();
+    void update(const float& inputL, const float& inputR);
+    void paint(juce::Graphics& g) override;
+    
+private:
+    using FilterType = juce::dsp::FIR::Filter<float>;
+    std::array<FilterType, 3> filters;
+    
+    double sampleRate;
+    float filtered;
+};
+
+//==============================================================================
 struct Goniometer : juce::Component
 {
     void paint(juce::Graphics& g) override;
@@ -304,6 +320,8 @@ private:
     Histogram peakHistogram{"PEAK"};
     
     Goniometer gonio;
+    
+    CorrelationMeter correlationMtr;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
