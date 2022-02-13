@@ -19,7 +19,7 @@ struct CorrelationMeter : juce::Component
 {
     CorrelationMeter(double _sampleRate);
     void prepareFilters();
-    void update(const float& inputL, const float& inputR);
+    void update(float inputL, float inputR);
     void paint(juce::Graphics& g) override;
     
 private:
@@ -27,7 +27,7 @@ private:
     std::array<FilterType, 3> filters;
     
     double sampleRate;
-    float filtered;
+    float correlation;
 };
 
 //==============================================================================

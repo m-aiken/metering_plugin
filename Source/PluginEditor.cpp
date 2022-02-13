@@ -17,18 +17,15 @@ CorrelationMeter::CorrelationMeter(double _sampleRate) : sampleRate(_sampleRate)
 
 void CorrelationMeter::prepareFilters()
 {
+    juce::dsp::ProcessSpec spec;
+    spec.numChannels = 1;
+    
     using FilterDesign = juce::dsp::FilterDesign<float>;
     using WindowingFunction = juce::dsp::WindowingFunction<float>;
-    
-    auto coefficientsPtr = FilterDesign::designFIRLowpassWindowMethod(100.f, // frequency
-                                                                      sampleRate, // sampleRate
-                                                                      1, // order
-                                                                      //WindowingFunction(300, WindowingFunction::WindowingMethod::hann)); // size & windowing method
+    auto coefficientsPtr = FilterDesign::designFIRLowpassWindowMethod(100.f,                                     // frequency
+                                                                      sampleRate,                                // sample rate
+                                                                      2,                                         // order
                                                                       WindowingFunction::WindowingMethod::hann); // windowing method
-    
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.numChannels = 1;
     
     for ( auto& filter : filters )
     {
@@ -39,12 +36,12 @@ void CorrelationMeter::prepareFilters()
     update(0.f, 0.f);
 }
 
-void CorrelationMeter::update(const float& inputL, const float& inputR)
+void CorrelationMeter::update(float inputL, float inputR)
 {
     auto firstTerm = filters[0].processSample(inputL * inputR);
-    auto secondTerm = std::sqrt(std::pow(filters[1].processSample(inputL), 2) * std::pow(filters[2].processSample(inputR), 2));
-    filtered = firstTerm / secondTerm;
-    DBG(filtered);
+    auto secondTerm = std::sqrt( filters[1].processSample(inputL) * filters[2].processSample(inputR) );
+    correlation = firstTerm / secondTerm;
+    DBG(correlation);
 }
 
 void CorrelationMeter::paint(juce::Graphics& g)
