@@ -19,8 +19,8 @@ struct CorrelationMeter : juce::Component
 {
     CorrelationMeter(double _sampleRate);
     void prepareFilters();
-    void update(float inputL, float inputR);
     void paint(juce::Graphics& g) override;
+    void update(float inputL, float inputR);
     
 private:
     using FilterType = juce::dsp::FIR::Filter<float>;
