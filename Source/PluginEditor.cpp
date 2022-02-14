@@ -60,31 +60,40 @@ void CorrelationMeter::paint(juce::Graphics& g)
 
     g.fillRect(meterBounds);
     
-    // meter
+    // meters
     g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
     
-    auto jmap = juce::jmap<float>(correlation,             // source
-                                  -1.f,                    // source min
-                                  1.f,                     // source max
-                                  meterBounds.getX(),      // target min
-                                  meterBounds.getRight()); // target max
-        
-    juce::Rectangle<int> meterRect;
-    meterRect.setY(bounds.getY());
-    meterRect.setHeight(height);
+    juce::Rectangle<int> averageMeter = paintMeter(meterBounds, meterBounds.getY(), static_cast<int>(height * 0.2f), averager.getAverage());
+    g.fillRect(averageMeter);
+    
+    juce::Rectangle<int> instMeter = paintMeter(meterBounds, averageMeter.getBottom() + (height * 0.1f), static_cast<int>(height * 0.7f), correlation);
+    g.fillRect(instMeter);
+}
+
+juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& containerBounds, const int& y, const int& height, const float& value)
+{
+    auto jmap = juce::jmap<float>(value,                       // source
+                                  -1.f,                        // source min
+                                  1.f,                         // source max
+                                  containerBounds.getX(),      // target min
+                                  containerBounds.getRight()); // target max
+    
+    juce::Rectangle<int> rectangle;
+    rectangle.setY(y);
+    rectangle.setHeight(height);
     
     if ( jmap > 0 )
     {
-        meterRect.setX(meterBounds.getCentreX());
-        meterRect.setWidth(std::floor(jmap) - meterBounds.getCentreX());
+        rectangle.setX(containerBounds.getCentreX());
+        rectangle.setWidth(std::floor(jmap) - containerBounds.getCentreX());
     }
     else
     {
-        meterRect.setX(std::floor(jmap));
-        meterRect.setWidth(meterBounds.getCentreX() - std::floor(jmap));
+        rectangle.setX(std::floor(jmap));
+        rectangle.setWidth(containerBounds.getCentreX() - std::floor(jmap));
     }
     
-    g.fillRect(meterRect);
+    return rectangle;
 }
 
 void CorrelationMeter::update(float inputL, float inputR)
@@ -92,6 +101,12 @@ void CorrelationMeter::update(float inputL, float inputR)
     auto numerator = filters[0].processSample(inputL * inputR);
     auto denominator = std::sqrt( filters[1].processSample(inputL) * filters[2].processSample(inputR) );
     correlation = numerator / denominator;
+    
+    if ( std::isnan(correlation) || std::isinf(correlation) )
+        averager.add(0.f);
+    else
+        averager.add(correlation);
+    
     //DBG(correlation);
     repaint();
 }
