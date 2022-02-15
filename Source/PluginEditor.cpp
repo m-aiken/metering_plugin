@@ -22,6 +22,7 @@ void CorrelationMeter::prepareFilters()
     
     using FilterDesign = juce::dsp::FilterDesign<float>;
     using WindowingFunction = juce::dsp::WindowingFunction<float>;
+    
     auto coefficientsPtr = FilterDesign::designFIRLowpassWindowMethod(100.f,                                     // frequency
                                                                       sampleRate,                                // sample rate
                                                                       2,                                         // order
@@ -32,7 +33,7 @@ void CorrelationMeter::prepareFilters()
         filter.prepare(spec);
         filter.coefficients = coefficientsPtr;
     }
-    
+
     update(0.f, 0.f);
 }
 
@@ -99,9 +100,11 @@ juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& co
 void CorrelationMeter::update(float inputL, float inputR)
 {
     auto numerator = filters[0].processSample(inputL * inputR);
-    auto denominator = std::sqrt( filters[1].processSample(inputL) * filters[2].processSample(inputR) );
-    correlation = numerator / denominator;
+//    auto denominator = std::sqrt( filters[1].processSample(inputL) * filters[2].processSample(inputR) );
+    auto denominator = std::sqrt( filters[1].processSample( std::pow(inputL, 2) ) * filters[2].processSample( std::pow(inputR, 2) ) );
     
+    correlation = numerator / denominator;
+    DBG(correlation);
     if ( std::isnan(correlation) || std::isinf(correlation) )
         averager.add(0.f);
     else

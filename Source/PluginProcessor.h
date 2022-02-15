@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include <array>
 
-//#define GAIN_TEST_ACTIVE
+#define GAIN_TEST_ACTIVE
 
 //==============================================================================
 template<typename T>
