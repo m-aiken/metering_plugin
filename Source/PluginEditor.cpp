@@ -100,7 +100,6 @@ juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& co
 void CorrelationMeter::update(float inputL, float inputR)
 {
     auto numerator = filters[0].processSample(inputL * inputR);
-//    auto denominator = std::sqrt( filters[1].processSample(inputL) * filters[2].processSample(inputR) );
     auto denominator = std::sqrt( filters[1].processSample( std::pow(inputL, 2) ) * filters[2].processSample( std::pow(inputR, 2) ) );
     
     correlation = numerator / denominator;
@@ -110,7 +109,6 @@ void CorrelationMeter::update(float inputL, float inputR)
     else
         averager.add(correlation);
     
-    //DBG(correlation);
     repaint();
 }
 
