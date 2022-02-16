@@ -83,7 +83,7 @@ juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& co
     rectangle.setY(y);
     rectangle.setHeight(height);
     
-    if ( jmap > 0 )
+    if ( jmap > containerBounds.getCentreX() )
     {
         rectangle.setX(containerBounds.getCentreX());
         rectangle.setWidth(std::floor(jmap) - containerBounds.getCentreX());
