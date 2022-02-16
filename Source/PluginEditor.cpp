@@ -10,109 +10,6 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-CorrelationMeter::CorrelationMeter(double _sampleRate) : sampleRate(_sampleRate)
-{
-    prepareFilters();
-}
-
-void CorrelationMeter::prepareFilters()
-{
-    juce::dsp::ProcessSpec spec;
-    spec.numChannels = 1;
-    
-    using FilterDesign = juce::dsp::FilterDesign<float>;
-    using WindowingFunction = juce::dsp::WindowingFunction<float>;
-    
-    auto coefficientsPtr = FilterDesign::designFIRLowpassWindowMethod(100.f,                                     // frequency
-                                                                      sampleRate,                                // sample rate
-                                                                      2,                                         // order
-                                                                      WindowingFunction::WindowingMethod::hann); // windowing method
-    
-    for ( auto& filter : filters )
-    {
-        filter.prepare(spec);
-        filter.coefficients = coefficientsPtr;
-    }
-
-    update(0.f, 0.f);
-}
-
-void CorrelationMeter::paint(juce::Graphics& g)
-{
-    auto bounds = getLocalBounds();
-    auto width = bounds.getWidth();
-    auto height = bounds.getHeight();
-    auto padding = width / 10;
-    auto meterWidth = width - (padding * 2);
-    
-    // labels
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
-    // draw fitted text args = text, x, y, width, height, justification, maxNumLines
-    g.drawFittedText("-1", 0, 0, padding, height, juce::Justification::centred, 1);
-    g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);
-    
-    // meter background
-    g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
-    
-    auto meterBounds = juce::Rectangle<int>(bounds.getCentreX() - (meterWidth / 2), // x
-                                            bounds.getY(),                          // y
-                                            meterWidth,                             // width
-                                            height);                                // height
-
-    g.fillRect(meterBounds);
-    
-    // meters
-    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
-    
-    juce::Rectangle<int> averageMeter = paintMeter(meterBounds, meterBounds.getY(), static_cast<int>(height * 0.2f), averager.getAverage());
-    g.fillRect(averageMeter);
-    
-    juce::Rectangle<int> instMeter = paintMeter(meterBounds, averageMeter.getBottom() + (height * 0.1f), static_cast<int>(height * 0.7f), correlation);
-    g.fillRect(instMeter);
-}
-
-juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& containerBounds, const int& y, const int& height, const float& value)
-{
-    auto jmap = juce::jmap<float>(value,                       // source
-                                  -1.f,                        // source min
-                                  1.f,                         // source max
-                                  containerBounds.getX(),      // target min
-                                  containerBounds.getRight()); // target max
-    
-    juce::Rectangle<int> rectangle;
-    rectangle.setY(y);
-    rectangle.setHeight(height);
-    
-    if ( jmap > containerBounds.getCentreX() )
-    {
-        rectangle.setX(containerBounds.getCentreX());
-        rectangle.setWidth(std::floor(jmap) - containerBounds.getCentreX());
-    }
-    else
-    {
-        rectangle.setX(std::floor(jmap));
-        rectangle.setWidth(containerBounds.getCentreX() - std::floor(jmap));
-    }
-    
-    return rectangle;
-}
-
-void CorrelationMeter::update(float inputL, float inputR)
-{
-    auto numerator = filters[0].processSample(inputL * inputR);
-    auto denominator = std::sqrt( filters[1].processSample( std::pow(inputL, 2) ) * filters[2].processSample( std::pow(inputR, 2) ) );
-    
-    correlation = numerator / denominator;
-    DBG(correlation);
-    if ( std::isnan(correlation) || std::isinf(correlation) )
-        averager.add(0.f);
-    else
-        averager.add(correlation);
-    
-    repaint();
-}
-
-//==============================================================================
 void Goniometer::paint(juce::Graphics& g)
 {
     using namespace juce;
@@ -297,6 +194,109 @@ void Histogram::update(const float& inputL, const float& inputR)
 {
     auto average = (inputL + inputR) / 2;
     circularBuffer.write(average);
+    
+    repaint();
+}
+
+//==============================================================================
+CorrelationMeter::CorrelationMeter(double _sampleRate) : sampleRate(_sampleRate)
+{
+    prepareFilters();
+}
+
+void CorrelationMeter::prepareFilters()
+{
+    juce::dsp::ProcessSpec spec;
+    spec.numChannels = 1;
+    
+    using FilterDesign = juce::dsp::FilterDesign<float>;
+    using WindowingFunction = juce::dsp::WindowingFunction<float>;
+    
+    auto coefficientsPtr = FilterDesign::designFIRLowpassWindowMethod(100.f,                                     // frequency
+                                                                      sampleRate,                                // sample rate
+                                                                      2,                                         // order
+                                                                      WindowingFunction::WindowingMethod::hann); // windowing method
+    
+    for ( auto& filter : filters )
+    {
+        filter.prepare(spec);
+        filter.coefficients = coefficientsPtr;
+    }
+
+    update(0.f, 0.f);
+}
+
+void CorrelationMeter::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    auto width = bounds.getWidth();
+    auto height = bounds.getHeight();
+    auto padding = width / 10;
+    auto meterWidth = width - (padding * 2);
+    
+    // labels
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    // draw fitted text args = text, x, y, width, height, justification, maxNumLines
+    g.drawFittedText("-1", 0, 0, padding, height, juce::Justification::centred, 1);
+    g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);
+    
+    // meter background
+    g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    
+    auto meterBounds = juce::Rectangle<int>(bounds.getCentreX() - (meterWidth / 2), // x
+                                            bounds.getY(),                          // y
+                                            meterWidth,                             // width
+                                            height);                                // height
+
+    g.fillRect(meterBounds);
+    
+    // meters
+    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
+    
+    juce::Rectangle<int> averageMeter = paintMeter(meterBounds, meterBounds.getY(), static_cast<int>(height * 0.2f), averager.getAverage());
+    g.fillRect(averageMeter);
+    
+    juce::Rectangle<int> instMeter = paintMeter(meterBounds, averageMeter.getBottom() + (height * 0.1f), static_cast<int>(height * 0.7f), correlation);
+    g.fillRect(instMeter);
+}
+
+juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& containerBounds, const int& y, const int& height, const float& value)
+{
+    auto jmap = juce::jmap<float>(value,                       // source
+                                  -1.f,                        // source min
+                                  1.f,                         // source max
+                                  containerBounds.getX(),      // target min
+                                  containerBounds.getRight()); // target max
+    
+    juce::Rectangle<int> rectangle;
+    rectangle.setY(y);
+    rectangle.setHeight(height);
+    
+    if ( jmap > containerBounds.getCentreX() )
+    {
+        rectangle.setX(containerBounds.getCentreX());
+        rectangle.setWidth(std::floor(jmap) - containerBounds.getCentreX());
+    }
+    else
+    {
+        rectangle.setX(std::floor(jmap));
+        rectangle.setWidth(containerBounds.getCentreX() - std::floor(jmap));
+    }
+    
+    return rectangle;
+}
+
+void CorrelationMeter::update(float inputL, float inputR)
+{
+    auto numerator = filters[0].processSample(inputL * inputR);
+    auto denominator = std::sqrt( filters[1].processSample( std::pow(inputL, 2) ) * filters[2].processSample( std::pow(inputR, 2) ) );
+    
+    correlation = numerator / denominator;
+    DBG(correlation);
+    if ( std::isnan(correlation) || std::isinf(correlation) )
+        averager.add(0.f);
+    else
+        averager.add(correlation);
     
     repaint();
 }

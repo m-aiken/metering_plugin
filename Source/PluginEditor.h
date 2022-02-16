@@ -15,6 +15,73 @@
 #define NegativeInfinity -48.f
 
 //==============================================================================
+struct Goniometer : juce::Component
+{
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+    void update(juce::AudioBuffer<float>& incomingBuffer);
+
+private:
+    juce::Image canvas;
+    juce::AudioBuffer<float> buffer;
+};
+
+//==============================================================================
+template<typename T>
+struct CircularBuffer
+{
+    using DataType = std::vector<T>;
+    
+    CircularBuffer(size_t numElements, T initialValue)
+    {
+        resize(numElements, initialValue);
+    }
+    
+    void resize(size_t s, T fillValue) { buffer.resize(s, fillValue); }
+    void clear(T fillValue) { buffer.assign(getSize(), fillValue); }
+    
+    void write(T t)
+    {
+        auto idx = writeIndex.load();
+        buffer[idx] = t;
+        
+        // increment writeIndex
+        ++idx;
+        if ( idx > getSize() - 1 ) // end of container, circle back to start
+            idx = 0;
+        
+        writeIndex = idx;
+    }
+    
+    DataType& getData() { return buffer; }
+    
+    size_t getReadIndex() const
+    {
+        // writeIndex was incremented in write() so now points to oldest item
+        return writeIndex.load();
+    }
+    
+    size_t getSize() const { return buffer.size(); }
+    
+private:
+    DataType buffer;
+    std::atomic<int> writeIndex = 0;
+};
+
+//==============================================================================
+struct Histogram : juce::Component
+{
+    Histogram(const juce::String& _label) : label(_label) { }
+    void paint(juce::Graphics& g) override;
+    void update(const float& inputL, const float& inputR);
+    
+private:
+    CircularBuffer<float> circularBuffer{780, NegativeInfinity};
+    
+    juce::String label;
+};
+
+//==============================================================================
 template<typename T>
 struct Averager
 {
@@ -84,73 +151,6 @@ private:
     float correlation;
     
     Averager<float> averager{12, 0.f};
-};
-
-//==============================================================================
-struct Goniometer : juce::Component
-{
-    void paint(juce::Graphics& g) override;
-    void resized() override;
-    void update(juce::AudioBuffer<float>& incomingBuffer);
-
-private:
-    juce::Image canvas;
-    juce::AudioBuffer<float> buffer;
-};
-
-//==============================================================================
-template<typename T>
-struct CircularBuffer
-{
-    using DataType = std::vector<T>;
-    
-    CircularBuffer(size_t numElements, T initialValue)
-    {
-        resize(numElements, initialValue);
-    }
-    
-    void resize(size_t s, T fillValue) { buffer.resize(s, fillValue); }
-    void clear(T fillValue) { buffer.assign(getSize(), fillValue); }
-    
-    void write(T t)
-    {
-        auto idx = writeIndex.load();
-        buffer[idx] = t;
-        
-        // increment writeIndex
-        ++idx;
-        if ( idx > getSize() - 1 ) // end of container, circle back to start
-            idx = 0;
-        
-        writeIndex = idx;
-    }
-    
-    DataType& getData() { return buffer; }
-    
-    size_t getReadIndex() const
-    {
-        // writeIndex was incremented in write() so now points to oldest item
-        return writeIndex.load();
-    }
-    
-    size_t getSize() const { return buffer.size(); }
-    
-private:
-    DataType buffer;
-    std::atomic<int> writeIndex = 0;
-};
-
-//==============================================================================
-struct Histogram : juce::Component
-{
-    Histogram(const juce::String& _label) : label(_label) { }
-    void paint(juce::Graphics& g) override;
-    void update(const float& inputL, const float& inputR);
-    
-private:
-    CircularBuffer<float> circularBuffer{780, NegativeInfinity};
-    
-    juce::String label;
 };
 
 //==============================================================================
