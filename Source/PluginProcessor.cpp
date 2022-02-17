@@ -171,7 +171,7 @@ void PFMProject10AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         }
         
         // out of phase test
-        buffer.setSample(1, sampleIdx, newVal * -1.f);
+//        buffer.setSample(1, sampleIdx, newVal * -1.f);
     }
     
     gain.setGainDecibels(gainParam->get());

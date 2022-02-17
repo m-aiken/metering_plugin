@@ -199,7 +199,8 @@ void Histogram::update(const float& inputL, const float& inputR)
 }
 
 //==============================================================================
-CorrelationMeter::CorrelationMeter(double _sampleRate) : sampleRate(_sampleRate)
+CorrelationMeter::CorrelationMeter(double _sampleRate, size_t _blockSize)
+    : sampleRate(_sampleRate), blockSize(_blockSize)
 {
     prepareFilters();
 }
@@ -222,8 +223,6 @@ void CorrelationMeter::prepareFilters()
         filter.prepare(spec);
         filter.coefficients = coefficientsPtr;
     }
-
-    update(0.f, 0.f);
 }
 
 void CorrelationMeter::paint(juce::Graphics& g)
@@ -253,11 +252,18 @@ void CorrelationMeter::paint(juce::Graphics& g)
     // meters
     g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
     
-    juce::Rectangle<int> averageMeter = paintMeter(meterBounds, meterBounds.getY(), static_cast<int>(height * 0.2f), averager.getAverage());
-    g.fillRect(averageMeter);
+    juce::Rectangle<int> averageCorrelationMeter = paintMeter(meterBounds,            // container bounds
+                                                   meterBounds.getY(),                // y
+                                                   static_cast<int>(height * 0.2f),   // height
+                                                   averagedCorrelation.getAverage()); // value
     
-    juce::Rectangle<int> instMeter = paintMeter(meterBounds, averageMeter.getBottom() + (height * 0.1f), static_cast<int>(height * 0.7f), correlation);
-    g.fillRect(instMeter);
+    juce::Rectangle<int> instantCorrelationMeter = paintMeter(meterBounds,                                           // container bounds
+                                                              averageCorrelationMeter.getBottom() + (height * 0.1f), // y
+                                                              static_cast<int>(height * 0.7f),                       // height
+                                                              instantaneousCorrelation.getAverage());                // value
+    
+    g.fillRect(averageCorrelationMeter);
+    g.fillRect(instantCorrelationMeter);
 }
 
 juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& containerBounds, const int& y, const int& height, const float& value)
@@ -286,17 +292,29 @@ juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& co
     return rectangle;
 }
 
-void CorrelationMeter::update(float inputL, float inputR)
+void CorrelationMeter::update(juce::AudioBuffer<float>& incomingBuffer)
 {
-    auto numerator = filters[0].processSample(inputL * inputR);
-    auto denominator = std::sqrt( filters[1].processSample( std::pow(inputL, 2) ) * filters[2].processSample( std::pow(inputR, 2) ) );
-    
-    correlation = numerator / denominator;
-    DBG(correlation);
-    if ( std::isnan(correlation) || std::isinf(correlation) )
-        averager.add(0.f);
-    else
-        averager.add(correlation);
+    for ( auto i = 0; i < incomingBuffer.getNumSamples(); ++i )
+    {
+        auto sampleL = incomingBuffer.getSample(0, i);
+        auto sampleR = incomingBuffer.getSample(1, i);
+        
+        auto numerator = filters[0].processSample(sampleL * sampleR);
+        auto denominator = std::sqrt( filters[1].processSample( std::pow(sampleL, 2) ) * filters[2].processSample( std::pow(sampleR, 2) ) );
+        
+        auto correlation = numerator / denominator;
+
+        if ( std::isnan(correlation) || std::isinf(correlation) )
+        {
+            instantaneousCorrelation.add(0.f);
+            averagedCorrelation.add(0.f);
+        }
+        else
+        {
+            instantaneousCorrelation.add(correlation);
+            averagedCorrelation.add(correlation);
+        }
+    }
     
     repaint();
 }
@@ -586,7 +604,7 @@ void StereoMeter::update(const float& inputL, const float& inputR)
 
 //==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), correlationMtr(p.getSampleRate())
+    : AudioProcessorEditor (&p), audioProcessor (p), correlationMtr(p.getSampleRate(), p.getBlockSize())
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -697,6 +715,6 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         
         gonio.update(incomingBuffer);
         
-        correlationMtr.update(rmsL, rmsR);
+        correlationMtr.update(incomingBuffer);
     }
 }
