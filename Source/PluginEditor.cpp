@@ -43,8 +43,6 @@ void Goniometer::paint(juce::Graphics& g)
         
         if ( i == 0 )
             p.startNewSubPath(point);
-        else if ( i == numSamples - 1)
-            p.closeSubPath();
         else
             p.lineTo(point);
     }
@@ -196,6 +194,127 @@ void Histogram::update(const float& inputL, const float& inputR)
 {
     auto average = (inputL + inputR) / 2;
     circularBuffer.write(average);
+    
+    repaint();
+}
+
+//==============================================================================
+CorrelationMeter::CorrelationMeter(double _sampleRate, size_t _blockSize)
+    : sampleRate(_sampleRate), blockSize(_blockSize)
+{
+    prepareFilters();
+}
+
+void CorrelationMeter::prepareFilters()
+{
+    juce::dsp::ProcessSpec spec;
+    spec.numChannels = 1;
+    
+    using FilterDesign = juce::dsp::FilterDesign<float>;
+    using WindowingFunction = juce::dsp::WindowingFunction<float>;
+    
+    auto coefficientsPtr = FilterDesign::designFIRLowpassWindowMethod(100.f,                                     // frequency
+                                                                      sampleRate,                                // sample rate
+                                                                      2,                                         // order
+                                                                      WindowingFunction::WindowingMethod::hann); // windowing method
+    
+    for ( auto& filter : filters )
+    {
+        filter.prepare(spec);
+        filter.coefficients = coefficientsPtr;
+    }
+}
+
+void CorrelationMeter::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    auto width = bounds.getWidth();
+    auto height = bounds.getHeight();
+    auto padding = width / 10;
+    auto meterWidth = width - (padding * 2);
+    
+    // labels
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    // draw fitted text args = text, x, y, width, height, justification, maxNumLines
+    g.drawFittedText("-1", 0, 0, padding, height, juce::Justification::centred, 1);
+    g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);
+    
+    // meter background
+    g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    
+    auto meterBounds = juce::Rectangle<int>(bounds.getCentreX() - (meterWidth / 2), // x
+                                            bounds.getY(),                          // y
+                                            meterWidth,                             // width
+                                            height);                                // height
+
+    g.fillRect(meterBounds);
+    
+    // meters
+    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
+    
+    juce::Rectangle<int> averageCorrelationMeter = paintMeter(meterBounds,            // container bounds
+                                                   meterBounds.getY(),                // y
+                                                   static_cast<int>(height * 0.2f),   // height
+                                                   averagedCorrelation.getAverage()); // value
+    
+    juce::Rectangle<int> instantCorrelationMeter = paintMeter(meterBounds,                                           // container bounds
+                                                              averageCorrelationMeter.getBottom() + (height * 0.1f), // y
+                                                              static_cast<int>(height * 0.7f),                       // height
+                                                              instantaneousCorrelation.getAverage());                // value
+    
+    g.fillRect(averageCorrelationMeter);
+    g.fillRect(instantCorrelationMeter);
+}
+
+juce::Rectangle<int> CorrelationMeter::paintMeter(const juce::Rectangle<int>& containerBounds, const int& y, const int& height, const float& value)
+{
+    auto jmap = juce::jmap<float>(value,                       // source
+                                  -1.f,                        // source min
+                                  1.f,                         // source max
+                                  containerBounds.getX(),      // target min
+                                  containerBounds.getRight()); // target max
+    
+    juce::Rectangle<int> rectangle;
+    rectangle.setY(y);
+    rectangle.setHeight(height);
+    
+    if ( jmap > containerBounds.getCentreX() )
+    {
+        rectangle.setX(containerBounds.getCentreX());
+        rectangle.setWidth(std::floor(jmap) - containerBounds.getCentreX());
+    }
+    else
+    {
+        rectangle.setX(std::floor(jmap));
+        rectangle.setWidth(containerBounds.getCentreX() - std::floor(jmap));
+    }
+    
+    return rectangle;
+}
+
+void CorrelationMeter::update(juce::AudioBuffer<float>& incomingBuffer)
+{
+    for ( auto i = 0; i < incomingBuffer.getNumSamples(); ++i )
+    {
+        auto sampleL = incomingBuffer.getSample(0, i);
+        auto sampleR = incomingBuffer.getSample(1, i);
+        
+        auto numerator = filters[0].processSample(sampleL * sampleR);
+        auto denominator = std::sqrt( filters[1].processSample( std::pow(sampleL, 2) ) * filters[2].processSample( std::pow(sampleR, 2) ) );
+        
+        auto correlation = numerator / denominator;
+
+        if ( std::isnan(correlation) || std::isinf(correlation) )
+        {
+            instantaneousCorrelation.add(0.f);
+            averagedCorrelation.add(0.f);
+        }
+        else
+        {
+            instantaneousCorrelation.add(correlation);
+            averagedCorrelation.add(correlation);
+        }
+    }
     
     repaint();
 }
@@ -485,7 +604,7 @@ void StereoMeter::update(const float& inputL, const float& inputR)
 
 //==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p), correlationMtr(p.getSampleRate(), p.getBlockSize())
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -498,6 +617,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(peakHistogram);
     
     addAndMakeVisible(gonio);
+    
+    addAndMakeVisible(correlationMtr);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -556,6 +677,11 @@ void PFMProject10AudioProcessorEditor::resized()
                     goniometerDims,
                     goniometerDims);
     
+    correlationMtr.setBounds(gonio.getX(),
+                             gonio.getBottom(),
+                             goniometerDims,
+                             20);
+    
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
 #endif
@@ -588,5 +714,7 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         peakHistogram.update(peakDbL, peakDbR);
         
         gonio.update(incomingBuffer);
+        
+        correlationMtr.update(incomingBuffer);
     }
 }
