@@ -334,7 +334,7 @@ private:
     Histogram rmsHistogram{"RMS"};
     Histogram peakHistogram{"PEAK"};
     
-    StereoImageMeter stereoImager;
+    StereoImageMeter stereoImageMeter;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;

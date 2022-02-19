@@ -629,7 +629,7 @@ void StereoMeter::update(const float& inputL, const float& inputR)
 
 //==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), stereoImager(p.getSampleRate(), p.getBlockSize())
+    : AudioProcessorEditor (&p), audioProcessor (p), stereoImageMeter(p.getSampleRate(), p.getBlockSize())
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -641,7 +641,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(rmsHistogram);
     addAndMakeVisible(peakHistogram);
     
-    addAndMakeVisible(stereoImager);
+    addAndMakeVisible(stereoImageMeter);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -693,11 +693,11 @@ void PFMProject10AudioProcessorEditor::resized()
                             width - (margin * 2),
                             105);
     
-    auto stereoImagerWidth = 300; // this will also be the height of the goniometer
-    stereoImager.setBounds((width / 2) - (stereoImagerWidth / 2),
-                           (rmsHistogram.getY() - stereoImagerWidth) / 2,
-                           stereoImagerWidth,
-                           stereoImagerWidth + 20); // +20 to account for correlation meter
+    auto stereoImageMeterWidth = 300; // this will also be the height of the goniometer
+    stereoImageMeter.setBounds((width / 2) - (stereoImageMeterWidth / 2),
+                              (rmsHistogram.getY() - stereoImageMeterWidth) / 2,
+                              stereoImageMeterWidth,
+                              stereoImageMeterWidth + 20); // +20 to account for correlation meter
      
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
@@ -730,6 +730,6 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         rmsHistogram.update(rmsDbL, rmsDbR);
         peakHistogram.update(peakDbL, peakDbR);
         
-        stereoImager.update(incomingBuffer);
+        stereoImageMeter.update(incomingBuffer);
     }
 }
