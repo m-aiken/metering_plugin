@@ -155,6 +155,17 @@ private:
 };
 
 //==============================================================================
+struct StereoImageMeter : juce::Component
+{
+    StereoImageMeter(double _sampleRate, size_t _blockSize);
+    void paint(juce::Graphics& g) override;
+    void update(juce::AudioBuffer<float>& incomingBuffer);
+private:
+    Goniometer goniometer;
+    CorrelationMeter correlationMeter;
+};
+
+//==============================================================================
 struct ValueHolderBase : juce::Timer
 {
     ValueHolderBase() { startTimerHz(30); }
@@ -323,9 +334,7 @@ private:
     Histogram rmsHistogram{"RMS"};
     Histogram peakHistogram{"PEAK"};
     
-    Goniometer gonio;
-    
-    CorrelationMeter correlationMtr;
+    StereoImageMeter stereoImager;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;

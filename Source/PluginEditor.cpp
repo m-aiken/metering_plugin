@@ -322,6 +322,29 @@ void CorrelationMeter::update(juce::AudioBuffer<float>& incomingBuffer)
 }
 
 //==============================================================================
+StereoImageMeter::StereoImageMeter(double _sampleRate, size_t _blockSize)
+    : correlationMeter(_sampleRate, _blockSize)
+{
+    addAndMakeVisible(goniometer);
+    addAndMakeVisible(correlationMeter);
+}
+
+void StereoImageMeter::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    auto goniometerDims = bounds.getWidth();
+    
+    goniometer.setBounds(0, 0, goniometerDims, goniometerDims);
+    correlationMeter.setBounds(0, goniometer.getBottom(), goniometerDims, 20);
+}
+
+void StereoImageMeter::update(juce::AudioBuffer<float>& incomingBuffer)
+{
+    goniometer.update(incomingBuffer);
+    correlationMeter.update(incomingBuffer);
+}
+
+//==============================================================================
 void ValueHolderBase::timerCallback()
 {
     now = juce::Time::currentTimeMillis();
@@ -606,7 +629,7 @@ void StereoMeter::update(const float& inputL, const float& inputR)
 
 //==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), correlationMtr(p.getSampleRate(), p.getBlockSize())
+    : AudioProcessorEditor (&p), audioProcessor (p), stereoImager(p.getSampleRate(), p.getBlockSize())
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -618,9 +641,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(rmsHistogram);
     addAndMakeVisible(peakHistogram);
     
-    addAndMakeVisible(gonio);
-    
-    addAndMakeVisible(correlationMtr);
+    addAndMakeVisible(stereoImager);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -651,7 +672,6 @@ void PFMProject10AudioProcessorEditor::resized()
     auto stereoMeterWidth = 100;
     auto stereoMeterHeight = 350;
     
-    auto goniometerDims = 300;
     // setBounds args (int x, int y, int width, int height)
     stereoMeterRms.setBounds(margin,
                              margin,
@@ -673,17 +693,12 @@ void PFMProject10AudioProcessorEditor::resized()
                             width - (margin * 2),
                             105);
     
-    // rmsHist Top = 370
-    gonio.setBounds((width / 2) - (goniometerDims / 2),
-                    (rmsHistogram.getY() - goniometerDims) / 2,
-                    goniometerDims,
-                    goniometerDims);
-    
-    correlationMtr.setBounds(gonio.getX(),
-                             gonio.getBottom(),
-                             goniometerDims,
-                             20);
-    
+    auto stereoImagerWidth = 300; // this will also be the height of the goniometer
+    stereoImager.setBounds((width / 2) - (stereoImagerWidth / 2),
+                           (rmsHistogram.getY() - stereoImagerWidth) / 2,
+                           stereoImagerWidth,
+                           stereoImagerWidth + 20); // +20 to account for correlation meter
+     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
 #endif
@@ -715,8 +730,6 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         rmsHistogram.update(rmsDbL, rmsDbR);
         peakHistogram.update(peakDbL, peakDbR);
         
-        gonio.update(incomingBuffer);
-        
-        correlationMtr.update(incomingBuffer);
+        stereoImager.update(incomingBuffer);
     }
 }
