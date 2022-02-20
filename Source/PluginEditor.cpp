@@ -305,17 +305,15 @@ void CorrelationMeter::update(juce::AudioBuffer<float>& incomingBuffer)
         {
             auto numerator = filters[0].processSample(sampleL * sampleR);
             auto correlation = numerator / denominator;
-
-            if ( !std::isnan(correlation) && !std::isinf(correlation) )
-            {
-                instantaneousCorrelation.add(correlation);
-                averagedCorrelation.add(correlation);
-                continue;
-            }
+            
+            instantaneousCorrelation.add(correlation);
+            averagedCorrelation.add(correlation);
         }
-        
-        instantaneousCorrelation.add(0.f);
-        averagedCorrelation.add(0.f);
+        else
+        {
+            instantaneousCorrelation.add(0.f);
+            averagedCorrelation.add(0.f);
+        }
     }
     
     repaint();
