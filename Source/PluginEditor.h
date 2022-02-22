@@ -296,6 +296,7 @@ struct StereoMeter : juce::Component
     void resized() override;
     void update(const float& inputL, const float& inputR);
     
+    juce::Slider thresholdControl;
 private:
     MacroMeter macroMeterL{ Channel::Left };
     DbScale dbScale;

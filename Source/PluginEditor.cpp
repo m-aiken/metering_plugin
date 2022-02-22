@@ -570,6 +570,9 @@ StereoMeter::StereoMeter(const juce::String& labelText)
     addAndMakeVisible(macroMeterL);
     addAndMakeVisible(dbScale);
     addAndMakeVisible(macroMeterR);
+    addAndMakeVisible(thresholdControl);
+    
+    thresholdControl.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
 }
 
 void StereoMeter::paint(juce::Graphics& g)
@@ -610,13 +613,19 @@ void StereoMeter::resized()
     macroMeterL.setBounds(0, 0, meterWidth, meterHeight);
     
     dbScale.ticks = macroMeterL.getTicks();
-    dbScale.yOffset = macroMeterL.getY() + macroMeterL.getTickYoffset();
+    auto tickYoffset = macroMeterL.getTickYoffset();
+    dbScale.yOffset = macroMeterL.getY() + tickYoffset;
     dbScale.setBounds(macroMeterL.getRight(),
                       0,
                       dbScaleWidth,
                       static_cast<int>(h * dbScaleLabelCrossover));
     
     macroMeterR.setBounds(dbScale.getRight(), 0, meterWidth, meterHeight);
+    
+    thresholdControl.setBounds(dbScale.getX(),                         // x
+                               macroMeterL.getY() + (tickYoffset / 2), // y
+                               dbScale.getWidth(),                     // width
+                               macroMeterL.getHeight());               // height
 }
 
 void StereoMeter::update(const float& inputL, const float& inputR)
