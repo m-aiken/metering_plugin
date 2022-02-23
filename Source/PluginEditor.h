@@ -288,9 +288,21 @@ private:
     Channel channel;
 };
 
+//==============================================================================
+struct CustomLookAndFeel : juce::LookAndFeel_V4
+{
+    void drawLinearSlider(juce::Graphics& g,
+                          int x, int y, int width, int height,
+                          float sliderPos, float minSliderPos, float maxSliderPos,
+                          const juce::Slider::SliderStyle style,
+                          juce::Slider& slider) override;
+};
+
+//==============================================================================
 struct StereoMeter : juce::Component
 {
     StereoMeter(const juce::String& labelText);
+    ~StereoMeter();
     
     void paint(juce::Graphics& g) override;
     void resized() override;
@@ -305,6 +317,8 @@ private:
     juce::String label;
     
     float dbScaleLabelCrossover = 0.94f;
+    
+    CustomLookAndFeel customStyle;
 };
 
 //==============================================================================
