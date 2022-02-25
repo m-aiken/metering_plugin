@@ -565,14 +565,22 @@ void MacroMeter::update(const float& input)
 
 //==============================================================================
 void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
-                      int x, int y, int width, int height,
-                      float sliderPos, float minSliderPos, float maxSliderPos,
-                      const juce::Slider::SliderStyle style,
-                      juce::Slider& slider)
+                                         int x, int y, int width, int height,
+                                         float sliderPos,
+                                         float minSliderPos,
+                                         float maxSliderPos,
+                                         const juce::Slider::SliderStyle style,
+                                         juce::Slider& slider)
 {
     auto bounds = juce::Rectangle<int>(x, y, width, height);
+    g.setColour(juce::Colours::green);
+    g.drawRect(bounds);
+    
+    slider.setSliderStyle(style);
+    
+    auto threshold = juce::Rectangle<float>(x, sliderPos, width, 2.f);
     g.setColour(juce::Colours::red);
-    g.fillAll();
+    g.fillRect(threshold);
 }
 
 //==============================================================================
@@ -584,7 +592,6 @@ StereoMeter::StereoMeter(const juce::String& labelText)
     addAndMakeVisible(macroMeterR);
     addAndMakeVisible(thresholdControl);
     
-    //thresholdControl.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     thresholdControl.setLookAndFeel(&customStyle);
 }
 
@@ -617,17 +624,24 @@ void StereoMeter::paint(juce::Graphics& g)
                          1);                                       // max num lines
     }
     
-    thresholdControl.getLookAndFeel().drawLinearSlider(
-        g,                                                       // graphics
-        dbScale.getX(),                                          // x
-        macroMeterL.getY() + (macroMeterL.getTickYoffset() / 2), // y
-        dbScale.getWidth(),                                      // width
-        macroMeterL.getHeight(),                                 // height
-        0.f,                                                     // sliderPos
-        NegativeInfinity,                                        // minSliderPos
-        MaxDecibels,                                             // maxSliderPos
-        juce::Slider::SliderStyle::LinearVertical,               // sliderStyle
-        thresholdControl);                                       // slider
+    auto offset = macroMeterL.getTickYoffset();
+    thresholdControl.setBounds(dbScale.getX(),
+                               macroMeterL.getY() + offset,
+                               dbScale.getWidth(),
+                               macroMeterL.getHeight() - offset);
+    
+    auto threshold = thresholdControl.getY() + (thresholdControl.getHeight() / 2);
+    
+    thresholdControl.getLookAndFeel().drawLinearSlider(g,          // graphics
+                        thresholdControl.getX(),                   // x
+                        thresholdControl.getY(),                   // y
+                        thresholdControl.getWidth(),               // width
+                        thresholdControl.getHeight(),              // height
+                        threshold,                                 // sliderPos
+                        thresholdControl.getBottom(),              // minSliderPos
+                        thresholdControl.getY(),                   // maxSliderPos
+                        juce::Slider::SliderStyle::LinearVertical, // sliderStyle
+                        thresholdControl);                         // slider
 }
 
 void StereoMeter::resized()
@@ -651,13 +665,6 @@ void StereoMeter::resized()
                       static_cast<int>(h * dbScaleLabelCrossover));
     
     macroMeterR.setBounds(dbScale.getRight(), 0, meterWidth, meterHeight);
-    
-    /*
-    thresholdControl.setBounds(dbScale.getX(),                         // x
-                               macroMeterL.getY() + (tickYoffset / 2), // y
-                               dbScale.getWidth(),                     // width
-                               macroMeterL.getHeight());               // height
-    */
 }
 
 void StereoMeter::update(const float& inputL, const float& inputR)
