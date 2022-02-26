@@ -303,23 +303,11 @@ struct CustomLookAndFeel : juce::LookAndFeel_V4
 //==============================================================================
 struct ThresholdSlider : juce::Slider
 {
-    ThresholdSlider()
-    {
-        setLookAndFeel(&lnf);
-        onValueChange = [this]
-        {
-            auto v = juce::jmap<float>(getValue(),
-                                       0.f,
-                                       getLocalBounds().getBottom(),
-                                       MaxDecibels,
-                                       NegativeInfinity);
-            //DBG(v);
-            // update meters
-        };
-    }
+    ThresholdSlider() { setLookAndFeel(&lnf); }
     ~ThresholdSlider() { setLookAndFeel(nullptr); }
     
     void paint(juce::Graphics& g) override;
+    float getScaledValue();
     
 private:
     CustomLookAndFeel lnf;

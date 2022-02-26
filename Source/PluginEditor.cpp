@@ -602,6 +602,15 @@ void ThresholdSlider::paint(juce::Graphics& g)
                                       *this);
 }
 
+float ThresholdSlider::getScaledValue()
+{
+    return juce::jmap<float>(getValue(),
+                             0.f,
+                             getLocalBounds().getBottom(),
+                             MaxDecibels,
+                             NegativeInfinity);
+}
+
 //==============================================================================
 StereoMeter::StereoMeter(const juce::String& labelText)
     : label(labelText)
@@ -702,11 +711,16 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
-    
     addAndMakeVisible(rmsHistogram);
     addAndMakeVisible(peakHistogram);
-    
     addAndMakeVisible(stereoImageMeter);
+    
+    stereoMeterRms.threshCtrl.onValueChange = [this]
+    {
+        auto v = stereoMeterRms.threshCtrl.getScaledValue();
+        
+        DBG(v);
+    };
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
