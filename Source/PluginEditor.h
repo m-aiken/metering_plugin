@@ -309,8 +309,8 @@ struct CustomLookAndFeel : juce::LookAndFeel_V4
 //==============================================================================
 struct ThresholdSlider : juce::Slider
 {
-    ThresholdSlider() { setLookAndFeel(&lnf); }
-    ~ThresholdSlider() { setLookAndFeel(nullptr); }
+    ThresholdSlider();
+    ~ThresholdSlider();
     
     void paint(juce::Graphics& g) override;
     float getScaledValue();

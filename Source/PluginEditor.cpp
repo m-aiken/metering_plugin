@@ -596,19 +596,32 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
 }
 
 //==============================================================================
+ThresholdSlider::ThresholdSlider()
+{
+    setLookAndFeel(&lnf);
+    setRange(NegativeInfinity, MaxDecibels);
+    setValue(0.f);
+}
+
+ThresholdSlider::~ThresholdSlider() { setLookAndFeel(nullptr); }
+
 void ThresholdSlider::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
-    setRange(bounds.getY(), bounds.getBottom());
+    auto valueToDraw = juce::jmap<float>(getValue(),
+                                         NegativeInfinity,
+                                         MaxDecibels,
+                                         bounds.getBottom(),
+                                         bounds.getY());
     
     getLookAndFeel().drawLinearSlider(g,
                                       bounds.getX(),
                                       bounds.getY(),
                                       bounds.getWidth(),
                                       bounds.getHeight(),
-                                      getValue(),          // sliderPos
-                                      getMinimum(),        // minSliderPos
-                                      getMaximum(),        // maxSliderPos
+                                      valueToDraw,          // sliderPos
+                                      bounds.getBottom(),   // minSliderPos
+                                      bounds.getY(),        // maxSliderPos
                                       juce::Slider::SliderStyle::LinearVertical,
                                       *this);
 }
