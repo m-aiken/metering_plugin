@@ -253,11 +253,15 @@ struct Meter : juce::Component
     void resized() override;
     void update(const float& newLevel);
     
+    void setThreshold(const float& threshAsDecibels);
+    
     std::vector<Tick> ticks;
 private:
     float level = 0.f;
     
     DecayingValueHolder fallingTick;
+    
+    float threshold = 0.f;
 };
 
 //==============================================================================
@@ -277,6 +281,8 @@ struct MacroMeter : juce::Component
     
     std::vector<Tick> getTicks() { return instantMeter.ticks; }
     int getTickYoffset() { return textMeter.getHeight(); }
+    
+    void setThreshold(const float& threshAsDecibels);
     
 private:
     TextMeter textMeter;
@@ -321,6 +327,8 @@ struct StereoMeter : juce::Component
     void paint(juce::Graphics& g) override;
     void resized() override;
     void update(const float& inputL, const float& inputR);
+    
+    void setThreshold(const float& threshAsDecibels);
     
     ThresholdSlider threshCtrl;
 private:

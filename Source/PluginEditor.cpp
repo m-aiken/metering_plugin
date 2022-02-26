@@ -503,6 +503,11 @@ void Meter::update(const float& newLevel)
     repaint();
 }
 
+void Meter::setThreshold(const float& threshAsDecibels)
+{
+    threshold = threshAsDecibels;
+}
+
 //==============================================================================
 MacroMeter::MacroMeter(const Channel& channel)
     : channel(channel)
@@ -561,6 +566,12 @@ void MacroMeter::update(const float& input)
     textMeter.update(input);
     averageMeter.update(averager.getAverage());
     instantMeter.update(input);
+}
+
+void MacroMeter::setThreshold(const float& threshAsDecibels)
+{
+    averageMeter.setThreshold(threshAsDecibels);
+    instantMeter.setThreshold(threshAsDecibels);
 }
 
 //==============================================================================
@@ -701,6 +712,12 @@ void StereoMeter::update(const float& inputL, const float& inputR)
     macroMeterR.update(inputR);
 }
 
+void StereoMeter::setThreshold(const float& threshAsDecibels)
+{
+    macroMeterL.setThreshold(threshAsDecibels);
+    macroMeterR.setThreshold(threshAsDecibels);
+}
+
 //==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), stereoImageMeter(p.getSampleRate(), p.getBlockSize())
@@ -718,8 +735,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     stereoMeterRms.threshCtrl.onValueChange = [this]
     {
         auto v = stereoMeterRms.threshCtrl.getScaledValue();
-        
-        DBG(v);
+        stereoMeterRms.setThreshold(v);
+//        DBG(v);
     };
     
 #if defined(GAIN_TEST_ACTIVE)
