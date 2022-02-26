@@ -301,16 +301,27 @@ struct CustomLookAndFeel : juce::LookAndFeel_V4
 };
 
 //==============================================================================
+struct ThresholdSlider : juce::Slider
+{
+    ThresholdSlider() { setLookAndFeel(&lnf); }
+    ~ThresholdSlider() { setLookAndFeel(nullptr); }
+    
+    void paint(juce::Graphics& g) override;
+    
+private:
+    CustomLookAndFeel lnf;
+};
+
+//==============================================================================
 struct StereoMeter : juce::Component
 {
     StereoMeter(const juce::String& labelText);
-    ~StereoMeter();
     
     void paint(juce::Graphics& g) override;
     void resized() override;
     void update(const float& inputL, const float& inputR);
     
-    juce::Slider thresholdControl;
+    ThresholdSlider threshCtrl;
 private:
     MacroMeter macroMeterL{ Channel::Left };
     DbScale dbScale;
