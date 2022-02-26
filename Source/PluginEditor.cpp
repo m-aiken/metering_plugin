@@ -458,9 +458,24 @@ void Meter::paint(juce::Graphics& g)
     g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background colour
     g.fillRect(bounds);
     
-    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
-    auto jmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
-    g.fillRect(bounds.withHeight(h * jmap).withY(jmap));
+    auto green = juce::Colour(89u, 255u, 103u).withAlpha(0.6f);
+    auto red = juce::Colour(196u, 55u, 55u);
+    g.setColour(green); // green
+    auto levelJmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
+    auto thrshJmap = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, h, 0);
+    //DBG(threshold);
+    g.setColour(green);
+    if ( threshold <= level )
+    {
+        g.setColour(red);
+        g.fillRect(bounds.withHeight((h * levelJmap) - thrshJmap).withY(levelJmap));
+        g.setColour(green);
+        g.fillRect(bounds.withHeight(h * thrshJmap).withY(thrshJmap));
+    }
+    else
+    {
+        g.fillRect(bounds.withHeight(h * levelJmap).withY(levelJmap));
+    }
     
     // falling tick
     auto yellow = juce::Colour(217, 193, 56);
@@ -626,15 +641,6 @@ void ThresholdSlider::paint(juce::Graphics& g)
                                       *this);
 }
 
-float ThresholdSlider::getScaledValue()
-{
-    return juce::jmap<float>(getValue(),
-                             0.f,
-                             getLocalBounds().getBottom(),
-                             MaxDecibels,
-                             NegativeInfinity);
-}
-
 //==============================================================================
 StereoMeter::StereoMeter(const juce::String& labelText)
     : label(labelText)
@@ -747,9 +753,14 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     
     stereoMeterRms.threshCtrl.onValueChange = [this]
     {
-        auto v = stereoMeterRms.threshCtrl.getScaledValue();
+        auto v = stereoMeterRms.threshCtrl.getValue();
         stereoMeterRms.setThreshold(v);
-//        DBG(v);
+    };
+    
+    stereoMeterPeak.threshCtrl.onValueChange = [this]
+    {
+        auto v = stereoMeterPeak.threshCtrl.getValue();
+        stereoMeterPeak.setThreshold(v);
     };
     
 #if defined(GAIN_TEST_ACTIVE)

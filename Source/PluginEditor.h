@@ -313,7 +313,6 @@ struct ThresholdSlider : juce::Slider
     ~ThresholdSlider();
     
     void paint(juce::Graphics& g) override;
-    float getScaledValue();
     
 private:
     CustomLookAndFeel lnf;
