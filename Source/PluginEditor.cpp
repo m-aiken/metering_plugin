@@ -572,14 +572,15 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
                                          const juce::Slider::SliderStyle style,
                                          juce::Slider& slider)
 {
+    /*
     auto bounds = juce::Rectangle<int>(x, y, width, height);
     g.setColour(juce::Colours::green);
     g.drawRect(bounds);
-    
+    */
     slider.setSliderStyle(style);
     
     auto threshold = juce::Rectangle<float>(x, sliderPos, width, 2.f);
-    g.setColour(juce::Colours::red);
+    g.setColour(juce::Colour(196u, 55u, 55u)); // red
     g.fillRect(threshold);
 }
 
@@ -587,18 +588,16 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
 void ThresholdSlider::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
-    auto range = getRange();
-    
-    auto threshold = bounds.getY() + (bounds.getHeight() / 2);
+    setRange(bounds.getY(), bounds.getBottom());
     
     getLookAndFeel().drawLinearSlider(g,
                                       bounds.getX(),
                                       bounds.getY(),
                                       bounds.getWidth(),
                                       bounds.getHeight(),
-                                      threshold,          // sliderPos
-                                      range.getStart(),   // minSliderPos
-                                      range.getEnd(),     // MaxSliderPos
+                                      getValue(),          // sliderPos
+                                      getMinimum(),        // minSliderPos
+                                      getMaximum(),        // maxSliderPos
                                       juce::Slider::SliderStyle::LinearVertical,
                                       *this);
 }
