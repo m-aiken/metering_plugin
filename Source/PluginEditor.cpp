@@ -495,7 +495,7 @@ void Meter::paint(juce::Graphics& g)
     g.setColour(green); // green
     auto levelJmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     auto thrshJmap = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, h, 0);
-    //DBG(threshold);
+    
     g.setColour(green);
     if ( threshold <= level )
     {
@@ -631,11 +631,6 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
                                          const juce::Slider::SliderStyle style,
                                          juce::Slider& slider)
 {
-    /*
-    auto bounds = juce::Rectangle<int>(x, y, width, height);
-    g.setColour(juce::Colours::green);
-    g.drawRect(bounds);
-    */
     slider.setSliderStyle(style);
     
     auto threshold = juce::Rectangle<float>(x, sliderPos, width, 2.f);
@@ -707,26 +702,6 @@ void StereoMeter::paint(juce::Graphics& g)
                          juce::Justification::horizontallyCentred, // justification
                          1);                                       // max num lines
     }
-    /*
-    auto offset = macroMeterL.getTickYoffset();
-    thresholdControl.setBounds(dbScale.getX(),
-                               macroMeterL.getY() + offset,
-                               dbScale.getWidth(),
-                               macroMeterL.getHeight() - offset);
-    
-    auto threshold = thresholdControl.getY() + (thresholdControl.getHeight() / 2);
-    
-    thresholdControl.getLookAndFeel().drawLinearSlider(g,          // graphics
-                        thresholdControl.getX(),                   // x
-                        thresholdControl.getY(),                   // y
-                        thresholdControl.getWidth(),               // width
-                        thresholdControl.getHeight(),              // height
-                        threshold,                                 // sliderPos
-                        thresholdControl.getBottom(),              // minSliderPos
-                        thresholdControl.getY(),                   // maxSliderPos
-                        juce::Slider::SliderStyle::LinearBarVertical, // sliderStyle
-                        thresholdControl);                         // slider
-     */
 }
 
 void StereoMeter::resized()
