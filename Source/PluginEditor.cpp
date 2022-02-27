@@ -430,11 +430,16 @@ void DecayingValueHolder::handleOverHoldTime()
 }
 
 //==============================================================================
+void ValueHolder::setThreshold(const float& threshAsDecibels)
+{
+    threshold = threshAsDecibels;
+}
+
 void ValueHolder::updateHeldValue(const float& input)
 {
     currentValue = input;
     
-    if (input > mThreshold)
+    if (input > threshold)
     {
         isOverThreshold = true;
         peakTime = juce::Time::currentTimeMillis();
@@ -445,7 +450,7 @@ void ValueHolder::updateHeldValue(const float& input)
 
 void ValueHolder::handleOverHoldTime()
 {
-    isOverThreshold = currentValue > mThreshold;
+    isOverThreshold = currentValue > threshold;
     heldValue = NegativeInfinity;
 }
 
@@ -476,6 +481,11 @@ void TextMeter::update(const float& input)
 {
     valueHolder.updateHeldValue(input);
     repaint();
+}
+
+void TextMeter::setThreshold(const float& threshAsDecibels)
+{
+    valueHolder.setThreshold(threshAsDecibels);
 }
 
 //==============================================================================
@@ -639,6 +649,7 @@ void MacroMeter::setThreshold(const float& threshAsDecibels)
 {
     averageMeter.setThreshold(threshAsDecibels);
     instantMeter.setThreshold(threshAsDecibels);
+    textMeter.setThreshold(threshAsDecibels);
 }
 
 //==============================================================================

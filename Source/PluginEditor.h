@@ -216,14 +216,14 @@ struct ValueHolder : ValueHolderBase
     ValueHolder() { }
     ~ValueHolder() { }
     
-    void setThreshold(const float& threshold) { mThreshold = threshold; }
+    void setThreshold(const float& threshAsDecibels);
     void updateHeldValue(const float& input);
     bool getIsOverThreshold() const { return isOverThreshold; }
     
     void handleOverHoldTime() override;
     
 private:
-    float mThreshold = -1.f;
+    float threshold = 0.f;
     bool isOverThreshold = false;
 };
 
@@ -232,6 +232,7 @@ struct TextMeter : juce::Component
 {
     void paint(juce::Graphics& g) override;
     void update(const float& input);
+    void setThreshold(const float& threshAsDecibels);
     
 private:
     ValueHolder valueHolder;
