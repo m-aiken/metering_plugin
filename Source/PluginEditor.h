@@ -79,10 +79,9 @@ struct Histogram : juce::Component
     
 private:
     CircularBuffer<float> circularBuffer{780, NegativeInfinity};
-    
     juce::String label;
-    
     float threshold = 0.f;
+    juce::ColourGradient colourGrad;
 };
 
 //==============================================================================

@@ -151,22 +151,14 @@ void Histogram::paint(juce::Graphics& g)
                      juce::Justification::centredBottom, // justification
                      1);                                 // max num lines
     
-    
-    
-    
-    
     auto& data = circularBuffer.getData();
     auto readIdx = circularBuffer.getReadIndex();
     auto bufferSize = circularBuffer.getSize();
 
-    // UNDER THRESHOLD
-    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
-    juce::Path subThresholdPath;
+    juce::Path p;
     
     // manually setting first and last pixel's column (x) outside of the loops
-    subThresholdPath.startNewSubPath(0, height);
-    
-    auto scaledThreshold = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, height, 0);
+    p.startNewSubPath(0, height);
     
     auto x = 1;
     
@@ -174,67 +166,45 @@ void Histogram::paint(juce::Graphics& g)
     {
         auto scaledValue = juce::jmap<float>(data[i], NegativeInfinity, MaxDecibels, height, 0);
         
-        if ( scaledValue >= scaledThreshold )
-            subThresholdPath.lineTo(x, scaledValue);
-        else
-            subThresholdPath.lineTo(x, scaledThreshold);
+        p.lineTo(x, scaledValue);
         
         ++x;
     }
 
     for ( auto j = 0; j < readIdx; ++j )
     {
+        
         auto scaledValue = juce::jmap<float>(data[j], NegativeInfinity, MaxDecibels, height, 0);
         
-        if ( scaledValue >= scaledThreshold )
-            subThresholdPath.lineTo(x, scaledValue);
-        else
-            subThresholdPath.lineTo(x, scaledThreshold);
+        p.lineTo(x, scaledValue);
 
         ++x;
     }
     
-    subThresholdPath.lineTo(bufferSize - 1, height);
-    subThresholdPath.closeSubPath();
-    g.fillPath(subThresholdPath);
+    p.lineTo(bufferSize - 1, height);
+    p.closeSubPath();
     
-    // OVER THRESHOLD
-    g.setColour(juce::Colour(196u, 55u, 55u).withAlpha(0.6f)); // red
-//    g.setColour(juce::Colour(196u, 55u, 55u)); // red
-    juce::Path overThresholdPath;
+    auto green = juce::Colour(89u, 255u, 103u).withAlpha(0.6f);
+    auto red = juce::Colour(196u, 55u, 55u);
     
-    // manually setting first and last pixel's column (x) outside of the loops
-    overThresholdPath.startNewSubPath(0, scaledThreshold);
+    auto thresholdProportion = juce::jmap<float>(threshold,
+                                                 NegativeInfinity,
+                                                 MaxDecibels,
+                                                 0.f,
+                                                 1.f);
     
-    x = 1;
+    colourGrad.clearColours();
     
-    for ( auto i = readIdx; i < bufferSize - 1; ++i )
-    {
-        auto scaledValue = juce::jmap<float>(data[i], NegativeInfinity, MaxDecibels, height, 0);
-        
-        if ( scaledValue < scaledThreshold )
-            overThresholdPath.lineTo(x, scaledValue);
-        else
-            overThresholdPath.lineTo(x, scaledThreshold);
-        
-        ++x;
-    }
+    colourGrad.point1 = juce::Point<float>(0, height); // bottom
+    colourGrad.point2 = juce::Point<float>(0, 0);      // top
+    
+    // bottom to boundary = green, boundary+ = red
+    colourGrad.addColour(0, green);                   // negative infinity
+    colourGrad.addColour(thresholdProportion, green); // threshold boundary
+    colourGrad.addColour(thresholdProportion, red);   // threshold boundary
 
-    for ( auto j = 0; j < readIdx; ++j )
-    {
-        auto scaledValue = juce::jmap<float>(data[j], NegativeInfinity, MaxDecibels, height, 0);
-        
-        if ( scaledValue < scaledThreshold )
-            overThresholdPath.lineTo(x, scaledValue);
-        else
-            overThresholdPath.lineTo(x, scaledThreshold);
-
-        ++x;
-    }
-    
-    overThresholdPath.lineTo(bufferSize - 1, scaledThreshold);
-    overThresholdPath.closeSubPath();
-    g.fillPath(overThresholdPath);
+    g.setGradientFill(colourGrad);
+    g.fillPath(p);
 }
 
 void Histogram::update(const float& inputL, const float& inputR)
