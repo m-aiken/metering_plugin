@@ -75,10 +75,13 @@ struct Histogram : juce::Component
     void paint(juce::Graphics& g) override;
     void update(const float& inputL, const float& inputR);
     
+    void setThreshold(const float& threshAsDecibels);
+    
 private:
     CircularBuffer<float> circularBuffer{780, NegativeInfinity};
-    
     juce::String label;
+    float threshold = 0.f;
+    juce::ColourGradient colourGrad;
 };
 
 //==============================================================================
@@ -212,14 +215,14 @@ struct ValueHolder : ValueHolderBase
     ValueHolder() { }
     ~ValueHolder() { }
     
-    void setThreshold(const float& threshold) { mThreshold = threshold; }
+    void setThreshold(const float& threshAsDecibels);
     void updateHeldValue(const float& input);
     bool getIsOverThreshold() const { return isOverThreshold; }
     
     void handleOverHoldTime() override;
     
 private:
-    float mThreshold = -1.f;
+    float threshold = 0.f;
     bool isOverThreshold = false;
 };
 
@@ -228,6 +231,7 @@ struct TextMeter : juce::Component
 {
     void paint(juce::Graphics& g) override;
     void update(const float& input);
+    void setThreshold(const float& threshAsDecibels);
     
 private:
     ValueHolder valueHolder;
@@ -253,11 +257,15 @@ struct Meter : juce::Component
     void resized() override;
     void update(const float& newLevel);
     
+    void setThreshold(const float& threshAsDecibels);
+    
     std::vector<Tick> ticks;
 private:
     float level = 0.f;
     
     DecayingValueHolder fallingTick;
+    
+    float threshold = 0.f;
 };
 
 //==============================================================================
@@ -278,6 +286,8 @@ struct MacroMeter : juce::Component
     std::vector<Tick> getTicks() { return instantMeter.ticks; }
     int getTickYoffset() { return textMeter.getHeight(); }
     
+    void setThreshold(const float& threshAsDecibels);
+    
 private:
     TextMeter textMeter;
     Meter averageMeter;
@@ -288,6 +298,31 @@ private:
     Channel channel;
 };
 
+//==============================================================================
+struct CustomLookAndFeel : juce::LookAndFeel_V4
+{
+    void drawLinearSlider(juce::Graphics& g,
+                          int x, int y, int width, int height,
+                          float sliderPos,
+                          float minSliderPos,
+                          float maxSliderPos,
+                          const juce::Slider::SliderStyle style,
+                          juce::Slider& slider) override;
+};
+
+//==============================================================================
+struct ThresholdSlider : juce::Slider
+{
+    ThresholdSlider();
+    ~ThresholdSlider();
+    
+    void paint(juce::Graphics& g) override;
+    
+private:
+    CustomLookAndFeel lnf;
+};
+
+//==============================================================================
 struct StereoMeter : juce::Component
 {
     StereoMeter(const juce::String& labelText);
@@ -296,6 +331,9 @@ struct StereoMeter : juce::Component
     void resized() override;
     void update(const float& inputL, const float& inputR);
     
+    void setThreshold(const float& threshAsDecibels);
+    
+    ThresholdSlider threshCtrl;
 private:
     MacroMeter macroMeterL{ Channel::Left };
     DbScale dbScale;
@@ -304,6 +342,8 @@ private:
     juce::String label;
     
     float dbScaleLabelCrossover = 0.94f;
+    
+    CustomLookAndFeel customStyle;
 };
 
 //==============================================================================
