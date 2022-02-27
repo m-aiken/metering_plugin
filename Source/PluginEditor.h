@@ -75,10 +75,14 @@ struct Histogram : juce::Component
     void paint(juce::Graphics& g) override;
     void update(const float& inputL, const float& inputR);
     
+    void setThreshold(const float& threshAsDecibels);
+    
 private:
     CircularBuffer<float> circularBuffer{780, NegativeInfinity};
     
     juce::String label;
+    
+    float threshold = 0.f;
 };
 
 //==============================================================================

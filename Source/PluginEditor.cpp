@@ -198,6 +198,11 @@ void Histogram::update(const float& inputL, const float& inputR)
     repaint();
 }
 
+void Histogram::setThreshold(const float& threshAsDecibels)
+{
+    threshold = threshAsDecibels;
+}
+
 //==============================================================================
 CorrelationMeter::CorrelationMeter(double _sampleRate, size_t _blockSize)
     : sampleRate(_sampleRate), blockSize(_blockSize)
@@ -755,12 +760,14 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     {
         auto v = stereoMeterRms.threshCtrl.getValue();
         stereoMeterRms.setThreshold(v);
+        rmsHistogram.setThreshold(v);
     };
     
     stereoMeterPeak.threshCtrl.onValueChange = [this]
     {
         auto v = stereoMeterPeak.threshCtrl.getValue();
         stereoMeterPeak.setThreshold(v);
+        peakHistogram.setThreshold(v);
     };
     
 #if defined(GAIN_TEST_ACTIVE)
