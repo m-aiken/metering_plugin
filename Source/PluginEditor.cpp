@@ -530,9 +530,9 @@ void Meter::paint(juce::Graphics& g)
     if ( threshold <= level )
     {
         g.setColour(red);
-        g.fillRect(bounds.withHeight((h * levelJmap) - thrshJmap).withY(levelJmap));
+        g.fillRect(bounds.withHeight((h * levelJmap) - (thrshJmap - 1)).withY(levelJmap));
         g.setColour(green);
-        g.fillRect(bounds.withHeight(h * thrshJmap).withY(thrshJmap));
+        g.fillRect(bounds.withHeight(h * (thrshJmap + 1)).withY(thrshJmap + 1));
     }
     else
     {
