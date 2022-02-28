@@ -73,6 +73,7 @@ struct Histogram : juce::Component
 {
     Histogram(const juce::String& _label) : label(_label) { }
     void paint(juce::Graphics& g) override;
+    void resized() override;
     void update(const float& inputL, const float& inputR);
     
     void setThreshold(const float& threshAsDecibels);

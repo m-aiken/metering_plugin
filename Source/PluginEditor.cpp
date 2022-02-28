@@ -195,9 +195,6 @@ void Histogram::paint(juce::Graphics& g)
     
     colourGrad.clearColours();
     
-    colourGrad.point1 = juce::Point<float>(0, height); // bottom
-    colourGrad.point2 = juce::Point<float>(0, 0);      // top
-    
     // bottom to boundary = green, boundary+ = red
     colourGrad.addColour(0, green);                   // negative infinity
     colourGrad.addColour(thresholdProportion, green); // threshold boundary
@@ -205,6 +202,12 @@ void Histogram::paint(juce::Graphics& g)
 
     g.setGradientFill(colourGrad);
     g.fillPath(p);
+}
+
+void Histogram::resized()
+{
+    colourGrad.point1 = juce::Point<float>(0, getLocalBounds().getHeight()); // bottom
+    colourGrad.point2 = juce::Point<float>(0, 0);      // top
 }
 
 void Histogram::update(const float& inputL, const float& inputR)
