@@ -348,6 +348,44 @@ private:
 };
 
 //==============================================================================
+struct MeterCombo : juce::Component
+{
+    MeterCombo(const juce::String& labelText, std::vector<juce::String> comboItems);
+    
+    void resized() override;
+    
+private:
+    juce::Label label;
+    juce::ComboBox comboBox;
+};
+
+struct MeterComboGroup : juce::Component
+{
+    MeterComboGroup();
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+    
+private:
+    MeterCombo decayRateCombo
+    {
+        "DECAY",
+        { "-3dB/s", "-6dB/s", "-12dB/s", "-24dB/s", "-36dB/s" }
+    };
+    
+    MeterCombo avgDurationCombo
+    {
+        "AVG",
+        { "100ms", "250ms", "500ms", "1000ms", "2000ms" }
+    };
+    
+    MeterCombo meterViewCombo
+    {
+        "METER",
+        { "Both", "Peak", "Avg" }
+    };
+};
+
+//==============================================================================
 /**
 */
 class PFMProject10AudioProcessorEditor  : public juce::AudioProcessorEditor, juce::Timer
@@ -376,6 +414,8 @@ private:
     Histogram peakHistogram{"PEAK"};
     
     StereoImageMeter stereoImageMeter;
+    
+    MeterComboGroup meterCombos;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;

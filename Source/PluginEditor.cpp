@@ -749,6 +749,96 @@ void StereoMeter::setThreshold(const float& threshAsDecibels)
 }
 
 //==============================================================================
+MeterCombo::MeterCombo(const juce::String& labelText, std::vector<juce::String> comboItems)
+{
+    addAndMakeVisible(label);
+    label.setText(labelText, juce::NotificationType::dontSendNotification);
+    label.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(comboBox);
+    for ( auto i = 0; i < comboItems.size(); ++i)
+        comboBox.addItem(comboItems[i], i+1);
+}
+
+void MeterCombo::resized()
+{
+    auto bounds = getLocalBounds();
+    label.setBounds(0,
+                    0,
+                    bounds.getWidth(),
+                    bounds.getHeight() / 2);
+    
+    comboBox.setBounds(0,
+                       bounds.getHeight() / 2,
+                       bounds.getWidth(),
+                       bounds.getHeight() / 2);
+}
+
+MeterComboGroup::MeterComboGroup()
+{
+    addAndMakeVisible(decayRateCombo);
+    addAndMakeVisible(avgDurationCombo);
+    addAndMakeVisible(meterViewCombo);
+}
+
+void MeterComboGroup::paint(juce::Graphics& g)
+{
+//    g.setColour(juce::Colours::red);
+//    g.drawRect(getLocalBounds());
+}
+
+void MeterComboGroup::resized()
+{
+    auto bounds = getLocalBounds();
+    auto height = bounds.getHeight();
+    
+    auto boxHeight = 60;
+    auto boxWidth = bounds.getWidth();
+    /*
+    decayRateLabel.setBounds(0,
+                             (height * 0.25f) - boxHeight,
+                             boxWidth,
+                             boxHeight);
+    decayRateCombo.setBounds(0,
+                             (height * 0.25f),
+                             boxWidth,
+                             boxHeight);
+    
+    avgDurationLabel.setBounds(0,
+                               (height * 0.5f) - boxHeight,
+                               boxWidth,
+                               boxHeight);
+    avgDurationCombo.setBounds(0,
+                               (height * 0.5f),
+                               boxWidth,
+                               boxHeight);
+    
+    meterViewLabel.setBounds(0,
+                             (height * 0.75f) - boxHeight,
+                             boxWidth,
+                             boxHeight);
+    meterViewCombo.setBounds(0,
+                             (height * 0.75f),
+                             boxWidth,
+                             boxHeight);
+    */
+    decayRateCombo.setBounds(0,
+                             (height * 0.25) - (boxHeight / 2),
+                             boxWidth,
+                             boxHeight);
+    
+    avgDurationCombo.setBounds(0,
+                               (height * 0.5) - (boxHeight / 2),
+                               boxWidth,
+                               boxHeight);
+    
+    meterViewCombo.setBounds(0,
+                             (height * 0.75) - (boxHeight / 2),
+                             boxWidth,
+                             boxHeight);
+}
+
+//==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), stereoImageMeter(p.getSampleRate(), p.getBlockSize())
 {
@@ -761,6 +851,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(rmsHistogram);
     addAndMakeVisible(peakHistogram);
     addAndMakeVisible(stereoImageMeter);
+    addAndMakeVisible(meterCombos);
     
     stereoMeterRms.threshCtrl.onValueChange = [this]
     {
@@ -831,7 +922,12 @@ void PFMProject10AudioProcessorEditor::resized()
                               (rmsHistogram.getY() - stereoImageMeterWidth) / 2,
                               stereoImageMeterWidth,
                               stereoImageMeterWidth + 20); // +20 to account for correlation meter
-     
+    
+    meterCombos.setBounds(stereoMeterRms.getRight() + 20,
+                          margin,
+                          80,
+                          stereoMeterHeight);
+    
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
 #endif
