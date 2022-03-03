@@ -749,92 +749,63 @@ void StereoMeter::setThreshold(const float& threshAsDecibels)
 }
 
 //==============================================================================
-MeterCombo::MeterCombo(const juce::String& labelText, std::vector<juce::String> comboItems)
-{
-    addAndMakeVisible(label);
-    label.setText(labelText, juce::NotificationType::dontSendNotification);
-    label.setJustificationType(juce::Justification::centred);
-    
-    addAndMakeVisible(comboBox);
-    for ( auto i = 0; i < comboItems.size(); ++i)
-        comboBox.addItem(comboItems[i], i+1);
-}
-
-void MeterCombo::resized()
-{
-    auto bounds = getLocalBounds();
-    label.setBounds(0,
-                    0,
-                    bounds.getWidth(),
-                    bounds.getHeight() / 2);
-    
-    comboBox.setBounds(0,
-                       bounds.getHeight() / 2,
-                       bounds.getWidth(),
-                       bounds.getHeight() / 2);
-}
-
 MeterComboGroup::MeterComboGroup()
 {
+    addAndMakeVisible(decayRateLabel);
+    decayRateLabel.setText("DECAY", juce::NotificationType::dontSendNotification);
+    decayRateLabel.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(avgDurationLabel);
+    avgDurationLabel.setText("AVG", juce::NotificationType::dontSendNotification);
+    avgDurationLabel.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(meterViewLabel);
+    meterViewLabel.setText("METER", juce::NotificationType::dontSendNotification);
+    meterViewLabel.setJustificationType(juce::Justification::centred);
+    
     addAndMakeVisible(decayRateCombo);
+    decayRateCombo.addItemList(decayRateChoices, 1);
+    
     addAndMakeVisible(avgDurationCombo);
+    avgDurationCombo.addItemList(avgDurationChoices, 1);
+    
     addAndMakeVisible(meterViewCombo);
-}
-
-void MeterComboGroup::paint(juce::Graphics& g)
-{
-//    g.setColour(juce::Colours::red);
-//    g.drawRect(getLocalBounds());
+    meterViewCombo.addItemList(meterViewChoices, 1);
 }
 
 void MeterComboGroup::resized()
 {
     auto bounds = getLocalBounds();
-    auto height = bounds.getHeight();
+    auto boundsHeight = bounds.getHeight();
     
-    auto boxHeight = 60;
-    auto boxWidth = bounds.getWidth();
-    /*
+    auto boxHeight = 30;
+    auto width = bounds.getWidth();
+
     decayRateLabel.setBounds(0,
-                             (height * 0.25f) - boxHeight,
-                             boxWidth,
+                             (boundsHeight * 0.25f) - boxHeight,
+                             width,
                              boxHeight);
     decayRateCombo.setBounds(0,
-                             (height * 0.25f),
-                             boxWidth,
+                             (boundsHeight * 0.25f),
+                             width,
                              boxHeight);
     
     avgDurationLabel.setBounds(0,
-                               (height * 0.5f) - boxHeight,
-                               boxWidth,
+                               (boundsHeight * 0.5f) - boxHeight,
+                               width,
                                boxHeight);
     avgDurationCombo.setBounds(0,
-                               (height * 0.5f),
-                               boxWidth,
+                               (boundsHeight * 0.5f),
+                               width,
                                boxHeight);
     
     meterViewLabel.setBounds(0,
-                             (height * 0.75f) - boxHeight,
-                             boxWidth,
+                             (boundsHeight * 0.75f) - boxHeight,
+                             width,
                              boxHeight);
     meterViewCombo.setBounds(0,
-                             (height * 0.75f),
-                             boxWidth,
-                             boxHeight);
-    */
-    decayRateCombo.setBounds(0,
-                             (height * 0.25) - (boxHeight / 2),
-                             boxWidth,
-                             boxHeight);
-    
-    avgDurationCombo.setBounds(0,
-                               (height * 0.5) - (boxHeight / 2),
-                               boxWidth,
-                               boxHeight);
-    
-    meterViewCombo.setBounds(0,
-                             (height * 0.75) - (boxHeight / 2),
-                             boxWidth,
+                             (boundsHeight * 0.75f),
+                             width,
                              boxHeight);
 }
 
