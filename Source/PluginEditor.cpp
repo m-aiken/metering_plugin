@@ -558,6 +558,11 @@ void Meter::setThreshold(const float& threshAsDecibels)
     threshold = threshAsDecibels;
 }
 
+void Meter::setDecayRate(const float& dbPerSecond)
+{
+    fallingTick.setDecayRate(dbPerSecond);
+}
+
 //==============================================================================
 MacroMeter::MacroMeter(const Channel& channel)
     : channel(channel)
@@ -623,6 +628,12 @@ void MacroMeter::setThreshold(const float& threshAsDecibels)
     averageMeter.setThreshold(threshAsDecibels);
     instantMeter.setThreshold(threshAsDecibels);
     textMeter.setThreshold(threshAsDecibels);
+}
+
+void MacroMeter::setDecayRate(const float& dbPerSecond)
+{
+    averageMeter.setDecayRate(dbPerSecond);
+    instantMeter.setDecayRate(dbPerSecond);
 }
 
 //==============================================================================
@@ -748,6 +759,12 @@ void StereoMeter::setThreshold(const float& threshAsDecibels)
     macroMeterR.setThreshold(threshAsDecibels);
 }
 
+void StereoMeter::setDecayRate(const float& dbPerSecond)
+{
+    macroMeterL.setDecayRate(dbPerSecond);
+    macroMeterR.setDecayRate(dbPerSecond);
+}
+
 //==============================================================================
 MeterComboGroup::MeterComboGroup()
 {
@@ -837,6 +854,25 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setThreshold(v);
         peakHistogram.setThreshold(v);
     };
+    
+    meterCombos.decayRateCombo.onChange = [this]
+    {
+        float dbPerSecond;
+        switch (meterCombos.decayRateCombo.getSelectedId()) {
+            case 1:  dbPerSecond = 3.f;  break;
+            case 2:  dbPerSecond = 6.f;  break;
+            case 3:  dbPerSecond = 12.f; break;
+            case 4:  dbPerSecond = 24.f; break;
+            case 5:  dbPerSecond = 36.f; break;
+            default: dbPerSecond = 12.f; break;
+        }
+        
+        stereoMeterRms.setDecayRate(dbPerSecond);
+        stereoMeterPeak.setDecayRate(dbPerSecond);
+    };
+    
+    meterCombos.avgDurationCombo.onChange = [this] { };
+    meterCombos.meterViewCombo.onChange = [this] { };
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
