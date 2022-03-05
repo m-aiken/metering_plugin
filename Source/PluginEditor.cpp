@@ -640,18 +640,18 @@ void MacroMeter::setMeterView(const int& newViewId)
 {
     if ( newViewId == 1 ) // Both
     {
-        averageMeter.setVisible(true);
-        instantMeter.setVisible(true);
+        averageMeter.setAlpha(1.f);
+        instantMeter.setAlpha(1.f);
     }
     else if ( newViewId == 2 ) // Peak
     {
-        averageMeter.setVisible(false);
-        instantMeter.setVisible(true);
+        averageMeter.setAlpha(0.07f);
+        instantMeter.setAlpha(1.f);
     }
     else if ( newViewId == 3 ) // Average
     {
-        averageMeter.setVisible(true);
-        instantMeter.setVisible(false);
+        averageMeter.setAlpha(1.f);
+        instantMeter.setAlpha(0.07f);
     }
 }
 
