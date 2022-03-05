@@ -638,7 +638,21 @@ void MacroMeter::setDecayRate(const float& dbPerSecond)
 
 void MacroMeter::setMeterView(const int& newViewId)
 {
-    viewId = newViewId;
+    if ( newViewId == 1 ) // Both
+    {
+        averageMeter.setVisible(true);
+        instantMeter.setVisible(true);
+    }
+    else if ( newViewId == 2 ) // Peak
+    {
+        averageMeter.setVisible(false);
+        instantMeter.setVisible(true);
+    }
+    else if ( newViewId == 3 ) // Average
+    {
+        averageMeter.setVisible(true);
+        instantMeter.setVisible(false);
+    }
 }
 
 //==============================================================================

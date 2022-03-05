@@ -301,8 +301,6 @@ private:
     Averager<float> averager{12, NegativeInfinity};
     
     Channel channel;
-    
-    int viewId = 1;
 };
 
 //==============================================================================
