@@ -223,6 +223,43 @@ void Histogram::setThreshold(const float& threshAsDecibels)
     threshold = threshAsDecibels;
 }
 
+HistogramContainer::HistogramContainer()
+{
+    addAndMakeVisible(rmsHistogram);
+    addAndMakeVisible(peakHistogram);
+}
+
+void HistogramContainer::resized()
+{
+    auto rms = juce::FlexItem(rmsHistogram).withFlex(1.f).withMargin(2.f);
+    auto peak = juce::FlexItem(peakHistogram).withFlex(1.f).withMargin(2.f);
+    
+    juce::FlexBox fb;
+    fb.flexDirection = juce::FlexBox::Direction::column;
+    fb.items.add(rms);
+    fb.items.add(peak);
+    fb.performLayout(getLocalBounds());
+}
+
+void HistogramContainer::update(const HistogramTypes& histoType,
+                                const float& inputL,
+                                const float& inputR)
+{
+    if ( histoType == HistogramTypes::RMS )
+        rmsHistogram.update(inputL, inputR);
+    else
+        peakHistogram.update(inputL, inputR);
+}
+
+void HistogramContainer::setThreshold(const HistogramTypes& histoType,
+                                      const float& threshAsDecibels)
+{
+    if ( histoType == HistogramTypes::RMS )
+        rmsHistogram.setThreshold(threshAsDecibels);
+    else
+        peakHistogram.setThreshold(threshAsDecibels);
+}
+
 //==============================================================================
 CorrelationMeter::CorrelationMeter(double _sampleRate, size_t _blockSize)
     : sampleRate(_sampleRate), blockSize(_blockSize)
@@ -863,8 +900,9 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
-    addAndMakeVisible(rmsHistogram);
-    addAndMakeVisible(peakHistogram);
+//    addAndMakeVisible(rmsHistogram);
+//    addAndMakeVisible(peakHistogram);
+    addAndMakeVisible(histograms);
     addAndMakeVisible(stereoImageMeter);
     addAndMakeVisible(meterCombos);
     
@@ -872,14 +910,16 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     {
         auto v = stereoMeterRms.threshCtrl.getValue();
         stereoMeterRms.setThreshold(v);
-        rmsHistogram.setThreshold(v);
+//        rmsHistogram.setThreshold(v);
+        histograms.setThreshold(HistogramTypes::RMS, v);
     };
     
     stereoMeterPeak.threshCtrl.onValueChange = [this]
     {
         auto v = stereoMeterPeak.threshCtrl.getValue();
         stereoMeterPeak.setThreshold(v);
-        peakHistogram.setThreshold(v);
+//        peakHistogram.setThreshold(v);
+        histograms.setThreshold(HistogramTypes::PEAK, v);
     };
     
     meterCombos.decayRateCombo.onChange = [this]
@@ -946,7 +986,7 @@ void PFMProject10AudioProcessorEditor::resized()
                               margin,
                               stereoMeterWidth,
                               stereoMeterHeight);
-    
+    /*
     rmsHistogram.setBounds(margin,
                            stereoMeterRms.getBottom() + margin,
                            width - (margin * 2),
@@ -956,10 +996,15 @@ void PFMProject10AudioProcessorEditor::resized()
                             rmsHistogram.getBottom() + margin,
                             width - (margin * 2),
                             105);
+    */
+    histograms.setBounds(margin,
+                         stereoMeterRms.getBottom() + margin,
+                         width - (margin * 2),
+                         210);
     
     auto stereoImageMeterWidth = 300; // this will also be the height of the goniometer
     stereoImageMeter.setBounds((width / 2) - (stereoImageMeterWidth / 2),
-                              (rmsHistogram.getY() - stereoImageMeterWidth) / 2,
+                              (histograms.getY() - stereoImageMeterWidth) / 2,
                               stereoImageMeterWidth,
                               stereoImageMeterWidth + 20); // +20 to account for correlation meter
     
@@ -996,8 +1041,10 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto peakDbR = juce::Decibels::gainToDecibels(peakR, NegativeInfinity);
         stereoMeterPeak.update(peakDbL, peakDbR);
         
-        rmsHistogram.update(rmsDbL, rmsDbR);
-        peakHistogram.update(peakDbL, peakDbR);
+//        rmsHistogram.update(rmsDbL, rmsDbR);
+//        peakHistogram.update(peakDbL, peakDbR);
+        histograms.update(HistogramTypes::RMS, rmsDbL, rmsDbR);
+        histograms.update(HistogramTypes::PEAK, peakDbL, peakDbR);
         
         stereoImageMeter.update(incomingBuffer);
     }

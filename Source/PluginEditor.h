@@ -69,6 +69,12 @@ private:
 };
 
 //==============================================================================
+enum class HistogramTypes
+{
+    RMS,
+    PEAK
+};
+
 struct Histogram : juce::Component
 {
     Histogram(const juce::String& _label) : label(_label) { }
@@ -83,6 +89,19 @@ private:
     juce::String label;
     float threshold = 0.f;
     juce::ColourGradient colourGrad;
+};
+
+struct HistogramContainer : juce::Component
+{
+    HistogramContainer();
+    void resized() override;
+    
+    void update(const HistogramTypes& histoType, const float& inputL, const float& inputR);
+    void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
+    
+private:
+    Histogram rmsHistogram{"RMS"};
+    Histogram peakHistogram{"PEAK"};
 };
 
 //==============================================================================
@@ -394,8 +413,9 @@ private:
     StereoMeter stereoMeterRms{"RMS"};
     StereoMeter stereoMeterPeak{"PEAK"};
     
-    Histogram rmsHistogram{"RMS"};
-    Histogram peakHistogram{"PEAK"};
+//    Histogram rmsHistogram{"RMS"};
+//    Histogram peakHistogram{"PEAK"};
+    HistogramContainer histograms;
     
     StereoImageMeter stereoImageMeter;
     
