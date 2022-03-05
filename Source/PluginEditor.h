@@ -291,6 +291,8 @@ struct MacroMeter : juce::Component
     void setThreshold(const float& threshAsDecibels);
     void setDecayRate(const float& dbPerSecond);
     
+    void setMeterView(const int& newViewId);
+    
 private:
     TextMeter textMeter;
     Meter averageMeter;
@@ -299,6 +301,8 @@ private:
     Averager<float> averager{12, NegativeInfinity};
     
     Channel channel;
+    
+    int viewId = 1;
 };
 
 //==============================================================================
@@ -336,6 +340,8 @@ struct StereoMeter : juce::Component
     
     void setThreshold(const float& threshAsDecibels);
     void setDecayRate(const float& dbPerSecond);
+    
+    void setMeterView(const int& newViewId);
     
     ThresholdSlider threshCtrl;
 private:

@@ -636,6 +636,11 @@ void MacroMeter::setDecayRate(const float& dbPerSecond)
     instantMeter.setDecayRate(dbPerSecond);
 }
 
+void MacroMeter::setMeterView(const int& newViewId)
+{
+    viewId = newViewId;
+}
+
 //==============================================================================
 void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
                                          int x, int y, int width, int height,
@@ -765,6 +770,12 @@ void StereoMeter::setDecayRate(const float& dbPerSecond)
     macroMeterR.setDecayRate(dbPerSecond);
 }
 
+void StereoMeter::setMeterView(const int& newViewId)
+{
+    macroMeterL.setMeterView(newViewId);
+    macroMeterR.setMeterView(newViewId);
+}
+
 //==============================================================================
 MeterComboGroup::MeterComboGroup()
 {
@@ -872,7 +883,13 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     };
     
     meterCombos.avgDurationCombo.onChange = [this] { };
-    meterCombos.meterViewCombo.onChange = [this] { };
+    
+    meterCombos.meterViewCombo.onChange = [this]
+    {
+        auto selectedId = meterCombos.meterViewCombo.getSelectedId();
+        stereoMeterRms.setMeterView(selectedId);
+        stereoMeterPeak.setMeterView(selectedId);
+    };
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
