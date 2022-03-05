@@ -813,6 +813,7 @@ MeterComboGroup::MeterComboGroup()
     
     addAndMakeVisible(meterViewCombo);
     meterViewCombo.addItemList(meterViewChoices, 1);
+    meterViewCombo.setSelectedId(1);
 }
 
 void MeterComboGroup::resized()
