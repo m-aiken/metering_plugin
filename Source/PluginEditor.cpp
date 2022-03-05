@@ -807,6 +807,7 @@ MeterComboGroup::MeterComboGroup()
     
     addAndMakeVisible(decayRateCombo);
     decayRateCombo.addItemList(decayRateChoices, 1);
+    decayRateCombo.setSelectedId(3);
     
     addAndMakeVisible(avgDurationCombo);
     avgDurationCombo.addItemList(avgDurationChoices, 1);

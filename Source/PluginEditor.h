@@ -206,7 +206,7 @@ struct DecayingValueHolder : ValueHolderBase
     
 private:
     int timerFrequency = 30;
-    float initDecayRate = 30.f;
+    float initDecayRate = 12.f;
     float decayRatePerFrame;
 };
 
