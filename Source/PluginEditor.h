@@ -105,14 +105,19 @@ private:
 struct HistogramContainer : juce::Component
 {
     HistogramContainer();
+    void paint(juce::Graphics& g) override;
     void resized() override;
     
     void update(const HistogramTypes& histoType, const float& inputL, const float& inputR);
     void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
     
+    void setFlexDirection(const int& selectedId);
+    
 private:
     Histogram rmsHistogram{"RMS"};
     Histogram peakHistogram{"PEAK"};
+    
+    juce::FlexBox fb;
 };
 
 //==============================================================================
@@ -426,7 +431,7 @@ private:
     
 //    Histogram rmsHistogram{"RMS"};
 //    Histogram peakHistogram{"PEAK"};
-    HistogramViewCombo histogramViewComboBox;
+    HistogramViewCombo histViewSelect;
     HistogramContainer histograms;
     
     StereoImageMeter stereoImageMeter;

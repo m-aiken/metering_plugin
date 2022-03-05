@@ -250,16 +250,19 @@ HistogramContainer::HistogramContainer()
     addAndMakeVisible(peakHistogram);
 }
 
+void HistogramContainer::paint(juce::Graphics& g)
+{
+    
+}
+
 void HistogramContainer::resized()
 {
     auto rms = juce::FlexItem(rmsHistogram).withFlex(1.f).withMargin(2.f);
     auto peak = juce::FlexItem(peakHistogram).withFlex(1.f).withMargin(2.f);
     
-    juce::FlexBox fb;
-    fb.flexDirection = juce::FlexBox::Direction::column;
     fb.items.add(rms);
     fb.items.add(peak);
-    fb.performLayout(getLocalBounds());
+    
 }
 
 void HistogramContainer::update(const HistogramTypes& histoType,
@@ -279,6 +282,16 @@ void HistogramContainer::setThreshold(const HistogramTypes& histoType,
         rmsHistogram.setThreshold(threshAsDecibels);
     else
         peakHistogram.setThreshold(threshAsDecibels);
+}
+
+void HistogramContainer::setFlexDirection(const int& selectedId)
+{
+    if ( selectedId == 1 )
+        fb.flexDirection = juce::FlexBox::Direction::column;
+    else if ( selectedId == 2)
+        fb.flexDirection = juce::FlexBox::Direction::row;
+    
+    fb.performLayout(getLocalBounds());
 }
 
 //==============================================================================
@@ -923,11 +936,16 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoMeterPeak);
 //    addAndMakeVisible(rmsHistogram);
 //    addAndMakeVisible(peakHistogram);
-    addAndMakeVisible(histogramViewComboBox);
+    addAndMakeVisible(histViewSelect);
     addAndMakeVisible(histograms);
+    
     addAndMakeVisible(stereoImageMeter);
     addAndMakeVisible(meterCombos);
     
+    // set inital values
+    histograms.setFlexDirection(histViewSelect.comboBox.getSelectedId());
+    
+    // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]
     {
         auto v = stereoMeterRms.threshCtrl.getValue();
@@ -967,6 +985,11 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         auto selectedId = meterCombos.meterViewCombo.getSelectedId();
         stereoMeterRms.setMeterView(selectedId);
         stereoMeterPeak.setMeterView(selectedId);
+    };
+    
+    histViewSelect.comboBox.onChange = [this]
+    {
+        histograms.setFlexDirection(histViewSelect.comboBox.getSelectedId());
     };
     
 #if defined(GAIN_TEST_ACTIVE)
@@ -1020,7 +1043,7 @@ void PFMProject10AudioProcessorEditor::resized()
                             105);
     */
     histograms.setBounds(margin,
-                         stereoMeterRms.getBottom() + margin,
+                         stereoMeterRms.getBottom() + (margin * 2),
                          width - (margin * 2),
                          210);
     
@@ -1040,7 +1063,7 @@ void PFMProject10AudioProcessorEditor::resized()
     auto padding = (rightMeterToCorrMeter * 0.2f) / 2;
     auto histSelectHeight = 60;
     
-    histogramViewComboBox.setBounds(stereoImageMeter.getRight() + padding,
+    histViewSelect.setBounds(stereoImageMeter.getRight() + padding,
                                     stereoImageMeter.getBottom() - histSelectHeight,
                                     histSelectWidth,
                                     histSelectHeight);
