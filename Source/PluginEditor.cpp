@@ -137,6 +137,27 @@ void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
 }
 
 //==============================================================================
+HistogramViewCombo::HistogramViewCombo()
+{
+    addAndMakeVisible(label);
+    label.setText("Histogram View", juce::NotificationType::dontSendNotification);
+    label.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(comboBox);
+    comboBox.addItemList(choices, 1);
+    comboBox.setSelectedId(1);
+}
+
+void HistogramViewCombo::resized()
+{
+    auto bounds = getLocalBounds();
+    auto width = bounds.getWidth();
+    auto height = bounds.getHeight();
+    
+    label.setBounds(0, 0, width, height / 2);
+    comboBox.setBounds(0, height / 2, width, height / 2);
+}
+
 void Histogram::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
@@ -902,6 +923,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoMeterPeak);
 //    addAndMakeVisible(rmsHistogram);
 //    addAndMakeVisible(peakHistogram);
+    addAndMakeVisible(histogramViewComboBox);
     addAndMakeVisible(histograms);
     addAndMakeVisible(stereoImageMeter);
     addAndMakeVisible(meterCombos);
@@ -1012,6 +1034,16 @@ void PFMProject10AudioProcessorEditor::resized()
                           margin,
                           80,
                           stereoMeterHeight);
+    
+    auto rightMeterToCorrMeter = (stereoMeterPeak.getX() - stereoImageMeter.getRight());
+    auto histSelectWidth = rightMeterToCorrMeter * 0.8f;
+    auto padding = (rightMeterToCorrMeter * 0.2f) / 2;
+    auto histSelectHeight = 60;
+    
+    histogramViewComboBox.setBounds(stereoImageMeter.getRight() + padding,
+                                    stereoImageMeter.getBottom() - histSelectHeight,
+                                    histSelectWidth,
+                                    histSelectHeight);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);

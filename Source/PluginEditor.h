@@ -69,6 +69,17 @@ private:
 };
 
 //==============================================================================
+struct HistogramViewCombo : juce::Component
+{
+    HistogramViewCombo();
+    void resized() override;
+    
+    juce::ComboBox comboBox;
+private:
+    juce::Label label;
+    juce::StringArray choices { "Stacked", "Side-by-Side" };
+};
+
 enum class HistogramTypes
 {
     RMS,
@@ -415,6 +426,7 @@ private:
     
 //    Histogram rmsHistogram{"RMS"};
 //    Histogram peakHistogram{"PEAK"};
+    HistogramViewCombo histogramViewComboBox;
     HistogramContainer histograms;
     
     StereoImageMeter stereoImageMeter;
