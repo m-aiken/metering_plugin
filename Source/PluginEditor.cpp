@@ -250,11 +250,6 @@ HistogramContainer::HistogramContainer()
     addAndMakeVisible(peakHistogram);
 }
 
-void HistogramContainer::paint(juce::Graphics& g)
-{
-    
-}
-
 void HistogramContainer::resized()
 {
     auto rms = juce::FlexItem(rmsHistogram).withFlex(1.f).withMargin(2.f);
