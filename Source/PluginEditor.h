@@ -95,11 +95,16 @@ struct Histogram : juce::Component
     
     void setThreshold(const float& threshAsDecibels);
     
+    void setView(const int& selectedId);
+    
 private:
-    CircularBuffer<float> circularBuffer{776, NegativeInfinity};
+    CircularBuffer<float> circularBufferStacked{776, NegativeInfinity};
+    CircularBuffer<float> circularBufferSideBySide{388, NegativeInfinity};
     juce::String label;
     float threshold = 0.f;
     juce::ColourGradient colourGrad;
+    
+    int viewId;
 };
 
 struct HistogramContainer : juce::Component

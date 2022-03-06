@@ -140,7 +140,7 @@ void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
 HistogramViewCombo::HistogramViewCombo()
 {
     addAndMakeVisible(label);
-    label.setText("Histogram View", juce::NotificationType::dontSendNotification);
+    label.setText("HISTOGRAM", juce::NotificationType::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
     
     addAndMakeVisible(comboBox);
@@ -172,9 +172,14 @@ void Histogram::paint(juce::Graphics& g)
                      juce::Justification::centredBottom, // justification
                      1);                                 // max num lines
     
-    auto& data = circularBuffer.getData();
-    auto readIdx = circularBuffer.getReadIndex();
-    auto bufferSize = circularBuffer.getSize();
+    auto& data      = viewId == 1 ? circularBufferStacked.getData()
+                                  : circularBufferSideBySide.getData();
+    
+    auto readIdx    = viewId == 1 ? circularBufferStacked.getReadIndex()
+                                  : circularBufferSideBySide.getReadIndex();
+    
+    auto bufferSize = viewId == 1 ? circularBufferStacked.getSize()
+                                  : circularBufferSideBySide.getSize();
 
     juce::Path p;
     
@@ -234,7 +239,8 @@ void Histogram::resized()
 void Histogram::update(const float& inputL, const float& inputR)
 {
     auto average = (inputL + inputR) / 2;
-    circularBuffer.write(average);
+    circularBufferStacked.write(average);
+    circularBufferSideBySide.write(average);
     
     repaint();
 }
@@ -242,6 +248,11 @@ void Histogram::update(const float& inputL, const float& inputR)
 void Histogram::setThreshold(const float& threshAsDecibels)
 {
     threshold = threshAsDecibels;
+}
+
+void Histogram::setView(const int& selectedId)
+{
+    viewId = selectedId;
 }
 
 HistogramContainer::HistogramContainer()
@@ -285,6 +296,9 @@ void HistogramContainer::setFlexDirection(const int& selectedId)
         fb.flexDirection = juce::FlexBox::Direction::column;
     else if ( selectedId == 2)
         fb.flexDirection = juce::FlexBox::Direction::row;
+    
+    rmsHistogram.setView(selectedId);
+    peakHistogram.setView(selectedId);
     
     fb.performLayout(getLocalBounds());
 }
