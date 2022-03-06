@@ -137,28 +137,6 @@ void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
 }
 
 //==============================================================================
-HistogramViewCombo::HistogramViewCombo()
-{
-    addAndMakeVisible(label);
-    label.setText("HISTOGRAM", juce::NotificationType::dontSendNotification);
-    label.setJustificationType(juce::Justification::centred);
-    
-    addAndMakeVisible(comboBox);
-    comboBox.addItemList(choices, 1);
-    comboBox.setSelectedId(1);
-}
-
-void HistogramViewCombo::resized()
-{
-    auto bounds = getLocalBounds();
-    auto width = bounds.getWidth();
-    auto height = bounds.getHeight();
-    
-    label.setBounds(0, 0, width, height / 2);
-    comboBox.setBounds(0, height / 2, width, height / 2);
-}
-
-//==============================================================================
 void Histogram::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
@@ -899,6 +877,11 @@ MeterComboGroup::MeterComboGroup()
     meterViewCombo.setSelectedId(1);
 }
 
+void MeterComboGroup::paint(juce::Graphics& g)
+{
+    g.fillAll(juce::Colours::red);
+}
+
 void MeterComboGroup::resized()
 {
     auto bounds = getLocalBounds();
@@ -936,6 +919,59 @@ void MeterComboGroup::resized()
 }
 
 //==============================================================================
+GonioHoldHistGuiControls::GonioHoldHistGuiControls()
+{
+    addAndMakeVisible(histViewLabel);
+    histViewLabel.setText("HIST", juce::NotificationType::dontSendNotification);
+    histViewLabel.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(histViewCombo);
+    histViewCombo.addItemList(histViewchoices, 1);
+    histViewCombo.setSelectedId(1);
+}
+
+void GonioHoldHistGuiControls::paint(juce::Graphics& g)
+{
+    g.fillAll(juce::Colours::red);
+}
+
+void GonioHoldHistGuiControls::resized()
+{
+    auto bounds = getLocalBounds();
+    auto boundsHeight = bounds.getHeight();
+    
+    auto boxHeight = 30;
+    auto width = bounds.getWidth();
+    /*
+    decayRateLabel.setBounds(0,
+                             (boundsHeight * 0.15f) - boxHeight,
+                             width,
+                             boxHeight);
+    decayRateCombo.setBounds(0,
+                             (boundsHeight * 0.15f),
+                             width,
+                             boxHeight);
+    
+    avgDurationLabel.setBounds(0,
+                               (boundsHeight * 0.5f) - boxHeight,
+                               width,
+                               boxHeight);
+    avgDurationCombo.setBounds(0,
+                               (boundsHeight * 0.5f),
+                               width,
+                               boxHeight);
+    */
+    histViewLabel.setBounds(0,
+                            (boundsHeight * 0.85f) - boxHeight,
+                            width,
+                            boxHeight);
+    histViewCombo.setBounds(0,
+                            (boundsHeight * 0.85f),
+                            width,
+                            boxHeight);
+}
+
+//==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), stereoImageMeter(p.getSampleRate(), p.getBlockSize())
 {
@@ -945,16 +981,13 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
-
-    addAndMakeVisible(histViewSelect);
     addAndMakeVisible(histograms);
-    
     addAndMakeVisible(stereoImageMeter);
     addAndMakeVisible(meterCombos);
+    addAndMakeVisible(gonioHoldHistControls);
     
     // set inital values
-    histograms.setFlexDirection(histViewSelect.comboBox.getSelectedId());
-    
+    histograms.setFlexDirection(gonioHoldHistControls.histViewCombo.getSelectedId());
     // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]
     {
@@ -995,9 +1028,9 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setMeterView(selectedId);
     };
     
-    histViewSelect.comboBox.onChange = [this]
+    gonioHoldHistControls.histViewCombo.onChange = [this]
     {
-        histograms.setFlexDirection(histViewSelect.comboBox.getSelectedId());
+        histograms.setFlexDirection(gonioHoldHistControls.histViewCombo.getSelectedId());
     };
     
 #if defined(GAIN_TEST_ACTIVE)
@@ -1051,20 +1084,18 @@ void PFMProject10AudioProcessorEditor::resized()
                               stereoImageMeterWidth,
                               stereoImageMeterWidth + 20); // +20 to account for correlation meter
     
-    meterCombos.setBounds(stereoMeterRms.getRight() + 20,
+    auto comboPadding = 20;
+    auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (comboPadding * 2);
+    
+    meterCombos.setBounds(stereoMeterRms.getRight() + comboPadding,
                           margin,
-                          80,
+                          comboWidth,
                           stereoMeterHeight);
     
-    auto histComboMaxWidth = (stereoMeterPeak.getX() - stereoImageMeter.getRight());
-    auto histComboWidth = histComboMaxWidth * 0.8f;
-    auto padding = (histComboMaxWidth * 0.2f) / 2;
-    auto histComboHeight = 60;
-    
-    histViewSelect.setBounds(stereoImageMeter.getRight() + padding,
-                             stereoImageMeter.getBottom() - histComboHeight,
-                             histComboWidth,
-                             histComboHeight);
+    gonioHoldHistControls.setBounds(stereoMeterPeak.getX() - comboPadding - comboWidth,
+                                    margin,
+                                    comboWidth,
+                                    stereoMeterHeight);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);

@@ -69,17 +69,6 @@ private:
 };
 
 //==============================================================================
-struct HistogramViewCombo : juce::Component
-{
-    HistogramViewCombo();
-    void resized() override;
-    
-    juce::ComboBox comboBox;
-private:
-    juce::Label label;
-    juce::StringArray choices { "Stacked", "Side-by-Side" };
-};
-
 enum class HistogramTypes
 {
     RMS,
@@ -397,6 +386,7 @@ private:
 struct MeterComboGroup : juce::Component
 {
     MeterComboGroup();
+    void paint(juce::Graphics& g) override;
     void resized() override;
     
     juce::ComboBox decayRateCombo, avgDurationCombo, meterViewCombo;
@@ -406,6 +396,20 @@ private:
     juce::StringArray decayRateChoices { "-3dB/s", "-6dB/s", "-12dB/s", "-24dB/s", "-36dB/s" };
     juce::StringArray avgDurationChoices { "100ms", "250ms", "500ms", "1000ms", "2000ms" };
     juce::StringArray meterViewChoices { "Both", "Peak", "Avg" };
+};
+
+//==============================================================================
+struct GonioHoldHistGuiControls : juce::Component
+{
+    GonioHoldHistGuiControls();
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+    
+    juce::ComboBox histViewCombo;
+    
+private:
+    juce::Label histViewLabel;
+    juce::StringArray histViewchoices { "Stacked", "Side/Side" };
 };
 
 //==============================================================================
@@ -433,12 +437,12 @@ private:
     StereoMeter stereoMeterRms{"RMS"};
     StereoMeter stereoMeterPeak{"PEAK"};
     
-    HistogramViewCombo histViewSelect;
     HistogramContainer histograms;
     
     StereoImageMeter stereoImageMeter;
     
     MeterComboGroup meterCombos;
+    GonioHoldHistGuiControls gonioHoldHistControls;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
