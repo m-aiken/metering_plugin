@@ -929,6 +929,23 @@ void MeterComboGroup::resized()
                              boxHeight);
 }
 
+float MeterComboGroup::getCurrentDecayRate()
+{
+    float dbPerSecond;
+    
+    switch (decayRateCombo.getSelectedId())
+    {
+        case 1:  dbPerSecond = 3.f;  break;
+        case 2:  dbPerSecond = 6.f;  break;
+        case 3:  dbPerSecond = 12.f; break;
+        case 4:  dbPerSecond = 24.f; break;
+        case 5:  dbPerSecond = 36.f; break;
+        default: dbPerSecond = 12.f; break;
+    }
+    
+    return dbPerSecond;
+}
+
 //==============================================================================
 GonioHoldHistGuiControls::GonioHoldHistGuiControls()
 {
@@ -1009,8 +1026,15 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(gonioHoldHistControls);
     
     // set inital values
-    histograms.setFlexDirection(gonioHoldHistControls.histViewCombo.getSelectedId());
-    stereoImageMeter.setGoniometerScale(gonioHoldHistControls.gonioScaleKnob.getValue());
+    auto dbPerSecond = meterCombos.getCurrentDecayRate();
+    stereoMeterRms.setDecayRate(dbPerSecond);
+    stereoMeterPeak.setDecayRate(dbPerSecond);
+    
+    auto histView = gonioHoldHistControls.histViewCombo.getSelectedId();
+    histograms.setFlexDirection(histView);
+    
+    auto gonioScale = gonioHoldHistControls.gonioScaleKnob.getValue();
+    stereoImageMeter.setGoniometerScale(gonioScale);
     
     // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]
@@ -1029,16 +1053,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     
     meterCombos.decayRateCombo.onChange = [this]
     {
-        float dbPerSecond;
-        switch (meterCombos.decayRateCombo.getSelectedId()) {
-            case 1:  dbPerSecond = 3.f;  break;
-            case 2:  dbPerSecond = 6.f;  break;
-            case 3:  dbPerSecond = 12.f; break;
-            case 4:  dbPerSecond = 24.f; break;
-            case 5:  dbPerSecond = 36.f; break;
-            default: dbPerSecond = 12.f; break;
-        }
-        
+        auto dbPerSecond = meterCombos.getCurrentDecayRate();
         stereoMeterRms.setDecayRate(dbPerSecond);
         stereoMeterPeak.setDecayRate(dbPerSecond);
     };

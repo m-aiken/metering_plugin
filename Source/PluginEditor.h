@@ -228,7 +228,7 @@ private:
 //==============================================================================
 struct DecayingValueHolder : ValueHolderBase
 {
-    DecayingValueHolder() { setDecayRate(initDecayRate); }
+    DecayingValueHolder() { }
     ~DecayingValueHolder() { }
     
     void updateHeldValue(const float& input);
@@ -392,6 +392,8 @@ struct MeterComboGroup : juce::Component
     MeterComboGroup();
     void paint(juce::Graphics& g) override;
     void resized() override;
+    
+    float getCurrentDecayRate();
     
     juce::ComboBox decayRateCombo, avgDurationCombo, meterViewCombo;
 private:
