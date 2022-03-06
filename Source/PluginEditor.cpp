@@ -921,9 +921,18 @@ void MeterComboGroup::resized()
 //==============================================================================
 GonioHoldHistGuiControls::GonioHoldHistGuiControls()
 {
+    addAndMakeVisible(gonioScaleLabel);
+    gonioScaleLabel.setText("SCALE", juce::NotificationType::dontSendNotification);
+    gonioScaleLabel.setJustificationType(juce::Justification::centred);
+    
     addAndMakeVisible(histViewLabel);
     histViewLabel.setText("HIST", juce::NotificationType::dontSendNotification);
     histViewLabel.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(gonioScaleKnob);
+    gonioScaleKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    gonioScaleKnob.setRange(50.0, 200.0);
+    gonioScaleKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     
     addAndMakeVisible(histViewCombo);
     histViewCombo.addItemList(histViewchoices, 1);
@@ -942,16 +951,17 @@ void GonioHoldHistGuiControls::resized()
     
     auto boxHeight = 30;
     auto width = bounds.getWidth();
-    /*
-    decayRateLabel.setBounds(0,
-                             (boundsHeight * 0.15f) - boxHeight,
-                             width,
-                             boxHeight);
-    decayRateCombo.setBounds(0,
-                             (boundsHeight * 0.15f),
-                             width,
-                             boxHeight);
+    auto rotaryDiameter = width * 0.8f;
     
+    gonioScaleLabel.setBounds(0,
+                              (boundsHeight * 0.15f) - boxHeight,
+                              width,
+                              boxHeight);
+    gonioScaleKnob.setBounds(bounds.getCentreX() - (rotaryDiameter / 2),
+                             (boundsHeight * 0.15f),
+                             rotaryDiameter,
+                             rotaryDiameter);
+    /*
     avgDurationLabel.setBounds(0,
                                (boundsHeight * 0.5f) - boxHeight,
                                width,

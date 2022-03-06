@@ -406,9 +406,9 @@ struct GonioHoldHistGuiControls : juce::Component
     void resized() override;
     
     juce::ComboBox histViewCombo;
-    
+    juce::Slider gonioScaleKnob;
 private:
-    juce::Label histViewLabel;
+    juce::Label gonioScaleLabel, histViewLabel;
     juce::StringArray histViewchoices { "Stacked", "Side/Side" };
 };
 
