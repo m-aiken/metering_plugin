@@ -38,8 +38,8 @@ void Goniometer::paint(juce::Graphics& g)
         
         auto mid = jlimit<float>(-1.f, 1.f, (left + right) * Decibels::decibelsToGain(-3.f));
         
-        Point<float> point(centre.getX() + radius * 0.5f * side,
-                           centre.getY() + radius * 0.5f * mid);
+        Point<float> point(centre.getX() + radius * scale * side,
+                           centre.getY() + radius * scale * mid);
         
         if ( i == 0 )
             p.startNewSubPath(point);
@@ -133,6 +133,12 @@ void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
     else
         buffer.applyGain(juce::Decibels::decibelsToGain(-3.f));
     
+    repaint();
+}
+
+void Goniometer::setScale(const double& rotaryValue)
+{
+    scale = juce::jmap<double>(rotaryValue, 50.0, 200.0, 0.2, 0.8);
     repaint();
 }
 
@@ -425,6 +431,11 @@ void StereoImageMeter::update(juce::AudioBuffer<float>& incomingBuffer)
 {
     goniometer.update(incomingBuffer);
     correlationMeter.update(incomingBuffer);
+}
+
+void StereoImageMeter::setGoniometerScale(const double& rotaryValue)
+{
+    goniometer.setScale(rotaryValue);
 }
 
 //==============================================================================
@@ -933,6 +944,7 @@ GonioHoldHistGuiControls::GonioHoldHistGuiControls()
     gonioScaleKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     gonioScaleKnob.setRange(50.0, 200.0);
     gonioScaleKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
+    gonioScaleKnob.setValue(100.0);
     
     addAndMakeVisible(histViewCombo);
     histViewCombo.addItemList(histViewchoices, 1);
@@ -998,6 +1010,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     
     // set inital values
     histograms.setFlexDirection(gonioHoldHistControls.histViewCombo.getSelectedId());
+    stereoImageMeter.setGoniometerScale(gonioHoldHistControls.gonioScaleKnob.getValue());
+    
     // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]
     {
@@ -1041,6 +1055,12 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     gonioHoldHistControls.histViewCombo.onChange = [this]
     {
         histograms.setFlexDirection(gonioHoldHistControls.histViewCombo.getSelectedId());
+    };
+    
+    gonioHoldHistControls.gonioScaleKnob.onValueChange = [this]
+    {
+        auto rotaryValue = gonioHoldHistControls.gonioScaleKnob.getValue();
+        stereoImageMeter.setGoniometerScale(rotaryValue);
     };
     
 #if defined(GAIN_TEST_ACTIVE)

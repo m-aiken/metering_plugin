@@ -20,10 +20,13 @@ struct Goniometer : juce::Component
     void paint(juce::Graphics& g) override;
     void resized() override;
     void update(juce::AudioBuffer<float>& incomingBuffer);
+    void setScale(const double& rotaryValue);
 
 private:
     juce::Image canvas;
     juce::AudioBuffer<float> buffer;
+    
+    double scale;
 };
 
 //==============================================================================
@@ -192,6 +195,7 @@ struct StereoImageMeter : juce::Component
     StereoImageMeter(double _sampleRate, size_t _blockSize);
     void paint(juce::Graphics& g) override;
     void update(juce::AudioBuffer<float>& incomingBuffer);
+    void setGoniometerScale(const double& rotaryValue);
 private:
     Goniometer goniometer;
     CorrelationMeter correlationMeter;
