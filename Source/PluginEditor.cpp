@@ -158,6 +158,7 @@ void HistogramViewCombo::resized()
     comboBox.setBounds(0, height / 2, width, height / 2);
 }
 
+//==============================================================================
 void Histogram::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
@@ -255,6 +256,7 @@ void Histogram::setView(const int& selectedId)
     viewId = selectedId;
 }
 
+//==============================================================================
 HistogramContainer::HistogramContainer()
 {
     addAndMakeVisible(rmsHistogram);
@@ -943,8 +945,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
-//    addAndMakeVisible(rmsHistogram);
-//    addAndMakeVisible(peakHistogram);
+
     addAndMakeVisible(histViewSelect);
     addAndMakeVisible(histograms);
     
@@ -959,7 +960,6 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     {
         auto v = stereoMeterRms.threshCtrl.getValue();
         stereoMeterRms.setThreshold(v);
-//        rmsHistogram.setThreshold(v);
         histograms.setThreshold(HistogramTypes::RMS, v);
     };
     
@@ -967,7 +967,6 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     {
         auto v = stereoMeterPeak.threshCtrl.getValue();
         stereoMeterPeak.setThreshold(v);
-//        peakHistogram.setThreshold(v);
         histograms.setThreshold(HistogramTypes::PEAK, v);
     };
     
@@ -1040,17 +1039,7 @@ void PFMProject10AudioProcessorEditor::resized()
                               margin,
                               stereoMeterWidth,
                               stereoMeterHeight);
-    /*
-    rmsHistogram.setBounds(margin,
-                           stereoMeterRms.getBottom() + margin,
-                           width - (margin * 2),
-                           105);
     
-    peakHistogram.setBounds(margin,
-                            rmsHistogram.getBottom() + margin,
-                            width - (margin * 2),
-                            105);
-    */
     histograms.setBounds(margin,
                          stereoMeterRms.getBottom() + (margin * 2),
                          width - (margin * 2),
@@ -1067,15 +1056,15 @@ void PFMProject10AudioProcessorEditor::resized()
                           80,
                           stereoMeterHeight);
     
-    auto rightMeterToCorrMeter = (stereoMeterPeak.getX() - stereoImageMeter.getRight());
-    auto histSelectWidth = rightMeterToCorrMeter * 0.8f;
-    auto padding = (rightMeterToCorrMeter * 0.2f) / 2;
-    auto histSelectHeight = 60;
+    auto histComboMaxWidth = (stereoMeterPeak.getX() - stereoImageMeter.getRight());
+    auto histComboWidth = histComboMaxWidth * 0.8f;
+    auto padding = (histComboMaxWidth * 0.2f) / 2;
+    auto histComboHeight = 60;
     
     histViewSelect.setBounds(stereoImageMeter.getRight() + padding,
-                                    stereoImageMeter.getBottom() - histSelectHeight,
-                                    histSelectWidth,
-                                    histSelectHeight);
+                             stereoImageMeter.getBottom() - histComboHeight,
+                             histComboWidth,
+                             histComboHeight);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
@@ -1105,8 +1094,6 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto peakDbR = juce::Decibels::gainToDecibels(peakR, NegativeInfinity);
         stereoMeterPeak.update(peakDbL, peakDbR);
         
-//        rmsHistogram.update(rmsDbL, rmsDbR);
-//        peakHistogram.update(peakDbL, peakDbR);
         histograms.update(HistogramTypes::RMS, rmsDbL, rmsDbR);
         histograms.update(HistogramTypes::PEAK, peakDbL, peakDbR);
         

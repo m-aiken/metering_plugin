@@ -433,8 +433,6 @@ private:
     StereoMeter stereoMeterRms{"RMS"};
     StereoMeter stereoMeterPeak{"PEAK"};
     
-//    Histogram rmsHistogram{"RMS"};
-//    Histogram peakHistogram{"PEAK"};
     HistogramViewCombo histViewSelect;
     HistogramContainer histograms;
     
