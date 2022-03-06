@@ -908,11 +908,11 @@ void MeterComboGroup::resized()
     auto width = bounds.getWidth();
 
     decayRateLabel.setBounds(0,
-                             (boundsHeight * 0.25f) - boxHeight,
+                             (boundsHeight * 0.15f) - boxHeight,
                              width,
                              boxHeight);
     decayRateCombo.setBounds(0,
-                             (boundsHeight * 0.25f),
+                             (boundsHeight * 0.15f),
                              width,
                              boxHeight);
     
@@ -926,11 +926,11 @@ void MeterComboGroup::resized()
                                boxHeight);
     
     meterViewLabel.setBounds(0,
-                             (boundsHeight * 0.75f) - boxHeight,
+                             (boundsHeight * 0.85f) - boxHeight,
                              width,
                              boxHeight);
     meterViewCombo.setBounds(0,
-                             (boundsHeight * 0.75f),
+                             (boundsHeight * 0.85f),
                              width,
                              boxHeight);
 }
