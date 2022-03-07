@@ -634,6 +634,11 @@ void Meter::setDecayRate(const float& dbPerSecond)
     fallingTick.setDecayRate(dbPerSecond);
 }
 
+void Meter::setHoldTime(const long long& ms)
+{
+    fallingTick.setHoldTime(ms);
+}
+
 //==============================================================================
 MacroMeter::MacroMeter(const Channel& channel)
     : channel(channel)
@@ -705,6 +710,12 @@ void MacroMeter::setDecayRate(const float& dbPerSecond)
 {
     averageMeter.setDecayRate(dbPerSecond);
     instantMeter.setDecayRate(dbPerSecond);
+}
+
+void MacroMeter::setHoldTime(const long long& ms)
+{
+    averageMeter.setHoldTime(ms);
+    instantMeter.setHoldTime(ms);
 }
 
 void MacroMeter::setMeterView(const int& newViewId)
@@ -853,6 +864,38 @@ void StereoMeter::setDecayRate(const float& dbPerSecond)
 {
     macroMeterL.setDecayRate(dbPerSecond);
     macroMeterR.setDecayRate(dbPerSecond);
+}
+
+void StereoMeter::setTickHoldTime(const int& selectedId)
+{
+    long long holdTimeMs;
+    
+    switch (selectedId) {
+        case 1:
+            holdTimeMs = 0;
+            break;
+        case 2:
+            holdTimeMs = 500;
+            break;
+        case 3:
+            holdTimeMs = 2000;
+            break;
+        case 4:
+            holdTimeMs = 4000;
+            break;
+        case 5:
+            holdTimeMs = 6000;
+            break;
+        case 6:
+            holdTimeMs = INFINITY;
+            break;
+        default:
+            holdTimeMs = 500;
+            break;
+    }
+    
+    macroMeterL.setHoldTime(holdTimeMs);
+    macroMeterR.setHoldTime(holdTimeMs);
 }
 
 void StereoMeter::setMeterView(const int& newViewId)
@@ -1053,11 +1096,15 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     stereoMeterRms.setDecayRate(dbPerSecond);
     stereoMeterPeak.setDecayRate(dbPerSecond);
     
-    auto histView = gonioHoldHistControls.histViewCombo.getSelectedId();
-    histograms.setFlexDirection(histView);
-    
     auto gonioScale = gonioHoldHistControls.gonioScaleKnob.getValue();
     stereoImageMeter.setGoniometerScale(gonioScale);
+    
+    auto holdTime = gonioHoldHistControls.holdTimeCombo.getSelectedId();
+    stereoMeterRms.setTickHoldTime(holdTime);
+    stereoMeterPeak.setTickHoldTime(holdTime);
+    
+    auto histView = gonioHoldHistControls.histViewCombo.getSelectedId();
+    histograms.setFlexDirection(histView);
     
     // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]
@@ -1090,15 +1137,22 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setMeterView(selectedId);
     };
     
-    gonioHoldHistControls.histViewCombo.onChange = [this]
-    {
-        histograms.setFlexDirection(gonioHoldHistControls.histViewCombo.getSelectedId());
-    };
-    
     gonioHoldHistControls.gonioScaleKnob.onValueChange = [this]
     {
         auto rotaryValue = gonioHoldHistControls.gonioScaleKnob.getValue();
         stereoImageMeter.setGoniometerScale(rotaryValue);
+    };
+    
+    gonioHoldHistControls.holdTimeCombo.onChange = [this]
+    {
+        auto selectedId = gonioHoldHistControls.holdTimeCombo.getSelectedId();
+        stereoMeterRms.setTickHoldTime(selectedId);
+        stereoMeterPeak.setTickHoldTime(selectedId);
+    };
+    
+    gonioHoldHistControls.histViewCombo.onChange = [this]
+    {
+        histograms.setFlexDirection(gonioHoldHistControls.histViewCombo.getSelectedId());
     };
     
 #if defined(GAIN_TEST_ACTIVE)

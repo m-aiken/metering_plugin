@@ -222,7 +222,7 @@ private:
    
     long long now = juce::Time::currentTimeMillis();
     long long peakTime = 0;
-    long long holdTime = 500;
+    long long holdTime;
 };
 
 //==============================================================================
@@ -292,6 +292,7 @@ struct Meter : juce::Component
     
     void setThreshold(const float& threshAsDecibels);
     void setDecayRate(const float& dbPerSecond);
+    void setHoldTime(const long long& ms);
     
     std::vector<Tick> ticks;
 private:
@@ -322,7 +323,7 @@ struct MacroMeter : juce::Component
     
     void setThreshold(const float& threshAsDecibels);
     void setDecayRate(const float& dbPerSecond);
-    
+    void setHoldTime(const long long& ms);
     void setMeterView(const int& newViewId);
     
 private:
@@ -371,6 +372,7 @@ struct StereoMeter : juce::Component
     void setThreshold(const float& threshAsDecibels);
     void setDecayRate(const float& dbPerSecond);
     
+    void setTickHoldTime(const int& selectedId);
     void setMeterView(const int& newViewId);
     
     ThresholdSlider threshCtrl;
