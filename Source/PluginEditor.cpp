@@ -1155,6 +1155,10 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     auto gonioScale = gonioHoldHistControls.gonioScaleKnob.getValue();
     stereoImageMeter.setGoniometerScale(gonioScale);
     
+    auto holdButtonState = gonioHoldHistControls.holdButton.getToggleState();
+    stereoMeterRms.setTickVisibility(holdButtonState);
+    stereoMeterPeak.setTickVisibility(holdButtonState);
+    
     auto holdTime = gonioHoldHistControls.holdTimeCombo.getSelectedId();
     stereoMeterRms.setTickHoldTime(holdTime);
     stereoMeterPeak.setTickHoldTime(holdTime);

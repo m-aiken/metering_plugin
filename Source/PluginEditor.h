@@ -302,7 +302,7 @@ private:
     float level = 0.f;
     
     DecayingValueHolder fallingTick;
-    bool fallingTickEnabled = true;
+    bool fallingTickEnabled;
     
     float threshold = 0.f;
 };
