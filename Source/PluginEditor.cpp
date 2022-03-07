@@ -862,35 +862,63 @@ void StereoMeter::setMeterView(const int& newViewId)
 }
 
 //==============================================================================
+CustomComboBox::CustomComboBox(const juce::StringArray& choices,
+                               const int& initSelectionId)
+{
+    addItemList(choices, 1);
+    setSelectedId(initSelectionId);
+}
+
+CustomComboBox::~CustomComboBox()
+{
+    
+}
+
+void CustomComboBox::paint(juce::Graphics& g)
+{
+    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
+}
+
+CustomLabel::CustomLabel(const juce::String& labelText)
+{
+    setText(labelText, juce::NotificationType::dontSendNotification);
+}
+
+CustomLabel::~CustomLabel()
+{
+    
+}
+
+void CustomLabel::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    
+    g.setColour(juce::Colour(201u, 209u, 217u));
+    
+    g.drawFittedText(getText(),
+                     bounds.getX(),
+                     bounds.getY(),
+                     bounds.getWidth(),
+                     bounds.getHeight(),
+                     juce::Justification::centred,
+                     1);
+}
+
+//==============================================================================
 MeterComboGroup::MeterComboGroup()
 {
     addAndMakeVisible(decayRateLabel);
-    decayRateLabel.setText("DECAY", juce::NotificationType::dontSendNotification);
-    decayRateLabel.setJustificationType(juce::Justification::centred);
-    
     addAndMakeVisible(avgDurationLabel);
-    avgDurationLabel.setText("AVG", juce::NotificationType::dontSendNotification);
-    avgDurationLabel.setJustificationType(juce::Justification::centred);
-    
     addAndMakeVisible(meterViewLabel);
-    meterViewLabel.setText("METER", juce::NotificationType::dontSendNotification);
-    meterViewLabel.setJustificationType(juce::Justification::centred);
     
     addAndMakeVisible(decayRateCombo);
-    decayRateCombo.addItemList(decayRateChoices, 1);
-    decayRateCombo.setSelectedId(3);
-    
     addAndMakeVisible(avgDurationCombo);
-    avgDurationCombo.addItemList(avgDurationChoices, 1);
-    
     addAndMakeVisible(meterViewCombo);
-    meterViewCombo.addItemList(meterViewChoices, 1);
-    meterViewCombo.setSelectedId(1);
 }
 
 void MeterComboGroup::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::red);
+    //g.fillAll(juce::Colours::red);
 }
 
 void MeterComboGroup::resized()
@@ -950,13 +978,8 @@ float MeterComboGroup::getCurrentDecayRate()
 GonioHoldHistGuiControls::GonioHoldHistGuiControls()
 {
     addAndMakeVisible(gonioScaleLabel);
-    gonioScaleLabel.setText("SCALE", juce::NotificationType::dontSendNotification);
-    gonioScaleLabel.setJustificationType(juce::Justification::centred);
-    
     addAndMakeVisible(histViewLabel);
-    histViewLabel.setText("HIST", juce::NotificationType::dontSendNotification);
-    histViewLabel.setJustificationType(juce::Justification::centred);
-    
+
     addAndMakeVisible(gonioScaleKnob);
     gonioScaleKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     gonioScaleKnob.setRange(50.0, 200.0);
@@ -964,17 +987,12 @@ GonioHoldHistGuiControls::GonioHoldHistGuiControls()
     gonioScaleKnob.setValue(100.0);
     
     addAndMakeVisible(holdTimeCombo);
-    holdTimeCombo.addItemList(holdTimeChoices, 1);
-    holdTimeCombo.setSelectedId(2);
-    
     addAndMakeVisible(histViewCombo);
-    histViewCombo.addItemList(histViewChoices, 1);
-    histViewCombo.setSelectedId(1);
 }
 
 void GonioHoldHistGuiControls::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::red);
+    //g.fillAll(juce::Colours::red);
 }
 
 void GonioHoldHistGuiControls::resized()

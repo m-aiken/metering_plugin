@@ -387,6 +387,21 @@ private:
 };
 
 //==============================================================================
+struct CustomComboBox : juce::ComboBox
+{
+    CustomComboBox(const juce::StringArray& choices, const int& initSelectionId);
+    ~CustomComboBox();
+    void paint(juce::Graphics& g) override;
+};
+
+struct CustomLabel : juce::Label
+{
+    CustomLabel(const juce::String& labelText);
+    ~CustomLabel();
+    void paint(juce::Graphics& g) override;
+};
+
+//==============================================================================
 struct MeterComboGroup : juce::Component
 {
     MeterComboGroup();
@@ -395,13 +410,18 @@ struct MeterComboGroup : juce::Component
     
     float getCurrentDecayRate();
     
-    juce::ComboBox decayRateCombo, avgDurationCombo, meterViewCombo;
-private:
-    juce::Label decayRateLabel, avgDurationLabel, meterViewLabel;
-    
     juce::StringArray decayRateChoices { "-3dB/s", "-6dB/s", "-12dB/s", "-24dB/s", "-36dB/s" };
     juce::StringArray avgDurationChoices { "100ms", "250ms", "500ms", "1000ms", "2000ms" };
     juce::StringArray meterViewChoices { "Both", "Peak", "Avg" };
+    
+    CustomComboBox decayRateCombo { decayRateChoices, 3 };
+    CustomComboBox avgDurationCombo { avgDurationChoices, 3 };
+    CustomComboBox meterViewCombo { meterViewChoices, 1 };
+    
+private:
+    CustomLabel decayRateLabel { "DECAY" };
+    CustomLabel avgDurationLabel { "AVG" };
+    CustomLabel meterViewLabel { "METER" };
 };
 
 //==============================================================================
@@ -411,12 +431,17 @@ struct GonioHoldHistGuiControls : juce::Component
     void paint(juce::Graphics& g) override;
     void resized() override;
     
-    juce::ComboBox holdTimeCombo, histViewCombo;
-    juce::Slider gonioScaleKnob;
-private:
-    juce::Label gonioScaleLabel, histViewLabel;
-    juce::StringArray histViewChoices { "Stacked", "Side/Side" };
     juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
+    juce::StringArray histViewChoices { "Stacked", "Side/Side" };
+    
+    CustomComboBox holdTimeCombo { holdTimeChoices, 2 };
+    CustomComboBox histViewCombo { histViewChoices, 1 };
+    
+    juce::Slider gonioScaleKnob;
+    
+private:
+    CustomLabel gonioScaleLabel { "SCALE" };
+    CustomLabel histViewLabel { "HIST" };
 };
 
 //==============================================================================
