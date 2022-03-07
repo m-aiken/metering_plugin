@@ -963,8 +963,12 @@ GonioHoldHistGuiControls::GonioHoldHistGuiControls()
     gonioScaleKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     gonioScaleKnob.setValue(100.0);
     
+    addAndMakeVisible(holdTimeCombo);
+    holdTimeCombo.addItemList(holdTimeChoices, 1);
+    holdTimeCombo.setSelectedId(2);
+    
     addAndMakeVisible(histViewCombo);
-    histViewCombo.addItemList(histViewchoices, 1);
+    histViewCombo.addItemList(histViewChoices, 1);
     histViewCombo.setSelectedId(1);
 }
 
@@ -995,11 +999,12 @@ void GonioHoldHistGuiControls::resized()
                                (boundsHeight * 0.5f) - boxHeight,
                                width,
                                boxHeight);
-    avgDurationCombo.setBounds(0,
-                               (boundsHeight * 0.5f),
-                               width,
-                               boxHeight);
     */
+    holdTimeCombo.setBounds(0,
+                            (boundsHeight * 0.5f),
+                            width,
+                            boxHeight);
+    
     histViewLabel.setBounds(0,
                             (boundsHeight * 0.85f) - boxHeight,
                             width,
