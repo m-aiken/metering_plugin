@@ -404,6 +404,13 @@ struct CustomLabel : juce::Label
     void paint(juce::Graphics& g) override;
 };
 
+struct CustomToggle : juce::ToggleButton
+{
+    CustomToggle(const juce::String& buttonText);
+    ~CustomToggle();
+    void paint(juce::Graphics& g) override;
+};
+
 //==============================================================================
 struct MeterComboGroup : juce::Component
 {
@@ -436,7 +443,7 @@ struct GonioHoldHistGuiControls : juce::Component
     
     juce::Slider gonioScaleKnob;
     
-    juce::TextButton holdButton { "HOLD" };
+    CustomToggle holdButton { "HOLD" };
     juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
     CustomComboBox holdTimeCombo { holdTimeChoices, 2 };
     

@@ -949,6 +949,36 @@ void CustomLabel::paint(juce::Graphics& g)
                      1);
 }
 
+CustomToggle::CustomToggle(const juce::String& buttonText)
+{
+    setButtonText(buttonText);
+    setToggleState(true, juce::NotificationType::dontSendNotification);
+}
+
+CustomToggle::~CustomToggle()
+{
+    
+}
+
+void CustomToggle::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    
+    if ( getToggleState() == true )
+        g.fillAll(juce::Colour(196u, 55u, 55u)); // red
+    else
+        g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.drawFittedText(getButtonText(),
+                     bounds.getX(),
+                     bounds.getY(),
+                     bounds.getWidth(),
+                     bounds.getHeight(),
+                     juce::Justification::centred,
+                     1);
+}
+
 //==============================================================================
 MeterComboGroup::MeterComboGroup()
 {
