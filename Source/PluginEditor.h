@@ -208,6 +208,7 @@ struct ValueHolderBase : juce::Timer
     ~ValueHolderBase() { stopTimer(); }
     
     void setHoldTime(const long long& ms) { holdTime = ms; }
+    long long getHoldTime() { return holdTime; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
     

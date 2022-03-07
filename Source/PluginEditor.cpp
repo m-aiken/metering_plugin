@@ -587,7 +587,9 @@ void Meter::paint(juce::Graphics& g)
     auto yellow = juce::Colour(217, 193, 56);
     g.setColour(yellow);
     
-    auto ftJmap = juce::jmap<float>(fallingTick.getCurrentValue(),
+    auto tickValue = fallingTick.getHoldTime() == 0 ? level : fallingTick.getCurrentValue();
+    
+    auto ftJmap = juce::jmap<float>(tickValue,
                                     NegativeInfinity,
                                     MaxDecibels,
                                     h,
