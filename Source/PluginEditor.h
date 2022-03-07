@@ -434,13 +434,14 @@ struct GonioHoldHistGuiControls : juce::Component
     void paint(juce::Graphics& g) override;
     void resized() override;
     
-    juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
-    juce::StringArray histViewChoices { "Stacked", "Side/Side" };
-    
-    CustomComboBox holdTimeCombo { holdTimeChoices, 2 };
-    CustomComboBox histViewCombo { histViewChoices, 1 };
-    
     juce::Slider gonioScaleKnob;
+    
+    juce::TextButton holdButton { "HOLD" };
+    juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
+    CustomComboBox holdTimeCombo { holdTimeChoices, 2 };
+    
+    juce::StringArray histViewChoices { "Stacked", "Side-by-Side" };
+    CustomComboBox histViewCombo { histViewChoices, 1 };
     
 private:
     CustomLabel gonioScaleLabel { "SCALE" };

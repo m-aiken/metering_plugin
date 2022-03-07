@@ -1023,15 +1023,16 @@ float MeterComboGroup::getCurrentDecayRate()
 GonioHoldHistGuiControls::GonioHoldHistGuiControls()
 {
     addAndMakeVisible(gonioScaleLabel);
-    addAndMakeVisible(histViewLabel);
-
     addAndMakeVisible(gonioScaleKnob);
     gonioScaleKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     gonioScaleKnob.setRange(50.0, 200.0);
     gonioScaleKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     gonioScaleKnob.setValue(100.0);
     
+    addAndMakeVisible(holdButton);
     addAndMakeVisible(holdTimeCombo);
+    
+    addAndMakeVisible(histViewLabel);
     addAndMakeVisible(histViewCombo);
 }
 
@@ -1053,16 +1054,17 @@ void GonioHoldHistGuiControls::resized()
                               (boundsHeight * 0.15f) - boxHeight,
                               width,
                               boxHeight);
+    
     gonioScaleKnob.setBounds(bounds.getCentreX() - (rotaryDiameter / 2),
                              (boundsHeight * 0.15f),
                              rotaryDiameter,
                              rotaryDiameter);
-    /*
-    avgDurationLabel.setBounds(0,
-                               (boundsHeight * 0.5f) - boxHeight,
-                               width,
-                               boxHeight);
-    */
+    
+    holdButton.setBounds(0,
+                         (boundsHeight * 0.5f) - boxHeight,
+                         width,
+                         boxHeight);
+    
     holdTimeCombo.setBounds(0,
                             (boundsHeight * 0.5f),
                             width,
@@ -1072,6 +1074,7 @@ void GonioHoldHistGuiControls::resized()
                             (boundsHeight * 0.85f) - boxHeight,
                             width,
                             boxHeight);
+    
     histViewCombo.setBounds(0,
                             (boundsHeight * 0.85f),
                             width,
