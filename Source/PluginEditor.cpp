@@ -1000,6 +1000,31 @@ void CustomToggle::paint(juce::Graphics& g)
                      1);
 }
 
+CustomTextButton::CustomTextButton(const juce::String& buttonText)
+{
+    setButtonText(buttonText);
+}
+
+CustomTextButton::~CustomTextButton()
+{
+    
+}
+
+void CustomTextButton::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.drawFittedText(getButtonText(),
+                     bounds.getX(),
+                     bounds.getY(),
+                     bounds.getWidth(),
+                     bounds.getHeight(),
+                     juce::Justification::centred,
+                     1);
+}
+
 //==============================================================================
 MeterComboGroup::MeterComboGroup()
 {
@@ -1082,6 +1107,7 @@ GonioHoldHistGuiControls::GonioHoldHistGuiControls()
     
     addAndMakeVisible(holdButton);
     addAndMakeVisible(holdTimeCombo);
+    addAndMakeVisible(holdResetButton);
     
     addAndMakeVisible(histViewLabel);
     addAndMakeVisible(histViewCombo);
@@ -1089,7 +1115,7 @@ GonioHoldHistGuiControls::GonioHoldHistGuiControls()
 
 void GonioHoldHistGuiControls::paint(juce::Graphics& g)
 {
-    //g.fillAll(juce::Colours::red);
+    
 }
 
 void GonioHoldHistGuiControls::resized()
@@ -1112,7 +1138,7 @@ void GonioHoldHistGuiControls::resized()
                              rotaryDiameter);
     
     holdButton.setBounds(0,
-                         (boundsHeight * 0.5f) - boxHeight,
+                         (boundsHeight * 0.5f) - boxHeight - 2,
                          width,
                          boxHeight);
     
@@ -1120,6 +1146,11 @@ void GonioHoldHistGuiControls::resized()
                             (boundsHeight * 0.5f),
                             width,
                             boxHeight);
+    
+    holdResetButton.setBounds(0,
+                              (boundsHeight * 0.5f) + boxHeight + 2,
+                              width,
+                              boxHeight);
     
     histViewLabel.setBounds(0,
                             (boundsHeight * 0.85f) - boxHeight,
@@ -1162,6 +1193,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     auto holdTime = gonioHoldHistControls.holdTimeCombo.getSelectedId();
     stereoMeterRms.setTickHoldTime(holdTime);
     stereoMeterPeak.setTickHoldTime(holdTime);
+    gonioHoldHistControls.holdResetButton.setVisible( (holdTime == 6) );
     
     auto histView = gonioHoldHistControls.histViewCombo.getSelectedId();
     histograms.setFlexDirection(histView);
@@ -1215,6 +1247,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         auto selectedId = gonioHoldHistControls.holdTimeCombo.getSelectedId();
         stereoMeterRms.setTickHoldTime(selectedId);
         stereoMeterPeak.setTickHoldTime(selectedId);
+        
+        gonioHoldHistControls.holdResetButton.setVisible( (selectedId == 6) );
     };
     
     gonioHoldHistControls.histViewCombo.onChange = [this]
