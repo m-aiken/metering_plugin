@@ -295,11 +295,14 @@ struct Meter : juce::Component
     void setDecayRate(const float& dbPerSecond);
     void setHoldTime(const long long& ms);
     
+    void setTickVisibility(const bool& toggleState);
+    
     std::vector<Tick> ticks;
 private:
     float level = 0.f;
     
     DecayingValueHolder fallingTick;
+    bool fallingTickEnabled = true;
     
     float threshold = 0.f;
 };
@@ -326,6 +329,7 @@ struct MacroMeter : juce::Component
     void setDecayRate(const float& dbPerSecond);
     void setHoldTime(const long long& ms);
     void setMeterView(const int& newViewId);
+    void setTickVisibility(const bool& toggleState);
     
 private:
     TextMeter textMeter;
@@ -373,6 +377,7 @@ struct StereoMeter : juce::Component
     void setThreshold(const float& threshAsDecibels);
     void setDecayRate(const float& dbPerSecond);
     
+    void setTickVisibility(const bool& toggleState);
     void setTickHoldTime(const int& selectedId);
     void setMeterView(const int& newViewId);
     

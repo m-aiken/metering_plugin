@@ -584,22 +584,25 @@ void Meter::paint(juce::Graphics& g)
     }
     
     // falling tick
-    auto yellow = juce::Colour(217, 193, 56);
-    g.setColour(yellow);
-    
-    auto tickValue = fallingTick.getHoldTime() == 0 ? level : fallingTick.getCurrentValue();
-    
-    auto ftJmap = juce::jmap<float>(tickValue,
-                                    NegativeInfinity,
-                                    MaxDecibels,
-                                    h,
-                                    0);
-    
-    g.drawLine(bounds.getX(),     // startX
-               ftJmap,            // startY
-               bounds.getRight(), // endX
-               ftJmap,            // endY
-               3.f);              // line thickness
+    if ( fallingTickEnabled )
+    {
+        auto yellow = juce::Colour(217, 193, 56);
+        g.setColour(yellow);
+        
+        auto tickValue = fallingTick.getHoldTime() == 0 ? level :   fallingTick.getCurrentValue();
+        
+        auto ftJmap = juce::jmap<float>(tickValue,
+                                        NegativeInfinity,
+                                        MaxDecibels,
+                                        h,
+                                        0);
+        
+        g.drawLine(bounds.getX(),     // startX
+                   ftJmap,            // startY
+                   bounds.getRight(), // endX
+                   ftJmap,            // endY
+                   3.f);              // line thickness
+    }
 }
 
 void Meter::resized()
@@ -639,6 +642,12 @@ void Meter::setDecayRate(const float& dbPerSecond)
 void Meter::setHoldTime(const long long& ms)
 {
     fallingTick.setHoldTime(ms);
+}
+
+void Meter::setTickVisibility(const bool& toggleState)
+{
+    fallingTickEnabled = toggleState;
+    repaint();
 }
 
 //==============================================================================
@@ -737,6 +746,12 @@ void MacroMeter::setMeterView(const int& newViewId)
         averageMeter.setAlpha(1.f);
         instantMeter.setAlpha(0.07f);
     }
+}
+
+void MacroMeter::setTickVisibility(const bool& toggleState)
+{
+    averageMeter.setTickVisibility(toggleState);
+    instantMeter.setTickVisibility(toggleState);
 }
 
 //==============================================================================
@@ -866,6 +881,12 @@ void StereoMeter::setDecayRate(const float& dbPerSecond)
 {
     macroMeterL.setDecayRate(dbPerSecond);
     macroMeterR.setDecayRate(dbPerSecond);
+}
+
+void StereoMeter::setTickVisibility(const bool& toggleState)
+{
+    macroMeterL.setTickVisibility(toggleState);
+    macroMeterR.setTickVisibility(toggleState);
 }
 
 void StereoMeter::setTickHoldTime(const int& selectedId)
@@ -1176,6 +1197,13 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     {
         auto rotaryValue = gonioHoldHistControls.gonioScaleKnob.getValue();
         stereoImageMeter.setGoniometerScale(rotaryValue);
+    };
+    
+    gonioHoldHistControls.holdButton.onClick = [this]
+    {
+        auto toggleState = gonioHoldHistControls.holdButton.getToggleState();
+        stereoMeterRms.setTickVisibility(toggleState);
+        stereoMeterPeak.setTickVisibility(toggleState);
     };
     
     gonioHoldHistControls.holdTimeCombo.onChange = [this]
