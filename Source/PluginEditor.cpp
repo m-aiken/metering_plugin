@@ -984,38 +984,14 @@ CustomToggle::~CustomToggle()
 void CustomToggle::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
+    auto green = juce::Colour(89u, 255u, 103u).withAlpha(0.6f);
+    auto grey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
+    auto textColour = juce::Colour(201u, 209u, 217u);
     
-    if ( getToggleState() == true )
-        g.fillAll(juce::Colour(196u, 55u, 55u)); // red
-    else
-        g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    g.fillAll( getToggleState() ? green : grey );
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
-    g.drawFittedText(getButtonText(),
-                     bounds.getX(),
-                     bounds.getY(),
-                     bounds.getWidth(),
-                     bounds.getHeight(),
-                     juce::Justification::centred,
-                     1);
-}
-
-CustomTextButton::CustomTextButton(const juce::String& buttonText)
-{
-    setButtonText(buttonText);
-}
-
-CustomTextButton::~CustomTextButton()
-{
+    g.setColour(textColour);
     
-}
-
-void CustomTextButton::paint(juce::Graphics& g)
-{
-    auto bounds = getLocalBounds();
-    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
-    
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
     g.drawFittedText(getButtonText(),
                      bounds.getX(),
                      bounds.getY(),
@@ -1138,7 +1114,7 @@ void GonioHoldHistGuiControls::resized()
                              rotaryDiameter);
     
     holdButton.setBounds(0,
-                         (boundsHeight * 0.5f) - boxHeight - 2,
+                         (boundsHeight * 0.5f) - boxHeight - 3,
                          width,
                          boxHeight);
     
@@ -1147,9 +1123,9 @@ void GonioHoldHistGuiControls::resized()
                             width,
                             boxHeight);
     
-    holdResetButton.setBounds(0,
-                              (boundsHeight * 0.5f) + boxHeight + 2,
-                              width,
+    holdResetButton.setBounds(bounds.getCentreX() - (width / 4),
+                              (boundsHeight * 0.5f) + boxHeight + 3,
+                              width / 2,
                               boxHeight);
     
     histViewLabel.setBounds(0,
