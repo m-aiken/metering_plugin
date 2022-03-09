@@ -644,6 +644,11 @@ void Meter::setHoldTime(const long long& ms)
     fallingTick.setHoldTime(ms);
 }
 
+void Meter::resetTick()
+{
+    fallingTick.resetTick();
+}
+
 void Meter::setTickVisibility(const bool& toggleState)
 {
     fallingTickEnabled = toggleState;
@@ -727,6 +732,12 @@ void MacroMeter::setHoldTime(const long long& ms)
 {
     averageMeter.setHoldTime(ms);
     instantMeter.setHoldTime(ms);
+}
+
+void MacroMeter::resetTick()
+{
+    averageMeter.resetTick();
+    instantMeter.resetTick();
 }
 
 void MacroMeter::setMeterView(const int& newViewId)
@@ -919,6 +930,12 @@ void StereoMeter::setTickHoldTime(const int& selectedId)
     
     macroMeterL.setHoldTime(holdTimeMs);
     macroMeterR.setHoldTime(holdTimeMs);
+}
+
+void StereoMeter::resetTick()
+{
+    macroMeterL.resetTick();
+    macroMeterR.resetTick();
 }
 
 void StereoMeter::setMeterView(const int& newViewId)
@@ -1226,6 +1243,12 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setTickHoldTime(selectedId);
         
         gonioHoldHistControls.holdResetButton.setVisible( (selectedId == 6) );
+    };
+    
+    gonioHoldHistControls.holdResetButton.onClick = [this]
+    {
+        stereoMeterRms.resetTick();
+        stereoMeterPeak.resetTick();
     };
     
     gonioHoldHistControls.histViewCombo.onChange = [this]

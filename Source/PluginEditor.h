@@ -211,6 +211,7 @@ struct ValueHolderBase : juce::Timer
     long long getHoldTime() { return holdTime; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
+    void resetTick() { currentValue = NegativeInfinity; }
     
     void timerCallback() override;
     virtual void handleOverHoldTime() = 0;
@@ -294,6 +295,7 @@ struct Meter : juce::Component
     void setThreshold(const float& threshAsDecibels);
     void setDecayRate(const float& dbPerSecond);
     void setHoldTime(const long long& ms);
+    void resetTick();
     
     void setTickVisibility(const bool& toggleState);
     
@@ -328,6 +330,7 @@ struct MacroMeter : juce::Component
     void setThreshold(const float& threshAsDecibels);
     void setDecayRate(const float& dbPerSecond);
     void setHoldTime(const long long& ms);
+    void resetTick();
     void setMeterView(const int& newViewId);
     void setTickVisibility(const bool& toggleState);
     
@@ -379,6 +382,7 @@ struct StereoMeter : juce::Component
     
     void setTickVisibility(const bool& toggleState);
     void setTickHoldTime(const int& selectedId);
+    void resetTick();
     void setMeterView(const int& newViewId);
     
     ThresholdSlider threshCtrl;
