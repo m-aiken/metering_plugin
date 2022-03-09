@@ -644,9 +644,9 @@ void Meter::setHoldTime(const long long& ms)
     fallingTick.setHoldTime(ms);
 }
 
-void Meter::resetTick()
+void Meter::resetValueHolder()
 {
-    fallingTick.resetTick();
+    fallingTick.reset();
 }
 
 void Meter::setTickVisibility(const bool& toggleState)
@@ -734,10 +734,10 @@ void MacroMeter::setHoldTime(const long long& ms)
     instantMeter.setHoldTime(ms);
 }
 
-void MacroMeter::resetTick()
+void MacroMeter::resetValueHolder()
 {
-    averageMeter.resetTick();
-    instantMeter.resetTick();
+    averageMeter.resetValueHolder();
+    instantMeter.resetValueHolder();
 }
 
 void MacroMeter::setMeterView(const int& newViewId)
@@ -932,10 +932,10 @@ void StereoMeter::setTickHoldTime(const int& selectedId)
     macroMeterR.setHoldTime(holdTimeMs);
 }
 
-void StereoMeter::resetTick()
+void StereoMeter::resetValueHolder()
 {
-    macroMeterL.resetTick();
-    macroMeterR.resetTick();
+    macroMeterL.resetValueHolder();
+    macroMeterR.resetValueHolder();
 }
 
 void StereoMeter::setMeterView(const int& newViewId)
@@ -1234,6 +1234,17 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         auto toggleState = gonioHoldHistControls.holdButton.getToggleState();
         stereoMeterRms.setTickVisibility(toggleState);
         stereoMeterPeak.setTickVisibility(toggleState);
+        
+        auto resetIsVisible = gonioHoldHistControls.holdResetButton.isVisible();
+        auto holdTimeId = gonioHoldHistControls.holdTimeCombo.getSelectedId();;
+        if ( !toggleState && resetIsVisible )
+        {
+            gonioHoldHistControls.holdResetButton.setVisible(false);
+        }
+        else if ( toggleState && holdTimeId == 6 && !resetIsVisible )
+        {
+            gonioHoldHistControls.holdResetButton.setVisible(true);
+        }
     };
     
     gonioHoldHistControls.holdTimeCombo.onChange = [this]
@@ -1242,13 +1253,14 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterRms.setTickHoldTime(selectedId);
         stereoMeterPeak.setTickHoldTime(selectedId);
         
-        gonioHoldHistControls.holdResetButton.setVisible( (selectedId == 6) );
+        auto holdEnabled = gonioHoldHistControls.holdButton.getToggleState();
+        gonioHoldHistControls.holdResetButton.setVisible( (selectedId == 6 && holdEnabled) );
     };
     
     gonioHoldHistControls.holdResetButton.onClick = [this]
     {
-        stereoMeterRms.resetTick();
-        stereoMeterPeak.resetTick();
+        stereoMeterRms.resetValueHolder();
+        stereoMeterPeak.resetValueHolder();
     };
     
     gonioHoldHistControls.histViewCombo.onChange = [this]
