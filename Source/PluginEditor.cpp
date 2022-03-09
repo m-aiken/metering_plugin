@@ -984,13 +984,14 @@ CustomToggle::~CustomToggle()
 void CustomToggle::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
-    auto green = juce::Colour(89u, 255u, 103u).withAlpha(0.6f);
-    auto grey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
-    auto textColour = juce::Colour(201u, 209u, 217u);
     
-    g.fillAll( getToggleState() ? green : grey );
+    auto yellow = juce::Colour(217, 193, 56);
+    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
+    auto lightGrey = juce::Colour(201u, 209u, 217u);
     
-    g.setColour(textColour);
+    g.fillAll( getToggleState() ? yellow : darkGrey ); // background
+    
+    g.setColour( getToggleState() ? darkGrey : lightGrey ); // text colour
     
     g.drawFittedText(getButtonText(),
                      bounds.getX(),
