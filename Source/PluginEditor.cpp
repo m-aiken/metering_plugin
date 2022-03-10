@@ -977,11 +977,6 @@ CustomComboBox::CustomComboBox(const juce::StringArray& choices,
     setSelectedId(initSelectionId);
 }
 
-CustomComboBox::~CustomComboBox()
-{
-    
-}
-
 void CustomComboBox::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
@@ -990,11 +985,6 @@ void CustomComboBox::paint(juce::Graphics& g)
 CustomLabel::CustomLabel(const juce::String& labelText)
 {
     setText(labelText, juce::NotificationType::dontSendNotification);
-}
-
-CustomLabel::~CustomLabel()
-{
-    
 }
 
 void CustomLabel::paint(juce::Graphics& g)
@@ -1016,11 +1006,6 @@ CustomToggle::CustomToggle(const juce::String& buttonText)
 {
     setButtonText(buttonText);
     setToggleState(true, juce::NotificationType::dontSendNotification);
-}
-
-CustomToggle::~CustomToggle()
-{
-    
 }
 
 void CustomToggle::paint(juce::Graphics& g)
@@ -1045,7 +1030,7 @@ void CustomToggle::paint(juce::Graphics& g)
 }
 
 //==============================================================================
-MeterComboGroup::MeterComboGroup()
+GuiControlsGroupA::GuiControlsGroupA()
 {
     addAndMakeVisible(decayRateLabel);
     addAndMakeVisible(avgDurationLabel);
@@ -1056,12 +1041,7 @@ MeterComboGroup::MeterComboGroup()
     addAndMakeVisible(meterViewCombo);
 }
 
-void MeterComboGroup::paint(juce::Graphics& g)
-{
-    //g.fillAll(juce::Colours::red);
-}
-
-void MeterComboGroup::resized()
+void GuiControlsGroupA::resized()
 {
     auto bounds = getLocalBounds();
     auto boundsHeight = bounds.getHeight();
@@ -1097,7 +1077,7 @@ void MeterComboGroup::resized()
                              boxHeight);
 }
 
-float MeterComboGroup::getCurrentDecayRate()
+float GuiControlsGroupA::getCurrentDecayRate()
 {
     float dbPerSecond;
     
@@ -1115,7 +1095,7 @@ float MeterComboGroup::getCurrentDecayRate()
 }
 
 //==============================================================================
-GonioHoldHistGuiControls::GonioHoldHistGuiControls()
+GuiControlsGroupB::GuiControlsGroupB()
 {
     addAndMakeVisible(gonioScaleLabel);
     addAndMakeVisible(gonioScaleKnob);
@@ -1132,12 +1112,7 @@ GonioHoldHistGuiControls::GonioHoldHistGuiControls()
     addAndMakeVisible(histViewCombo);
 }
 
-void GonioHoldHistGuiControls::paint(juce::Graphics& g)
-{
-    
-}
-
-void GonioHoldHistGuiControls::resized()
+void GuiControlsGroupB::resized()
 {
     auto bounds = getLocalBounds();
     auto boundsHeight = bounds.getHeight();
@@ -1194,31 +1169,31 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoMeterPeak);
     addAndMakeVisible(histograms);
     addAndMakeVisible(stereoImageMeter);
-    addAndMakeVisible(meterCombos);
-    addAndMakeVisible(gonioHoldHistControls);
+    addAndMakeVisible(guiControlsA);
+    addAndMakeVisible(guiControlsB);
     
     // set initial values
-    auto dbPerSecond = meterCombos.getCurrentDecayRate();
+    auto dbPerSecond = guiControlsA.getCurrentDecayRate();
     stereoMeterRms.setDecayRate(dbPerSecond);
     stereoMeterPeak.setDecayRate(dbPerSecond);
     
-    auto duration = meterCombos.avgDurationCombo.getSelectedId();
+    auto duration = guiControlsA.avgDurationCombo.getSelectedId();
     stereoMeterRms.resizeAverager(duration);
     stereoMeterPeak.resizeAverager(duration);
     
-    auto gonioScale = gonioHoldHistControls.gonioScaleKnob.getValue();
+    auto gonioScale = guiControlsB.gonioScaleKnob.getValue();
     stereoImageMeter.setGoniometerScale(gonioScale);
     
-    auto holdButtonState = gonioHoldHistControls.holdButton.getToggleState();
+    auto holdButtonState = guiControlsB.holdButton.getToggleState();
     stereoMeterRms.setTickVisibility(holdButtonState);
     stereoMeterPeak.setTickVisibility(holdButtonState);
     
-    auto holdTime = gonioHoldHistControls.holdTimeCombo.getSelectedId();
+    auto holdTime = guiControlsB.holdTimeCombo.getSelectedId();
     stereoMeterRms.setTickHoldTime(holdTime);
     stereoMeterPeak.setTickHoldTime(holdTime);
-    gonioHoldHistControls.holdResetButton.setVisible( (holdTime == 6) );
+    guiControlsB.holdResetButton.setVisible( (holdTime == 6) );
     
-    auto histView = gonioHoldHistControls.histViewCombo.getSelectedId();
+    auto histView = guiControlsB.histViewCombo.getSelectedId();
     histograms.setFlexDirection(histView);
     
     // handle change events
@@ -1236,70 +1211,70 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         histograms.setThreshold(HistogramTypes::PEAK, v);
     };
     
-    meterCombos.decayRateCombo.onChange = [this]
+    guiControlsA.decayRateCombo.onChange = [this]
     {
-        auto dbPerSecond = meterCombos.getCurrentDecayRate();
+        auto dbPerSecond = guiControlsA.getCurrentDecayRate();
         stereoMeterRms.setDecayRate(dbPerSecond);
         stereoMeterPeak.setDecayRate(dbPerSecond);
     };
     
-    meterCombos.avgDurationCombo.onChange = [this]
+    guiControlsA.avgDurationCombo.onChange = [this]
     {
-        auto durationId = meterCombos.avgDurationCombo.getSelectedId();
+        auto durationId = guiControlsA.avgDurationCombo.getSelectedId();
         stereoMeterRms.resizeAverager(durationId);
         stereoMeterPeak.resizeAverager(durationId);
     };
     
-    meterCombos.meterViewCombo.onChange = [this]
+    guiControlsA.meterViewCombo.onChange = [this]
     {
-        auto selectedId = meterCombos.meterViewCombo.getSelectedId();
+        auto selectedId = guiControlsA.meterViewCombo.getSelectedId();
         stereoMeterRms.setMeterView(selectedId);
         stereoMeterPeak.setMeterView(selectedId);
     };
     
-    gonioHoldHistControls.gonioScaleKnob.onValueChange = [this]
+    guiControlsB.gonioScaleKnob.onValueChange = [this]
     {
-        auto rotaryValue = gonioHoldHistControls.gonioScaleKnob.getValue();
+        auto rotaryValue = guiControlsB.gonioScaleKnob.getValue();
         stereoImageMeter.setGoniometerScale(rotaryValue);
     };
     
-    gonioHoldHistControls.holdButton.onClick = [this]
+    guiControlsB.holdButton.onClick = [this]
     {
-        auto toggleState = gonioHoldHistControls.holdButton.getToggleState();
+        auto toggleState = guiControlsB.holdButton.getToggleState();
         stereoMeterRms.setTickVisibility(toggleState);
         stereoMeterPeak.setTickVisibility(toggleState);
         
-        auto resetIsVisible = gonioHoldHistControls.holdResetButton.isVisible();
-        auto holdTimeId = gonioHoldHistControls.holdTimeCombo.getSelectedId();;
+        auto resetIsVisible = guiControlsB.holdResetButton.isVisible();
+        auto holdTimeId = guiControlsB.holdTimeCombo.getSelectedId();;
         if ( !toggleState && resetIsVisible )
         {
-            gonioHoldHistControls.holdResetButton.setVisible(false);
+            guiControlsB.holdResetButton.setVisible(false);
         }
         else if ( toggleState && holdTimeId == 6 && !resetIsVisible )
         {
-            gonioHoldHistControls.holdResetButton.setVisible(true);
+            guiControlsB.holdResetButton.setVisible(true);
         }
     };
     
-    gonioHoldHistControls.holdTimeCombo.onChange = [this]
+    guiControlsB.holdTimeCombo.onChange = [this]
     {
-        auto selectedId = gonioHoldHistControls.holdTimeCombo.getSelectedId();
+        auto selectedId = guiControlsB.holdTimeCombo.getSelectedId();
         stereoMeterRms.setTickHoldTime(selectedId);
         stereoMeterPeak.setTickHoldTime(selectedId);
         
-        auto holdEnabled = gonioHoldHistControls.holdButton.getToggleState();
-        gonioHoldHistControls.holdResetButton.setVisible( (selectedId == 6 && holdEnabled) );
+        auto holdEnabled = guiControlsB.holdButton.getToggleState();
+        guiControlsB.holdResetButton.setVisible( (selectedId == 6 && holdEnabled) );
     };
     
-    gonioHoldHistControls.holdResetButton.onClick = [this]
+    guiControlsB.holdResetButton.onClick = [this]
     {
         stereoMeterRms.resetValueHolder();
         stereoMeterPeak.resetValueHolder();
     };
     
-    gonioHoldHistControls.histViewCombo.onChange = [this]
+    guiControlsB.histViewCombo.onChange = [this]
     {
-        histograms.setFlexDirection(gonioHoldHistControls.histViewCombo.getSelectedId());
+        histograms.setFlexDirection(guiControlsB.histViewCombo.getSelectedId());
     };
     
 #if defined(GAIN_TEST_ACTIVE)
@@ -1356,15 +1331,15 @@ void PFMProject10AudioProcessorEditor::resized()
     auto comboPadding = 20;
     auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (comboPadding * 2);
     
-    meterCombos.setBounds(stereoMeterRms.getRight() + comboPadding,
-                          margin,
-                          comboWidth,
-                          stereoMeterHeight);
+    guiControlsA.setBounds(stereoMeterRms.getRight() + comboPadding,
+                           margin,
+                           comboWidth,
+                           stereoMeterHeight);
     
-    gonioHoldHistControls.setBounds(stereoMeterPeak.getX() - comboPadding - comboWidth,
-                                    margin,
-                                    comboWidth,
-                                    stereoMeterHeight);
+    guiControlsB.setBounds(stereoMeterPeak.getX() - comboPadding - comboWidth,
+                           margin,
+                           comboWidth,
+                           stereoMeterHeight);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);

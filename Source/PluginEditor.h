@@ -405,29 +405,25 @@ private:
 struct CustomComboBox : juce::ComboBox
 {
     CustomComboBox(const juce::StringArray& choices, const int& initSelectionId);
-    ~CustomComboBox();
     void paint(juce::Graphics& g) override;
 };
 
 struct CustomLabel : juce::Label
 {
     CustomLabel(const juce::String& labelText);
-    ~CustomLabel();
     void paint(juce::Graphics& g) override;
 };
 
 struct CustomToggle : juce::ToggleButton
 {
     CustomToggle(const juce::String& buttonText);
-    ~CustomToggle();
     void paint(juce::Graphics& g) override;
 };
 
 //==============================================================================
-struct MeterComboGroup : juce::Component
+struct GuiControlsGroupA : juce::Component
 {
-    MeterComboGroup();
-    void paint(juce::Graphics& g) override;
+    GuiControlsGroupA();
     void resized() override;
     
     float getCurrentDecayRate();
@@ -447,10 +443,9 @@ private:
 };
 
 //==============================================================================
-struct GonioHoldHistGuiControls : juce::Component
+struct GuiControlsGroupB : juce::Component
 {
-    GonioHoldHistGuiControls();
-    void paint(juce::Graphics& g) override;
+    GuiControlsGroupB();
     void resized() override;
     
     juce::Slider gonioScaleKnob;
@@ -497,8 +492,8 @@ private:
     
     StereoImageMeter stereoImageMeter;
     
-    MeterComboGroup meterCombos;
-    GonioHoldHistGuiControls gonioHoldHistControls;
+    GuiControlsGroupA guiControlsA;
+    GuiControlsGroupB guiControlsB;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
