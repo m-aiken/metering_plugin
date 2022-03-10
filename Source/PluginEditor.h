@@ -204,7 +204,7 @@ private:
 //==============================================================================
 struct ValueHolderBase : juce::Timer
 {
-    ValueHolderBase() { startTimerHz(30); }
+    ValueHolderBase() { startTimer(25); }
     ~ValueHolderBase() { stopTimer(); }
     
     void setHoldTime(const long long& ms) { holdTime = ms; }
@@ -340,7 +340,7 @@ private:
     Meter averageMeter;
     Meter instantMeter;
     
-    Averager<float> averager{12, NegativeInfinity};
+    Averager<float> averager{20, NegativeInfinity};
     
     Channel channel;
 };

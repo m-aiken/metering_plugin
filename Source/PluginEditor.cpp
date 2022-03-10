@@ -767,17 +767,17 @@ void MacroMeter::setTickVisibility(const bool& toggleState)
 
 void MacroMeter::resizeAverager(const int& durationId)
 {
-    // timerCallback called every 10ms
+    // timerCallback called every 25ms
     size_t newSize;
     
     switch (durationId)
     {
-        case 1:  newSize = 10;  break; // 100ms
-        case 2:  newSize = 25;  break; // 250ms
-        case 3:  newSize = 50;  break; // 500ms
-        case 4:  newSize = 100; break; // 1000ms
-        case 5:  newSize = 200; break; // 2000ms
-        default: newSize = 10;  break; // 100ms
+        case 1:  newSize = 4;  break; // 100ms
+        case 2:  newSize = 10; break; // 250ms
+        case 3:  newSize = 20; break; // 500ms
+        case 4:  newSize = 40; break; // 1000ms
+        case 5:  newSize = 80; break; // 2000ms
+        default: newSize = 20; break; // 500ms
     }
     
     averager.resize(newSize, averager.getAverage());
@@ -1188,9 +1188,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-//    startTimerHz(30);
-    startTimer(10);
-        
+    startTimer(25);
+    
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
     addAndMakeVisible(histograms);
@@ -1198,10 +1197,14 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(meterCombos);
     addAndMakeVisible(gonioHoldHistControls);
     
-    // set inital values
+    // set initial values
     auto dbPerSecond = meterCombos.getCurrentDecayRate();
     stereoMeterRms.setDecayRate(dbPerSecond);
     stereoMeterPeak.setDecayRate(dbPerSecond);
+    
+    auto duration = meterCombos.avgDurationCombo.getSelectedId();
+    stereoMeterRms.resizeAverager(duration);
+    stereoMeterPeak.resizeAverager(duration);
     
     auto gonioScale = gonioHoldHistControls.gonioScaleKnob.getValue();
     stereoImageMeter.setGoniometerScale(gonioScale);
