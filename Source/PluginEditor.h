@@ -333,6 +333,7 @@ struct MacroMeter : juce::Component
     void resetValueHolder();
     void setMeterView(const int& newViewId);
     void setTickVisibility(const bool& toggleState);
+    void resizeAverager(const int& durationId);
     
 private:
     TextMeter textMeter;
@@ -384,6 +385,8 @@ struct StereoMeter : juce::Component
     void setTickHoldTime(const int& selectedId);
     void resetValueHolder();
     void setMeterView(const int& newViewId);
+    
+    void resizeAverager(const int& durationId);
     
     ThresholdSlider threshCtrl;
 private:

@@ -765,6 +765,24 @@ void MacroMeter::setTickVisibility(const bool& toggleState)
     instantMeter.setTickVisibility(toggleState);
 }
 
+void MacroMeter::resizeAverager(const int& durationId)
+{
+    // timerCallback called every 10ms
+    size_t newSize;
+    
+    switch (durationId)
+    {
+        case 1:  newSize = 10;  break; // 100ms
+        case 2:  newSize = 25;  break; // 250ms
+        case 3:  newSize = 50;  break; // 500ms
+        case 4:  newSize = 100; break; // 1000ms
+        case 5:  newSize = 200; break; // 2000ms
+        default: newSize = 10;  break; // 100ms
+    }
+    
+    averager.resize(newSize, averager.getAverage());
+}
+
 //==============================================================================
 void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
                                          int x, int y, int width, int height,
@@ -904,7 +922,8 @@ void StereoMeter::setTickHoldTime(const int& selectedId)
 {
     long long holdTimeMs;
     
-    switch (selectedId) {
+    switch (selectedId)
+    {
         case 1:
             holdTimeMs = 0;
             break;
@@ -942,6 +961,12 @@ void StereoMeter::setMeterView(const int& newViewId)
 {
     macroMeterL.setMeterView(newViewId);
     macroMeterR.setMeterView(newViewId);
+}
+
+void StereoMeter::resizeAverager(const int& durationId)
+{
+    macroMeterL.resizeAverager(durationId);
+    macroMeterR.resizeAverager(durationId);
 }
 
 //==============================================================================
@@ -1163,7 +1188,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    startTimerHz(30);
+//    startTimerHz(30);
+    startTimer(10);
         
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
@@ -1214,7 +1240,12 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setDecayRate(dbPerSecond);
     };
     
-    meterCombos.avgDurationCombo.onChange = [this] { };
+    meterCombos.avgDurationCombo.onChange = [this]
+    {
+        auto durationId = meterCombos.avgDurationCombo.getSelectedId();
+        stereoMeterRms.resizeAverager(durationId);
+        stereoMeterPeak.resizeAverager(durationId);
+    };
     
     meterCombos.meterViewCombo.onChange = [this]
     {
