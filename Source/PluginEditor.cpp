@@ -799,6 +799,16 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
     g.fillRect(threshold);
 }
 
+void CustomLookAndFeel::drawComboBox(juce::Graphics& g,
+                                     int width, int height,
+                                     bool isButtonDown,
+                                     int buttonX, int buttonY,
+                                     int buttonW, int buttonH,
+                                     juce::ComboBox& comboBox)
+{
+    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
+}
+
 //==============================================================================
 ThresholdSlider::ThresholdSlider()
 {
@@ -973,13 +983,25 @@ void StereoMeter::resizeAverager(const int& durationId)
 CustomComboBox::CustomComboBox(const juce::StringArray& choices,
                                const int& initSelectionId)
 {
+    setLookAndFeel(&lnf);
     addItemList(choices, 1);
     setSelectedId(initSelectionId);
 }
 
+CustomComboBox::~CustomComboBox() { setLookAndFeel(nullptr); }
+
 void CustomComboBox::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
+    auto bounds = getLocalBounds();
+    getLookAndFeel().drawComboBox(g,
+                                  bounds.getWidth(),  // width
+                                  bounds.getHeight(), // height
+                                  true,               // isButtonDown
+                                  bounds.getX(),      // button x
+                                  bounds.getY(),      // button y
+                                  bounds.getWidth(),  // button width
+                                  bounds.getHeight(), // button height
+                                  *this);             // combo box
 }
 
 CustomLabel::CustomLabel(const juce::String& labelText)

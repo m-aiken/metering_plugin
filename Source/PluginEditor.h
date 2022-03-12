@@ -355,6 +355,13 @@ struct CustomLookAndFeel : juce::LookAndFeel_V4
                           float maxSliderPos,
                           const juce::Slider::SliderStyle style,
                           juce::Slider& slider) override;
+    
+    void drawComboBox(juce::Graphics& g,
+                      int width, int height,
+                      bool isButtonDown,
+                      int buttonX, int buttonY,
+                      int buttonW, int buttonH,
+                      juce::ComboBox& comboBox) override;
 };
 
 //==============================================================================
@@ -405,7 +412,12 @@ private:
 struct CustomComboBox : juce::ComboBox
 {
     CustomComboBox(const juce::StringArray& choices, const int& initSelectionId);
+    ~CustomComboBox();
+    
     void paint(juce::Graphics& g) override;
+    
+private:
+    CustomLookAndFeel lnf;
 };
 
 struct CustomLabel : juce::Label
