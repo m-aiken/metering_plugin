@@ -157,15 +157,15 @@ void Histogram::paint(juce::Graphics& g)
                      juce::Justification::centredBottom, // justification
                      1);                                 // max num lines
     
-    auto& data      = view == HistView::stacked ? circularBufferStacked.getData()
-                                  : circularBufferSideBySide.getData();
-    
-    auto readIdx    = view == HistView::stacked ? circularBufferStacked.getReadIndex()
-                                  : circularBufferSideBySide.getReadIndex();
-    
-    auto bufferSize = view == HistView::stacked ? circularBufferStacked.getSize()
-                                  : circularBufferSideBySide.getSize();
+    auto& data = circularBuffer.getData();
+    auto readIdx = circularBuffer.getReadIndex();
+    auto bufferSize = circularBuffer.getSize();
 
+    if ( view == HistView::sideBySide )
+    {
+        readIdx = (readIdx + (bufferSize / 2) ) % bufferSize;
+    }
+    
     juce::Path p;
     
     // manually setting first and last pixel's column (x) outside of the loops
@@ -224,8 +224,7 @@ void Histogram::resized()
 void Histogram::update(const float& inputL, const float& inputR)
 {
     auto average = (inputL + inputR) / 2;
-    circularBufferStacked.write(average);
-    circularBufferSideBySide.write(average);
+    circularBuffer.write(average);
     
     repaint();
 }
@@ -238,6 +237,7 @@ void Histogram::setThreshold(const float& threshAsDecibels)
 void Histogram::setView(const HistView& v)
 {
     view = v;
+    repaint();
 }
 
 //==============================================================================

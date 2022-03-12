@@ -96,13 +96,13 @@ struct Histogram : juce::Component
     void setView(const HistView& v);
     
 private:
-    CircularBuffer<float> circularBufferStacked{776, NegativeInfinity};
-    CircularBuffer<float> circularBufferSideBySide{388, NegativeInfinity};
+    CircularBuffer<float> circularBuffer{776, NegativeInfinity};
+    
     juce::String label;
     float threshold = 0.f;
     juce::ColourGradient colourGrad;
     
-    int view;
+    HistView view;
 };
 
 struct HistogramContainer : juce::Component
@@ -119,7 +119,7 @@ private:
     Histogram rmsHistogram{"RMS"};
     Histogram peakHistogram{"PEAK"};
         
-    int view;
+    HistView view;
 };
 
 //==============================================================================
@@ -515,7 +515,7 @@ struct GuiControlsGroupB : juce::Component
     
 private:
     CustomLabel gonioScaleLabel { "SCALE" };
-    CustomLabel histViewLabel { "HIST" };
+    CustomLabel histViewLabel { "HIST VIEW" };
 };
 
 //==============================================================================
