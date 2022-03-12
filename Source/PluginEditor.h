@@ -373,6 +373,13 @@ struct CustomLookAndFeel : juce::LookAndFeel_V4
                               const juce::Colour& backgroundColour,
                               bool shouldDrawButtonAsHighlighted,
                               bool shouldDrawButtonAsDown) override;
+    
+    void drawRotarySlider(juce::Graphics& g,
+                          int x, int y, int width, int height,
+                          float sliderPosProportional,
+                          float rotaryStartAngle,
+                          float rotaryEndAngle,
+                          juce::Slider& slider) override;
 };
 
 //==============================================================================
@@ -423,7 +430,7 @@ private:
 struct CustomComboBox : juce::ComboBox
 {
     CustomComboBox(const juce::StringArray& choices, const int& initSelectionId);
-    ~CustomComboBox();
+    ~CustomComboBox() { setLookAndFeel(nullptr); }
     void paint(juce::Graphics& g) override;
 private:
     CustomLookAndFeel lnf;
@@ -438,7 +445,7 @@ struct CustomLabel : juce::Label
 struct CustomToggle : juce::ToggleButton
 {
     CustomToggle(const juce::String& buttonText);
-    ~CustomToggle();
+    ~CustomToggle() { setLookAndFeel(nullptr); }
     void paint(juce::Graphics& g) override;
 private:
     CustomLookAndFeel lnf;
@@ -447,7 +454,16 @@ private:
 struct CustomTextBtn : juce::TextButton
 {
     CustomTextBtn(const juce::String& buttonText);
-    ~CustomTextBtn();
+    ~CustomTextBtn() { setLookAndFeel(nullptr); }
+    void paint(juce::Graphics& g) override;
+private:
+    CustomLookAndFeel lnf;
+};
+
+struct CustomRotary : juce::Slider
+{
+    CustomRotary();
+    ~CustomRotary() { setLookAndFeel(nullptr); }
     void paint(juce::Graphics& g) override;
 private:
     CustomLookAndFeel lnf;
@@ -481,12 +497,11 @@ struct GuiControlsGroupB : juce::Component
     GuiControlsGroupB();
     void resized() override;
     
-    juce::Slider gonioScaleKnob;
+    CustomRotary gonioScaleKnob;
     
     CustomToggle holdButton { "HOLD" };
     juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
     CustomComboBox holdTimeCombo { holdTimeChoices, 2 };
-//    juce::TextButton holdResetButton { "RESET" };
     CustomTextBtn holdResetButton { "RESET" };
     
     juce::StringArray histViewChoices { "Stacked", "Side-by-Side" };

@@ -855,6 +855,48 @@ void CustomLookAndFeel::drawButtonBackground(juce::Graphics& g,
                      1);
 }
 
+void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g,
+                                         int x, int y, int width, int height,
+                                         float sliderPosProportional,
+                                         float rotaryStartAngle,
+                                         float rotaryEndAngle,
+                                         juce::Slider& slider)
+{
+    auto bounds = juce::Rectangle<float>(x, y, width, height);
+    
+    auto yellow = juce::Colour(217, 193, 56);
+    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
+    auto lightGrey = juce::Colour(201u, 209u, 217u);
+    
+    g.setColour(darkGrey);
+    g.fillEllipse(bounds);
+    
+    g.setColour(lightGrey);
+    g.drawEllipse(bounds, 1.f);
+    
+    juce::Path p;
+    
+    auto centre = bounds.getCentre();
+    
+    juce::Rectangle<float> r;
+    r.setLeft(centre.getX() - 2);
+    r.setRight(centre.getX() + 2);
+    r.setTop(bounds.getY());
+    r.setBottom(centre.getY());
+    
+    p.addRoundedRectangle(r, 2.f);
+    
+    jassert(rotaryStartAngle < rotaryEndAngle);
+    
+    auto transform = juce::AffineTransform().rotated(sliderPosProportional,
+                                                     centre.getX(),
+                                                     centre.getY());
+    
+    p.applyTransform(transform);
+    
+    g.fillPath(p);
+}
+
 //==============================================================================
 ThresholdSlider::ThresholdSlider()
 {
@@ -1034,8 +1076,6 @@ CustomComboBox::CustomComboBox(const juce::StringArray& choices,
     setSelectedId(initSelectionId);
 }
 
-CustomComboBox::~CustomComboBox() { setLookAndFeel(nullptr); }
-
 void CustomComboBox::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
@@ -1077,8 +1117,6 @@ CustomToggle::CustomToggle(const juce::String& buttonText)
     setToggleState(true, juce::NotificationType::dontSendNotification);
 }
 
-CustomToggle::~CustomToggle() { setLookAndFeel(nullptr); }
-
 void CustomToggle::paint(juce::Graphics& g)
 {
     getLookAndFeel().drawToggleButton(g,
@@ -1093,8 +1131,6 @@ CustomTextBtn::CustomTextBtn(const juce::String& buttonText)
     setButtonText(buttonText);
 }
 
-CustomTextBtn::~CustomTextBtn() { setLookAndFeel(nullptr); }
-
 void CustomTextBtn::paint(juce::Graphics& g)
 {
     auto red = juce::Colour(196u, 55u, 55u);
@@ -1104,6 +1140,39 @@ void CustomTextBtn::paint(juce::Graphics& g)
                                           red,    // colour
                                           true,   // draw as highlighted
                                           false); // draw as down
+}
+
+CustomRotary::CustomRotary()
+{
+    setLookAndFeel(&lnf);
+}
+
+void CustomRotary::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    auto diameter = bounds.getWidth() * 0.8f;
+    auto radius = diameter / 2;
+    
+    auto startAngle = juce::degreesToRadians(180.f + 45.f);
+    auto endAngle = juce::degreesToRadians(180.f - 45.f) + juce::MathConstants<float>::twoPi;
+    
+    auto range = getRange();
+    
+    auto valueToDraw = juce::jmap<float>(getValue(),
+                                         range.getStart(),
+                                         range.getEnd(),
+                                         startAngle,
+                                         endAngle);
+    
+    getLookAndFeel().drawRotarySlider(g,
+                                      bounds.getCentreX() - radius, // x
+                                      bounds.getCentreY() - radius, // y
+                                      diameter,                     // width
+                                      diameter,                     // height
+                                      valueToDraw,                  // position
+                                      startAngle,                   // start angle
+                                      endAngle,                     // end angle
+                                      *this);                       // slider
 }
 
 //==============================================================================
@@ -1197,13 +1266,14 @@ void GuiControlsGroupB::resized()
     auto boxHeight = 30;
     auto width = bounds.getWidth();
     auto rotaryDiameter = width * 0.8f;
+    auto rotaryRadius = rotaryDiameter / 2;
     
     gonioScaleLabel.setBounds(0,
                               (boundsHeight * 0.15f) - boxHeight,
                               width,
                               boxHeight);
     
-    gonioScaleKnob.setBounds(bounds.getCentreX() - (rotaryDiameter / 2),
+    gonioScaleKnob.setBounds(bounds.getCentreX() - rotaryRadius,
                              (boundsHeight * 0.15f),
                              rotaryDiameter,
                              rotaryDiameter);
