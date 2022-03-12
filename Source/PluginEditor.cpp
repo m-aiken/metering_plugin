@@ -809,6 +809,52 @@ void CustomLookAndFeel::drawComboBox(juce::Graphics& g,
     g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
 }
 
+void CustomLookAndFeel::drawToggleButton(juce::Graphics& g,
+                                         juce::ToggleButton& toggleButton,
+                                         bool shouldDrawButtonAsHighlighted,
+                                         bool shouldDrawButtonAsDown)
+{
+    auto bounds = toggleButton.getLocalBounds();
+    
+    auto yellow = juce::Colour(217, 193, 56);
+    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
+    auto lightGrey = juce::Colour(201u, 209u, 217u);
+    
+    // background
+    g.fillAll( toggleButton.getToggleState() ? yellow : darkGrey );
+    
+    // text colour
+    g.setColour( toggleButton.getToggleState() ? darkGrey : lightGrey );
+    
+    g.drawFittedText(toggleButton.getButtonText(),
+                     bounds.getX(),
+                     bounds.getY(),
+                     bounds.getWidth(),
+                     bounds.getHeight(),
+                     juce::Justification::centred,
+                     1);
+}
+
+void CustomLookAndFeel::drawButtonBackground(juce::Graphics& g,
+                                             juce::Button& button,
+                                             const juce::Colour& backgroundColour,
+                                             bool shouldDrawButtonAsHighlighted,
+                                             bool shouldDrawButtonAsDown)
+{
+    auto bounds = button.getLocalBounds();
+    
+    g.fillAll(backgroundColour);
+    
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.drawFittedText(button.getButtonText(),
+                     bounds.getX(),
+                     bounds.getY(),
+                     bounds.getWidth(),
+                     bounds.getHeight(),
+                     juce::Justification::centred,
+                     1);
+}
+
 //==============================================================================
 ThresholdSlider::ThresholdSlider()
 {
@@ -1026,29 +1072,38 @@ void CustomLabel::paint(juce::Graphics& g)
 
 CustomToggle::CustomToggle(const juce::String& buttonText)
 {
+    setLookAndFeel(&lnf);
     setButtonText(buttonText);
     setToggleState(true, juce::NotificationType::dontSendNotification);
 }
 
+CustomToggle::~CustomToggle() { setLookAndFeel(nullptr); }
+
 void CustomToggle::paint(juce::Graphics& g)
 {
-    auto bounds = getLocalBounds();
+    getLookAndFeel().drawToggleButton(g,
+                                      *this, // toggle button
+                                      true,  // draw as highlighted
+                                      true); // draw as down
+}
+
+CustomTextBtn::CustomTextBtn(const juce::String& buttonText)
+{
+    setLookAndFeel(&lnf);
+    setButtonText(buttonText);
+}
+
+CustomTextBtn::~CustomTextBtn() { setLookAndFeel(nullptr); }
+
+void CustomTextBtn::paint(juce::Graphics& g)
+{
+    auto red = juce::Colour(196u, 55u, 55u);
     
-    auto yellow = juce::Colour(217, 193, 56);
-    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
-    auto lightGrey = juce::Colour(201u, 209u, 217u);
-    
-    g.fillAll( getToggleState() ? yellow : darkGrey ); // background
-    
-    g.setColour( getToggleState() ? darkGrey : lightGrey ); // text colour
-    
-    g.drawFittedText(getButtonText(),
-                     bounds.getX(),
-                     bounds.getY(),
-                     bounds.getWidth(),
-                     bounds.getHeight(),
-                     juce::Justification::centred,
-                     1);
+    getLookAndFeel().drawButtonBackground(g,
+                                          *this,  // button
+                                          red,    // colour
+                                          true,   // draw as highlighted
+                                          false); // draw as down
 }
 
 //==============================================================================

@@ -362,6 +362,17 @@ struct CustomLookAndFeel : juce::LookAndFeel_V4
                       int buttonX, int buttonY,
                       int buttonW, int buttonH,
                       juce::ComboBox& comboBox) override;
+    
+    void drawToggleButton(juce::Graphics& g,
+                          juce::ToggleButton& toggleButton,
+                          bool shouldDrawButtonAsHighlighted,
+                          bool shouldDrawButtonAsDown) override;
+    
+    void drawButtonBackground(juce::Graphics& g,
+                              juce::Button& button,
+                              const juce::Colour& backgroundColour,
+                              bool shouldDrawButtonAsHighlighted,
+                              bool shouldDrawButtonAsDown) override;
 };
 
 //==============================================================================
@@ -413,9 +424,7 @@ struct CustomComboBox : juce::ComboBox
 {
     CustomComboBox(const juce::StringArray& choices, const int& initSelectionId);
     ~CustomComboBox();
-    
     void paint(juce::Graphics& g) override;
-    
 private:
     CustomLookAndFeel lnf;
 };
@@ -429,7 +438,19 @@ struct CustomLabel : juce::Label
 struct CustomToggle : juce::ToggleButton
 {
     CustomToggle(const juce::String& buttonText);
+    ~CustomToggle();
     void paint(juce::Graphics& g) override;
+private:
+    CustomLookAndFeel lnf;
+};
+
+struct CustomTextBtn : juce::TextButton
+{
+    CustomTextBtn(const juce::String& buttonText);
+    ~CustomTextBtn();
+    void paint(juce::Graphics& g) override;
+private:
+    CustomLookAndFeel lnf;
 };
 
 //==============================================================================
@@ -465,7 +486,8 @@ struct GuiControlsGroupB : juce::Component
     CustomToggle holdButton { "HOLD" };
     juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
     CustomComboBox holdTimeCombo { holdTimeChoices, 2 };
-    juce::TextButton holdResetButton { "RESET" };
+//    juce::TextButton holdResetButton { "RESET" };
+    CustomTextBtn holdResetButton { "RESET" };
     
     juce::StringArray histViewChoices { "Stacked", "Side-by-Side" };
     CustomComboBox histViewCombo { histViewChoices, 1 };
