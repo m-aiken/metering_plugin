@@ -807,6 +807,8 @@ void CustomLookAndFeel::drawComboBox(juce::Graphics& g,
                                      juce::ComboBox& comboBox)
 {
     g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
+    auto lightGrey = juce::Colour(201u, 209u, 217u);
+    comboBox.setColour(juce::ComboBox::textColourId, lightGrey);
 }
 
 void CustomLookAndFeel::drawToggleButton(juce::Graphics& g,
