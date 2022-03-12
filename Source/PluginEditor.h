@@ -78,6 +78,12 @@ enum class HistogramTypes
     PEAK
 };
 
+enum HistView
+{
+    stacked = 1,
+    sideBySide
+};
+
 struct Histogram : juce::Component
 {
     Histogram(const juce::String& _label) : label(_label) { }
@@ -87,7 +93,7 @@ struct Histogram : juce::Component
     
     void setThreshold(const float& threshAsDecibels);
     
-    void setView(const int& selectedId);
+    void setView(const HistView& v);
     
 private:
     CircularBuffer<float> circularBufferStacked{776, NegativeInfinity};
@@ -96,7 +102,7 @@ private:
     float threshold = 0.f;
     juce::ColourGradient colourGrad;
     
-    int viewId;
+    int view;
 };
 
 struct HistogramContainer : juce::Component
@@ -107,13 +113,13 @@ struct HistogramContainer : juce::Component
     void update(const HistogramTypes& histoType, const float& inputL, const float& inputR);
     void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
     
-    void setFlexDirection(const int& selectedId);
+    void setView(const HistView& v);
     
 private:
     Histogram rmsHistogram{"RMS"};
     Histogram peakHistogram{"PEAK"};
-    
-    juce::FlexBox fb;
+        
+    int view;
 };
 
 //==============================================================================

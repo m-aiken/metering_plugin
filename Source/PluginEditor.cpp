@@ -157,13 +157,13 @@ void Histogram::paint(juce::Graphics& g)
                      juce::Justification::centredBottom, // justification
                      1);                                 // max num lines
     
-    auto& data      = viewId == 1 ? circularBufferStacked.getData()
+    auto& data      = view == HistView::stacked ? circularBufferStacked.getData()
                                   : circularBufferSideBySide.getData();
     
-    auto readIdx    = viewId == 1 ? circularBufferStacked.getReadIndex()
+    auto readIdx    = view == HistView::stacked ? circularBufferStacked.getReadIndex()
                                   : circularBufferSideBySide.getReadIndex();
     
-    auto bufferSize = viewId == 1 ? circularBufferStacked.getSize()
+    auto bufferSize = view == HistView::stacked ? circularBufferStacked.getSize()
                                   : circularBufferSideBySide.getSize();
 
     juce::Path p;
@@ -235,9 +235,9 @@ void Histogram::setThreshold(const float& threshAsDecibels)
     threshold = threshAsDecibels;
 }
 
-void Histogram::setView(const int& selectedId)
+void Histogram::setView(const HistView& v)
 {
-    viewId = selectedId;
+    view = v;
 }
 
 //==============================================================================
@@ -249,12 +249,17 @@ HistogramContainer::HistogramContainer()
 
 void HistogramContainer::resized()
 {
+    juce::FlexBox fb;
+    fb.flexDirection = ( view == stacked ? juce::FlexBox::Direction::column
+                                         : juce::FlexBox::Direction::row);
+    
     auto rms = juce::FlexItem(rmsHistogram).withFlex(1.f).withMargin(2.f);
     auto peak = juce::FlexItem(peakHistogram).withFlex(1.f).withMargin(2.f);
     
     fb.items.add(rms);
     fb.items.add(peak);
     
+    fb.performLayout(getLocalBounds());
 }
 
 void HistogramContainer::update(const HistogramTypes& histoType,
@@ -276,17 +281,13 @@ void HistogramContainer::setThreshold(const HistogramTypes& histoType,
         peakHistogram.setThreshold(threshAsDecibels);
 }
 
-void HistogramContainer::setFlexDirection(const int& selectedId)
+void HistogramContainer::setView(const HistView& v)
 {
-    if ( selectedId == 1 )
-        fb.flexDirection = juce::FlexBox::Direction::column;
-    else if ( selectedId == 2)
-        fb.flexDirection = juce::FlexBox::Direction::row;
+    view = v;
+    resized();
     
-    rmsHistogram.setView(selectedId);
-    peakHistogram.setView(selectedId);
-    
-    fb.performLayout(getLocalBounds());
+    rmsHistogram.setView(v);
+    peakHistogram.setView(v);
 }
 
 //==============================================================================
@@ -1343,7 +1344,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     guiControlsB.holdResetButton.setVisible( (holdTime == 6) );
     
     auto histView = guiControlsB.histViewCombo.getSelectedId();
-    histograms.setFlexDirection(histView);
+    histograms.setView(histView == HistView::stacked ? HistView::stacked
+                                                     : HistView::sideBySide);
     
     // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]
@@ -1423,7 +1425,9 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     
     guiControlsB.histViewCombo.onChange = [this]
     {
-        histograms.setFlexDirection(guiControlsB.histViewCombo.getSelectedId());
+        auto selectedId = guiControlsB.histViewCombo.getSelectedId();
+        histograms.setView(selectedId == HistView::stacked ? HistView::stacked
+                                                           : HistView::sideBySide);
     };
     
 #if defined(GAIN_TEST_ACTIVE)
