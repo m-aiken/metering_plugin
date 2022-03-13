@@ -465,10 +465,18 @@ struct CustomTextBtn : juce::TextButton
     void animateButton();
 private:
     CustomLookAndFeel lnf;
-    juce::Colour buttonColour;
+    
+    enum Colours
+    {
+        standardRed,
+        brighterRed
+    };
+    
+    int selectedColour = Colours::standardRed;
+    
     std::function<void()> resetColour = [this]()
     {
-        buttonColour = juce::Colour(196u, 55u, 55u); // red
+        selectedColour = Colours::standardRed;
         repaint();
     };
 };
