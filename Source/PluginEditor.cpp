@@ -1136,9 +1136,7 @@ CustomTextBtn::CustomTextBtn(const juce::String& buttonText)
 }
 
 void CustomTextBtn::paint(juce::Graphics& g)
-{
-//    auto red = juce::Colour(196u, 55u, 55u);
-    
+{    
     getLookAndFeel().drawButtonBackground(g,
                                           *this,        // button
                                           buttonColour, // colour
