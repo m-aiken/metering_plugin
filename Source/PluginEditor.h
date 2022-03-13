@@ -210,7 +210,7 @@ private:
 //==============================================================================
 struct ValueHolderBase : juce::Timer
 {
-    ValueHolderBase() { startTimer(25); }
+    ValueHolderBase() { startTimerHz(40); }
     ~ValueHolderBase() { stopTimer(); }
     
     void setHoldTime(const long long& ms) { holdTime = ms; }
