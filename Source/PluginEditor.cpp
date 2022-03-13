@@ -1132,17 +1132,26 @@ CustomTextBtn::CustomTextBtn(const juce::String& buttonText)
 {
     setLookAndFeel(&lnf);
     setButtonText(buttonText);
+    buttonColour = juce::Colour(196u, 55u, 55u); // red
 }
 
 void CustomTextBtn::paint(juce::Graphics& g)
 {
-    auto red = juce::Colour(196u, 55u, 55u);
+//    auto red = juce::Colour(196u, 55u, 55u);
     
     getLookAndFeel().drawButtonBackground(g,
-                                          *this,  // button
-                                          red,    // colour
-                                          true,   // draw as highlighted
-                                          false); // draw as down
+                                          *this,        // button
+                                          buttonColour, // colour
+                                          true,         // draw as highlighted
+                                          false);       // draw as down
+}
+
+void CustomTextBtn::animateButton()
+{
+    buttonColour = juce::Colour(255u, 55u, 55u); // brighter red;
+    repaint();
+    
+    juce::Timer::callAfterDelay(100, resetColour);
 }
 
 CustomRotary::CustomRotary()
@@ -1421,6 +1430,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     {
         stereoMeterRms.resetValueHolder();
         stereoMeterPeak.resetValueHolder();
+        guiControlsB.holdResetButton.animateButton();
     };
     
     guiControlsB.histViewCombo.onChange = [this]

@@ -462,8 +462,15 @@ struct CustomTextBtn : juce::TextButton
     CustomTextBtn(const juce::String& buttonText);
     ~CustomTextBtn() { setLookAndFeel(nullptr); }
     void paint(juce::Graphics& g) override;
+    void animateButton();
 private:
     CustomLookAndFeel lnf;
+    juce::Colour buttonColour;
+    std::function<void()> resetColour = [this]()
+    {
+        buttonColour = juce::Colour(196u, 55u, 55u); // red
+        repaint();
+    };
 };
 
 struct CustomRotary : juce::Slider
