@@ -38,8 +38,8 @@ void Goniometer::paint(juce::Graphics& g)
         
         auto mid = jlimit<float>(-1.f, 1.f, (left + right) * Decibels::decibelsToGain(-3.f));
         
-        Point<float> point(centre.getX() + radius * 0.5f * side,
-                           centre.getY() + radius * 0.5f * mid);
+        Point<float> point(centre.getX() + radius * scale * side,
+                           centre.getY() + radius * scale * mid);
         
         if ( i == 0 )
             p.startNewSubPath(point);
@@ -136,6 +136,12 @@ void Goniometer::update(juce::AudioBuffer<float>& incomingBuffer)
     repaint();
 }
 
+void Goniometer::setScale(const double& rotaryValue)
+{
+    scale = juce::jmap<double>(rotaryValue, 50.0, 200.0, 0.2, 0.8);
+    repaint();
+}
+
 //==============================================================================
 void Histogram::paint(juce::Graphics& g)
 {
@@ -155,6 +161,11 @@ void Histogram::paint(juce::Graphics& g)
     auto readIdx = circularBuffer.getReadIndex();
     auto bufferSize = circularBuffer.getSize();
 
+    if ( view == HistView::sideBySide )
+    {
+        readIdx = (readIdx + (bufferSize / 2)) % bufferSize;
+    }
+    
     juce::Path p;
     
     // manually setting first and last pixel's column (x) outside of the loops
@@ -195,9 +206,6 @@ void Histogram::paint(juce::Graphics& g)
     
     colourGrad.clearColours();
     
-    colourGrad.point1 = juce::Point<float>(0, height); // bottom
-    colourGrad.point2 = juce::Point<float>(0, 0);      // top
-    
     // bottom to boundary = green, boundary+ = red
     colourGrad.addColour(0, green);                   // negative infinity
     colourGrad.addColour(thresholdProportion, green); // threshold boundary
@@ -205,6 +213,12 @@ void Histogram::paint(juce::Graphics& g)
 
     g.setGradientFill(colourGrad);
     g.fillPath(p);
+}
+
+void Histogram::resized()
+{
+    colourGrad.point1 = juce::Point<float>(0, getLocalBounds().getHeight()); // bottom
+    colourGrad.point2 = juce::Point<float>(0, 0);      // top
 }
 
 void Histogram::update(const float& inputL, const float& inputR)
@@ -218,6 +232,62 @@ void Histogram::update(const float& inputL, const float& inputR)
 void Histogram::setThreshold(const float& threshAsDecibels)
 {
     threshold = threshAsDecibels;
+}
+
+void Histogram::setView(const HistView& v)
+{
+    view = v;
+    repaint();
+}
+
+//==============================================================================
+HistogramContainer::HistogramContainer()
+{
+    addAndMakeVisible(rmsHistogram);
+    addAndMakeVisible(peakHistogram);
+}
+
+void HistogramContainer::resized()
+{
+    juce::FlexBox fb;
+    fb.flexDirection = ( view == stacked ? juce::FlexBox::Direction::column
+                                         : juce::FlexBox::Direction::row);
+    
+    auto rms = juce::FlexItem(rmsHistogram).withFlex(1.f).withMargin(2.f);
+    auto peak = juce::FlexItem(peakHistogram).withFlex(1.f).withMargin(2.f);
+    
+    fb.items.add(rms);
+    fb.items.add(peak);
+    
+    fb.performLayout(getLocalBounds());
+}
+
+void HistogramContainer::update(const HistogramTypes& histoType,
+                                const float& inputL,
+                                const float& inputR)
+{
+    if ( histoType == HistogramTypes::RMS )
+        rmsHistogram.update(inputL, inputR);
+    else
+        peakHistogram.update(inputL, inputR);
+}
+
+void HistogramContainer::setThreshold(const HistogramTypes& histoType,
+                                      const float& threshAsDecibels)
+{
+    if ( histoType == HistogramTypes::RMS )
+        rmsHistogram.setThreshold(threshAsDecibels);
+    else
+        peakHistogram.setThreshold(threshAsDecibels);
+}
+
+void HistogramContainer::setView(const HistView& v)
+{
+    view = v;
+    resized();
+    
+    rmsHistogram.setView(v);
+    peakHistogram.setView(v);
 }
 
 //==============================================================================
@@ -362,6 +432,11 @@ void StereoImageMeter::update(juce::AudioBuffer<float>& incomingBuffer)
 {
     goniometer.update(incomingBuffer);
     correlationMeter.update(incomingBuffer);
+}
+
+void StereoImageMeter::setGoniometerScale(const double& rotaryValue)
+{
+    goniometer.setScale(rotaryValue);
 }
 
 //==============================================================================
@@ -510,20 +585,25 @@ void Meter::paint(juce::Graphics& g)
     }
     
     // falling tick
-    auto yellow = juce::Colour(217, 193, 56);
-    g.setColour(yellow);
-    
-    auto ftJmap = juce::jmap<float>(fallingTick.getCurrentValue(),
-                                    NegativeInfinity,
-                                    MaxDecibels,
-                                    h,
-                                    0);
-    
-    g.drawLine(bounds.getX(),     // startX
-               ftJmap,            // startY
-               bounds.getRight(), // endX
-               ftJmap,            // endY
-               3.f);              // line thickness
+    if ( fallingTickEnabled )
+    {
+        auto yellow = juce::Colour(217, 193, 56);
+        g.setColour(yellow);
+        
+        auto tickValue = fallingTick.getHoldTime() == 0 ? level :   fallingTick.getCurrentValue();
+        
+        auto ftJmap = juce::jmap<float>(tickValue,
+                                        NegativeInfinity,
+                                        MaxDecibels,
+                                        h,
+                                        0);
+        
+        g.drawLine(bounds.getX(),     // startX
+                   ftJmap,            // startY
+                   bounds.getRight(), // endX
+                   ftJmap,            // endY
+                   3.f);              // line thickness
+    }
 }
 
 void Meter::resized()
@@ -553,6 +633,27 @@ void Meter::update(const float& newLevel)
 void Meter::setThreshold(const float& threshAsDecibels)
 {
     threshold = threshAsDecibels;
+}
+
+void Meter::setDecayRate(const float& dbPerSecond)
+{
+    fallingTick.setDecayRate(dbPerSecond);
+}
+
+void Meter::setHoldTime(const long long& ms)
+{
+    fallingTick.setHoldTime(ms);
+}
+
+void Meter::resetValueHolder()
+{
+    fallingTick.reset();
+}
+
+void Meter::setTickVisibility(const bool& toggleState)
+{
+    fallingTickEnabled = toggleState;
+    repaint();
 }
 
 //==============================================================================
@@ -622,6 +723,67 @@ void MacroMeter::setThreshold(const float& threshAsDecibels)
     textMeter.setThreshold(threshAsDecibels);
 }
 
+void MacroMeter::setDecayRate(const float& dbPerSecond)
+{
+    averageMeter.setDecayRate(dbPerSecond);
+    instantMeter.setDecayRate(dbPerSecond);
+}
+
+void MacroMeter::setHoldTime(const long long& ms)
+{
+    averageMeter.setHoldTime(ms);
+    instantMeter.setHoldTime(ms);
+}
+
+void MacroMeter::resetValueHolder()
+{
+    averageMeter.resetValueHolder();
+    instantMeter.resetValueHolder();
+}
+
+void MacroMeter::setMeterView(const int& newViewId)
+{
+    if ( newViewId == 1 ) // Both
+    {
+        averageMeter.setVisible(true);
+        instantMeter.setVisible(true);
+    }
+    else if ( newViewId == 2 ) // Peak
+    {
+        averageMeter.setVisible(false);
+        instantMeter.setVisible(true);
+    }
+    else if ( newViewId == 3 ) // Average
+    {
+        averageMeter.setVisible(true);
+        instantMeter.setVisible(false);
+    }
+}
+
+void MacroMeter::setTickVisibility(const bool& toggleState)
+{
+    averageMeter.setTickVisibility(toggleState);
+    instantMeter.setTickVisibility(toggleState);
+}
+
+void MacroMeter::resizeAverager(const int& durationId)
+{
+    // timerCallback called every 25ms
+    size_t newSize;
+    
+    switch (durationId)
+    {
+        case 1:  newSize = 4;  break; // 100ms
+        case 2:  newSize = 10; break; // 250ms
+        case 3:  newSize = 20; break; // 500ms
+        case 4:  newSize = 40; break; // 1000ms
+        case 5:  newSize = 80; break; // 2000ms
+        default: newSize = 20; break; // 500ms
+    }
+    
+    averager.resize(newSize, averager.getAverage());
+}
+
 //==============================================================================
 void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
                                          int x, int y, int width, int height,
@@ -636,6 +798,106 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
     auto threshold = juce::Rectangle<float>(x, sliderPos, width, 2.f);
     g.setColour(juce::Colour(196u, 55u, 55u)); // red
     g.fillRect(threshold);
+}
+
+void CustomLookAndFeel::drawComboBox(juce::Graphics& g,
+                                     int width, int height,
+                                     bool isButtonDown,
+                                     int buttonX, int buttonY,
+                                     int buttonW, int buttonH,
+                                     juce::ComboBox& comboBox)
+{
+    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
+    auto lightGrey = juce::Colour(201u, 209u, 217u);
+    comboBox.setColour(juce::ComboBox::textColourId, lightGrey);
+}
+
+void CustomLookAndFeel::drawToggleButton(juce::Graphics& g,
+                                         juce::ToggleButton& toggleButton,
+                                         bool shouldDrawButtonAsHighlighted,
+                                         bool shouldDrawButtonAsDown)
+{
+    auto bounds = toggleButton.getLocalBounds();
+    
+    auto yellow = juce::Colour(217, 193, 56);
+    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
+    auto lightGrey = juce::Colour(201u, 209u, 217u);
+    
+    // background
+    g.fillAll( toggleButton.getToggleState() ? yellow : darkGrey );
+    
+    // text colour
+    g.setColour( toggleButton.getToggleState() ? darkGrey : lightGrey );
+    
+    g.drawFittedText(toggleButton.getButtonText(),
+                     bounds.getX(),
+                     bounds.getY(),
+                     bounds.getWidth(),
+                     bounds.getHeight(),
+                     juce::Justification::centred,
+                     1);
+}
+
+void CustomLookAndFeel::drawButtonBackground(juce::Graphics& g,
+                                             juce::Button& button,
+                                             const juce::Colour& backgroundColour,
+                                             bool shouldDrawButtonAsHighlighted,
+                                             bool shouldDrawButtonAsDown)
+{
+    auto bounds = button.getLocalBounds();
+    
+    g.fillAll(backgroundColour);
+    
+    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.drawFittedText(button.getButtonText(),
+                     bounds.getX(),
+                     bounds.getY(),
+                     bounds.getWidth(),
+                     bounds.getHeight(),
+                     juce::Justification::centred,
+                     1);
+}
+
+void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g,
+                                         int x, int y, int width, int height,
+                                         float sliderPosProportional,
+                                         float rotaryStartAngle,
+                                         float rotaryEndAngle,
+                                         juce::Slider& slider)
+{
+    auto bounds = juce::Rectangle<float>(x, y, width, height);
+    
+    auto yellow = juce::Colour(217, 193, 56);
+    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
+    auto lightGrey = juce::Colour(201u, 209u, 217u);
+    
+    g.setColour(darkGrey);
+    g.fillEllipse(bounds);
+    
+    g.setColour(lightGrey);
+    g.drawEllipse(bounds, 1.f);
+    
+    juce::Path p;
+    
+    auto centre = bounds.getCentre();
+    
+    juce::Rectangle<float> r;
+    r.setLeft(centre.getX() - 2);
+    r.setRight(centre.getX() + 2);
+    r.setTop(bounds.getY());
+    r.setBottom(centre.getY());
+    
+    p.addRoundedRectangle(r, 2.f);
+    
+    jassert(rotaryStartAngle < rotaryEndAngle);
+    
+    auto transform = juce::AffineTransform().rotated(sliderPosProportional,
+                                                     centre.getX(),
+                                                     centre.getY());
+    
+    p.applyTransform(transform);
+    
+    g.fillPath(p);
 }
 
 //==============================================================================
@@ -745,32 +1007,436 @@ void StereoMeter::setThreshold(const float& threshAsDecibels)
     macroMeterR.setThreshold(threshAsDecibels);
 }
 
+void StereoMeter::setDecayRate(const float& dbPerSecond)
+{
+    macroMeterL.setDecayRate(dbPerSecond);
+    macroMeterR.setDecayRate(dbPerSecond);
+}
+
+void StereoMeter::setTickVisibility(const bool& toggleState)
+{
+    macroMeterL.setTickVisibility(toggleState);
+    macroMeterR.setTickVisibility(toggleState);
+}
+
+void StereoMeter::setTickHoldTime(const int& selectedId)
+{
+    long long holdTimeMs;
+    
+    switch (selectedId)
+    {
+        case 1:
+            holdTimeMs = 0;
+            break;
+        case 2:
+            holdTimeMs = 500;
+            break;
+        case 3:
+            holdTimeMs = 2000;
+            break;
+        case 4:
+            holdTimeMs = 4000;
+            break;
+        case 5:
+            holdTimeMs = 6000;
+            break;
+        case 6:
+            holdTimeMs = INFINITY;
+            break;
+        default:
+            holdTimeMs = 500;
+            break;
+    }
+    
+    macroMeterL.setHoldTime(holdTimeMs);
+    macroMeterR.setHoldTime(holdTimeMs);
+}
+
+void StereoMeter::resetValueHolder()
+{
+    macroMeterL.resetValueHolder();
+    macroMeterR.resetValueHolder();
+}
+
+void StereoMeter::setMeterView(const int& newViewId)
+{
+    macroMeterL.setMeterView(newViewId);
+    macroMeterR.setMeterView(newViewId);
+}
+
+void StereoMeter::resizeAverager(const int& durationId)
+{
+    macroMeterL.resizeAverager(durationId);
+    macroMeterR.resizeAverager(durationId);
+}
+
+//==============================================================================
+CustomComboBox::CustomComboBox(const juce::StringArray& choices,
+                               const int& initSelectionId)
+{
+    setLookAndFeel(&lnf);
+    addItemList(choices, 1);
+    setSelectedId(initSelectionId);
+}
+
+void CustomComboBox::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    getLookAndFeel().drawComboBox(g,
+                                  bounds.getWidth(),  // width
+                                  bounds.getHeight(), // height
+                                  true,               // isButtonDown
+                                  bounds.getX(),      // button x
+                                  bounds.getY(),      // button y
+                                  bounds.getWidth(),  // button width
+                                  bounds.getHeight(), // button height
+                                  *this);             // combo box
+}
+
+CustomLabel::CustomLabel(const juce::String& labelText)
+{
+    setText(labelText, juce::NotificationType::dontSendNotification);
+}
+
+void CustomLabel::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    
+    g.setColour(juce::Colour(201u, 209u, 217u));
+    
+    g.drawFittedText(getText(),
+                     bounds.getX(),
+                     bounds.getY(),
+                     bounds.getWidth(),
+                     bounds.getHeight(),
+                     juce::Justification::centred,
+                     1);
+}
+
+CustomToggle::CustomToggle(const juce::String& buttonText)
+{
+    setLookAndFeel(&lnf);
+    setButtonText(buttonText);
+    setToggleState(true, juce::NotificationType::dontSendNotification);
+}
+
+void CustomToggle::paint(juce::Graphics& g)
+{
+    getLookAndFeel().drawToggleButton(g,
+                                      *this, // toggle button
+                                      true,  // draw as highlighted
+                                      true); // draw as down
+}
+
+CustomTextBtn::CustomTextBtn(const juce::String& buttonText)
+{
+    setLookAndFeel(&lnf);
+    setButtonText(buttonText);
+}
+
+void CustomTextBtn::paint(juce::Graphics& g)
+{
+    auto buttonColour = (selectedColour == Colours::standardRed ? juce::Colour(196u, 55u, 55u) : juce::Colour(255u, 55u, 55u));
+    
+    getLookAndFeel().drawButtonBackground(g,
+                                          *this,        // button
+                                          buttonColour, // colour
+                                          true,         // draw as highlighted
+                                          false);       // draw as down
+}
+
+void CustomTextBtn::animateButton()
+{
+    selectedColour = Colours::brighterRed;
+    repaint();
+    
+    juce::Timer::callAfterDelay(100, resetColour);
+}
+
+CustomRotary::CustomRotary()
+{
+    setLookAndFeel(&lnf);
+}
+
+void CustomRotary::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    auto diameter = bounds.getWidth() * 0.8f;
+    auto radius = diameter / 2;
+    
+    auto startAngle = juce::degreesToRadians(180.f + 45.f);
+    auto endAngle = juce::degreesToRadians(180.f - 45.f) + juce::MathConstants<float>::twoPi;
+    
+    auto range = getRange();
+    
+    auto valueToDraw = juce::jmap<float>(getValue(),
+                                         range.getStart(),
+                                         range.getEnd(),
+                                         startAngle,
+                                         endAngle);
+    
+    getLookAndFeel().drawRotarySlider(g,
+                                      bounds.getCentreX() - radius, // x
+                                      bounds.getCentreY() - radius, // y
+                                      diameter,                     // width
+                                      diameter,                     // height
+                                      valueToDraw,                  // position
+                                      startAngle,                   // start angle
+                                      endAngle,                     // end angle
+                                      *this);                       // slider
+}
+
+//==============================================================================
+GuiControlsGroupA::GuiControlsGroupA()
+{
+    addAndMakeVisible(decayRateLabel);
+    addAndMakeVisible(avgDurationLabel);
+    addAndMakeVisible(meterViewLabel);
+    
+    addAndMakeVisible(decayRateCombo);
+    addAndMakeVisible(avgDurationCombo);
+    addAndMakeVisible(meterViewCombo);
+}
+
+void GuiControlsGroupA::resized()
+{
+    auto bounds = getLocalBounds();
+    auto boundsHeight = bounds.getHeight();
+    
+    auto boxHeight = 30;
+    auto width = bounds.getWidth();
+
+    decayRateLabel.setBounds(0,
+                             (boundsHeight * 0.15f) - boxHeight,
+                             width,
+                             boxHeight);
+    decayRateCombo.setBounds(0,
+                             (boundsHeight * 0.15f),
+                             width,
+                             boxHeight);
+    
+    avgDurationLabel.setBounds(0,
+                               (boundsHeight * 0.5f) - boxHeight,
+                               width,
+                               boxHeight);
+    avgDurationCombo.setBounds(0,
+                               (boundsHeight * 0.5f),
+                               width,
+                               boxHeight);
+    
+    meterViewLabel.setBounds(0,
+                             (boundsHeight * 0.85f) - boxHeight,
+                             width,
+                             boxHeight);
+    meterViewCombo.setBounds(0,
+                             (boundsHeight * 0.85f),
+                             width,
+                             boxHeight);
+}
+
+float GuiControlsGroupA::getCurrentDecayRate()
+{
+    float dbPerSecond;
+    
+    switch (decayRateCombo.getSelectedId())
+    {
+        case 1:  dbPerSecond = 3.f;  break;
+        case 2:  dbPerSecond = 6.f;  break;
+        case 3:  dbPerSecond = 12.f; break;
+        case 4:  dbPerSecond = 24.f; break;
+        case 5:  dbPerSecond = 36.f; break;
+        default: dbPerSecond = 12.f; break;
+    }
+    
+    return dbPerSecond;
+}
+
+//==============================================================================
+GuiControlsGroupB::GuiControlsGroupB()
+{
+    addAndMakeVisible(gonioScaleLabel);
+    addAndMakeVisible(gonioScaleKnob);
+    gonioScaleKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    gonioScaleKnob.setRange(50.0, 200.0);
+    gonioScaleKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
+    gonioScaleKnob.setValue(100.0);
+    
+    addAndMakeVisible(holdButton);
+    addAndMakeVisible(holdTimeCombo);
+    addAndMakeVisible(holdResetButton);
+    
+    addAndMakeVisible(histViewLabel);
+    addAndMakeVisible(histViewCombo);
+}
+
+void GuiControlsGroupB::resized()
+{
+    auto bounds = getLocalBounds();
+    auto boundsHeight = bounds.getHeight();
+    
+    auto boxHeight = 30;
+    auto width = bounds.getWidth();
+    auto rotaryDiameter = width * 0.8f;
+    auto rotaryRadius = rotaryDiameter / 2;
+    
+    gonioScaleLabel.setBounds(0,
+                              (boundsHeight * 0.15f) - boxHeight,
+                              width,
+                              boxHeight);
+    
+    gonioScaleKnob.setBounds(bounds.getCentreX() - rotaryRadius,
+                             (boundsHeight * 0.15f),
+                             rotaryDiameter,
+                             rotaryDiameter);
+    
+    holdButton.setBounds(0,
+                         (boundsHeight * 0.5f) - boxHeight - 3,
+                         width,
+                         boxHeight);
+    
+    holdTimeCombo.setBounds(0,
+                            (boundsHeight * 0.5f),
+                            width,
+                            boxHeight);
+    
+    holdResetButton.setBounds(bounds.getCentreX() - (width / 4),
+                              (boundsHeight * 0.5f) + boxHeight + 3,
+                              width / 2,
+                              boxHeight);
+    
+    histViewLabel.setBounds(0,
+                            (boundsHeight * 0.85f) - boxHeight,
+                            width,
+                            boxHeight);
+    
+    histViewCombo.setBounds(0,
+                            (boundsHeight * 0.85f),
+                            width,
+                            boxHeight);
+}
+
 //==============================================================================
 PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), stereoImageMeter(p.getSampleRate(), p.getBlockSize())
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    startTimerHz(30);
-        
+    startTimerHz(40);
+    
     addAndMakeVisible(stereoMeterRms);
     addAndMakeVisible(stereoMeterPeak);
-    addAndMakeVisible(rmsHistogram);
-    addAndMakeVisible(peakHistogram);
+    addAndMakeVisible(histograms);
     addAndMakeVisible(stereoImageMeter);
+    addAndMakeVisible(guiControlsA);
+    addAndMakeVisible(guiControlsB);
     
+    // set initial values
+    auto dbPerSecond = guiControlsA.getCurrentDecayRate();
+    stereoMeterRms.setDecayRate(dbPerSecond);
+    stereoMeterPeak.setDecayRate(dbPerSecond);
+    
+    auto duration = guiControlsA.avgDurationCombo.getSelectedId();
+    stereoMeterRms.resizeAverager(duration);
+    stereoMeterPeak.resizeAverager(duration);
+    
+    auto gonioScale = guiControlsB.gonioScaleKnob.getValue();
+    stereoImageMeter.setGoniometerScale(gonioScale);
+    
+    auto holdButtonState = guiControlsB.holdButton.getToggleState();
+    stereoMeterRms.setTickVisibility(holdButtonState);
+    stereoMeterPeak.setTickVisibility(holdButtonState);
+    
+    auto holdTime = guiControlsB.holdTimeCombo.getSelectedId();
+    stereoMeterRms.setTickHoldTime(holdTime);
+    stereoMeterPeak.setTickHoldTime(holdTime);
+    guiControlsB.holdResetButton.setVisible( (holdTime == 6) );
+    
+    auto histView = guiControlsB.histViewCombo.getSelectedId();
+    histograms.setView(histView == HistView::stacked ? HistView::stacked
+                                                     : HistView::sideBySide);
+    
+    // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]
     {
         auto v = stereoMeterRms.threshCtrl.getValue();
         stereoMeterRms.setThreshold(v);
-        rmsHistogram.setThreshold(v);
+        histograms.setThreshold(HistogramTypes::RMS, v);
     };
     
     stereoMeterPeak.threshCtrl.onValueChange = [this]
     {
         auto v = stereoMeterPeak.threshCtrl.getValue();
         stereoMeterPeak.setThreshold(v);
-        peakHistogram.setThreshold(v);
+        histograms.setThreshold(HistogramTypes::PEAK, v);
+    };
+    
+    guiControlsA.decayRateCombo.onChange = [this]
+    {
+        auto dbPerSecond = guiControlsA.getCurrentDecayRate();
+        stereoMeterRms.setDecayRate(dbPerSecond);
+        stereoMeterPeak.setDecayRate(dbPerSecond);
+    };
+    
+    guiControlsA.avgDurationCombo.onChange = [this]
+    {
+        auto durationId = guiControlsA.avgDurationCombo.getSelectedId();
+        stereoMeterRms.resizeAverager(durationId);
+        stereoMeterPeak.resizeAverager(durationId);
+    };
+    
+    guiControlsA.meterViewCombo.onChange = [this]
+    {
+        auto selectedId = guiControlsA.meterViewCombo.getSelectedId();
+        stereoMeterRms.setMeterView(selectedId);
+        stereoMeterPeak.setMeterView(selectedId);
+    };
+    
+    guiControlsB.gonioScaleKnob.onValueChange = [this]
+    {
+        auto rotaryValue = guiControlsB.gonioScaleKnob.getValue();
+        stereoImageMeter.setGoniometerScale(rotaryValue);
+    };
+    
+    guiControlsB.holdButton.onClick = [this]
+    {
+        auto toggleState = guiControlsB.holdButton.getToggleState();
+        stereoMeterRms.setTickVisibility(toggleState);
+        stereoMeterPeak.setTickVisibility(toggleState);
+        
+        auto resetIsVisible = guiControlsB.holdResetButton.isVisible();
+        auto holdTimeId = guiControlsB.holdTimeCombo.getSelectedId();;
+        if ( !toggleState && resetIsVisible )
+        {
+            guiControlsB.holdResetButton.setVisible(false);
+        }
+        else if ( toggleState && holdTimeId == 6 && !resetIsVisible )
+        {
+            guiControlsB.holdResetButton.setVisible(true);
+        }
+    };
+    
+    guiControlsB.holdTimeCombo.onChange = [this]
+    {
+        auto selectedId = guiControlsB.holdTimeCombo.getSelectedId();
+        stereoMeterRms.setTickHoldTime(selectedId);
+        stereoMeterPeak.setTickHoldTime(selectedId);
+        
+        auto holdEnabled = guiControlsB.holdButton.getToggleState();
+        guiControlsB.holdResetButton.setVisible( (selectedId == 6 && holdEnabled) );
+    };
+    
+    guiControlsB.holdResetButton.onClick = [this]
+    {
+        stereoMeterRms.resetValueHolder();
+        stereoMeterPeak.resetValueHolder();
+        guiControlsB.holdResetButton.animateButton();
+    };
+    
+    guiControlsB.histViewCombo.onChange = [this]
+    {
+        auto selectedId = guiControlsB.histViewCombo.getSelectedId();
+        histograms.setView(selectedId == HistView::stacked ? HistView::stacked
+                                                           : HistView::sideBySide);
     };
     
 #if defined(GAIN_TEST_ACTIVE)
@@ -813,22 +1479,30 @@ void PFMProject10AudioProcessorEditor::resized()
                               stereoMeterWidth,
                               stereoMeterHeight);
     
-    rmsHistogram.setBounds(margin,
-                           stereoMeterRms.getBottom() + margin,
-                           width - (margin * 2),
-                           105);
-    
-    peakHistogram.setBounds(margin,
-                            rmsHistogram.getBottom() + margin,
-                            width - (margin * 2),
-                            105);
+    histograms.setBounds(margin,
+                         stereoMeterRms.getBottom() + (margin * 2),
+                         width - (margin * 2),
+                         210);
     
     auto stereoImageMeterWidth = 300; // this will also be the height of the goniometer
     stereoImageMeter.setBounds((width / 2) - (stereoImageMeterWidth / 2),
-                              (rmsHistogram.getY() - stereoImageMeterWidth) / 2,
+                              (histograms.getY() - stereoImageMeterWidth) / 2,
                               stereoImageMeterWidth,
                               stereoImageMeterWidth + 20); // +20 to account for correlation meter
-     
+    
+    auto comboPadding = 20;
+    auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (comboPadding * 2);
+    
+    guiControlsA.setBounds(stereoMeterRms.getRight() + comboPadding,
+                           margin,
+                           comboWidth,
+                           stereoMeterHeight);
+    
+    guiControlsB.setBounds(stereoMeterPeak.getX() - comboPadding - comboWidth,
+                           margin,
+                           comboWidth,
+                           stereoMeterHeight);
+    
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
 #endif
@@ -857,8 +1531,8 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         auto peakDbR = juce::Decibels::gainToDecibels(peakR, NegativeInfinity);
         stereoMeterPeak.update(peakDbL, peakDbR);
         
-        rmsHistogram.update(rmsDbL, rmsDbR);
-        peakHistogram.update(peakDbL, peakDbR);
+        histograms.update(HistogramTypes::RMS, rmsDbL, rmsDbR);
+        histograms.update(HistogramTypes::PEAK, peakDbL, peakDbR);
         
         stereoImageMeter.update(incomingBuffer);
     }

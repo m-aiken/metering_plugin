@@ -20,10 +20,13 @@ struct Goniometer : juce::Component
     void paint(juce::Graphics& g) override;
     void resized() override;
     void update(juce::AudioBuffer<float>& incomingBuffer);
+    void setScale(const double& rotaryValue);
 
 private:
     juce::Image canvas;
     juce::AudioBuffer<float> buffer;
+    
+    double scale;
 };
 
 //==============================================================================
@@ -69,19 +72,54 @@ private:
 };
 
 //==============================================================================
+enum class HistogramTypes
+{
+    RMS,
+    PEAK
+};
+
+enum HistView
+{
+    stacked = 1,
+    sideBySide
+};
+
 struct Histogram : juce::Component
 {
     Histogram(const juce::String& _label) : label(_label) { }
     void paint(juce::Graphics& g) override;
+    void resized() override;
     void update(const float& inputL, const float& inputR);
     
     void setThreshold(const float& threshAsDecibels);
     
+    void setView(const HistView& v);
+    
 private:
-    CircularBuffer<float> circularBuffer{780, NegativeInfinity};
+    CircularBuffer<float> circularBuffer{776, NegativeInfinity};
+    
     juce::String label;
     float threshold = 0.f;
     juce::ColourGradient colourGrad;
+    
+    HistView view;
+};
+
+struct HistogramContainer : juce::Component
+{
+    HistogramContainer();
+    void resized() override;
+    
+    void update(const HistogramTypes& histoType, const float& inputL, const float& inputR);
+    void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
+    
+    void setView(const HistView& v);
+    
+private:
+    Histogram rmsHistogram{"RMS"};
+    Histogram peakHistogram{"PEAK"};
+        
+    HistView view;
 };
 
 //==============================================================================
@@ -163,6 +201,7 @@ struct StereoImageMeter : juce::Component
     StereoImageMeter(double _sampleRate, size_t _blockSize);
     void paint(juce::Graphics& g) override;
     void update(juce::AudioBuffer<float>& incomingBuffer);
+    void setGoniometerScale(const double& rotaryValue);
 private:
     Goniometer goniometer;
     CorrelationMeter correlationMeter;
@@ -171,12 +210,14 @@ private:
 //==============================================================================
 struct ValueHolderBase : juce::Timer
 {
-    ValueHolderBase() { startTimerHz(30); }
+    ValueHolderBase() { startTimerHz(40); }
     ~ValueHolderBase() { stopTimer(); }
     
     void setHoldTime(const long long& ms) { holdTime = ms; }
+    long long getHoldTime() { return holdTime; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
+    void reset() { currentValue = NegativeInfinity; }
     
     void timerCallback() override;
     virtual void handleOverHoldTime() = 0;
@@ -189,14 +230,14 @@ private:
    
     long long now = juce::Time::currentTimeMillis();
     long long peakTime = 0;
-    long long holdTime = 500;
+    long long holdTime;
 };
 
 //==============================================================================
 struct DecayingValueHolder : ValueHolderBase
 {
     DecayingValueHolder() { setDecayRate(initDecayRate); }
-    ~DecayingValueHolder() { }
+    ~DecayingValueHolder() = default;
     
     void updateHeldValue(const float& input);
     void setDecayRate(const float& dbPerSecond);
@@ -205,7 +246,7 @@ struct DecayingValueHolder : ValueHolderBase
     
 private:
     int timerFrequency = 30;
-    float initDecayRate = 30.f;
+    float initDecayRate = 12.f;
     float decayRatePerFrame;
 };
 
@@ -258,12 +299,18 @@ struct Meter : juce::Component
     void update(const float& newLevel);
     
     void setThreshold(const float& threshAsDecibels);
+    void setDecayRate(const float& dbPerSecond);
+    void setHoldTime(const long long& ms);
+    void resetValueHolder();
+    
+    void setTickVisibility(const bool& toggleState);
     
     std::vector<Tick> ticks;
 private:
     float level = 0.f;
     
     DecayingValueHolder fallingTick;
+    bool fallingTickEnabled;
     
     float threshold = 0.f;
 };
@@ -287,13 +334,19 @@ struct MacroMeter : juce::Component
     int getTickYoffset() { return textMeter.getHeight(); }
     
     void setThreshold(const float& threshAsDecibels);
+    void setDecayRate(const float& dbPerSecond);
+    void setHoldTime(const long long& ms);
+    void resetValueHolder();
+    void setMeterView(const int& newViewId);
+    void setTickVisibility(const bool& toggleState);
+    void resizeAverager(const int& durationId);
     
 private:
     TextMeter textMeter;
     Meter averageMeter;
     Meter instantMeter;
     
-    Averager<float> averager{12, NegativeInfinity};
+    Averager<float> averager{20, NegativeInfinity};
     
     Channel channel;
 };
@@ -307,6 +360,31 @@ struct CustomLookAndFeel : juce::LookAndFeel_V4
                           float minSliderPos,
                           float maxSliderPos,
                           const juce::Slider::SliderStyle style,
+                          juce::Slider& slider) override;
+    
+    void drawComboBox(juce::Graphics& g,
+                      int width, int height,
+                      bool isButtonDown,
+                      int buttonX, int buttonY,
+                      int buttonW, int buttonH,
+                      juce::ComboBox& comboBox) override;
+    
+    void drawToggleButton(juce::Graphics& g,
+                          juce::ToggleButton& toggleButton,
+                          bool shouldDrawButtonAsHighlighted,
+                          bool shouldDrawButtonAsDown) override;
+    
+    void drawButtonBackground(juce::Graphics& g,
+                              juce::Button& button,
+                              const juce::Colour& backgroundColour,
+                              bool shouldDrawButtonAsHighlighted,
+                              bool shouldDrawButtonAsDown) override;
+    
+    void drawRotarySlider(juce::Graphics& g,
+                          int x, int y, int width, int height,
+                          float sliderPosProportional,
+                          float rotaryStartAngle,
+                          float rotaryEndAngle,
                           juce::Slider& slider) override;
 };
 
@@ -332,6 +410,14 @@ struct StereoMeter : juce::Component
     void update(const float& inputL, const float& inputR);
     
     void setThreshold(const float& threshAsDecibels);
+    void setDecayRate(const float& dbPerSecond);
+    
+    void setTickVisibility(const bool& toggleState);
+    void setTickHoldTime(const int& selectedId);
+    void resetValueHolder();
+    void setMeterView(const int& newViewId);
+    
+    void resizeAverager(const int& durationId);
     
     ThresholdSlider threshCtrl;
 private:
@@ -344,6 +430,107 @@ private:
     float dbScaleLabelCrossover = 0.94f;
     
     CustomLookAndFeel customStyle;
+};
+
+//==============================================================================
+struct CustomComboBox : juce::ComboBox
+{
+    CustomComboBox(const juce::StringArray& choices, const int& initSelectionId);
+    ~CustomComboBox() { setLookAndFeel(nullptr); }
+    void paint(juce::Graphics& g) override;
+private:
+    CustomLookAndFeel lnf;
+};
+
+struct CustomLabel : juce::Label
+{
+    CustomLabel(const juce::String& labelText);
+    void paint(juce::Graphics& g) override;
+};
+
+struct CustomToggle : juce::ToggleButton
+{
+    CustomToggle(const juce::String& buttonText);
+    ~CustomToggle() { setLookAndFeel(nullptr); }
+    void paint(juce::Graphics& g) override;
+private:
+    CustomLookAndFeel lnf;
+};
+
+struct CustomTextBtn : juce::TextButton
+{
+    CustomTextBtn(const juce::String& buttonText);
+    ~CustomTextBtn() { setLookAndFeel(nullptr); }
+    void paint(juce::Graphics& g) override;
+    void animateButton();
+private:
+    CustomLookAndFeel lnf;
+    
+    enum Colours
+    {
+        standardRed,
+        brighterRed
+    };
+    
+    int selectedColour = Colours::standardRed;
+    
+    std::function<void()> resetColour = [this]()
+    {
+        selectedColour = Colours::standardRed;
+        repaint();
+    };
+};
+
+struct CustomRotary : juce::Slider
+{
+    CustomRotary();
+    ~CustomRotary() { setLookAndFeel(nullptr); }
+    void paint(juce::Graphics& g) override;
+private:
+    CustomLookAndFeel lnf;
+};
+
+//==============================================================================
+struct GuiControlsGroupA : juce::Component
+{
+    GuiControlsGroupA();
+    void resized() override;
+    
+    float getCurrentDecayRate();
+    
+    juce::StringArray decayRateChoices { "-3dB/s", "-6dB/s", "-12dB/s", "-24dB/s", "-36dB/s" };
+    juce::StringArray avgDurationChoices { "100ms", "250ms", "500ms", "1000ms", "2000ms" };
+    juce::StringArray meterViewChoices { "Both", "Peak", "Avg" };
+    
+    CustomComboBox decayRateCombo { decayRateChoices, 3 };
+    CustomComboBox avgDurationCombo { avgDurationChoices, 3 };
+    CustomComboBox meterViewCombo { meterViewChoices, 1 };
+    
+private:
+    CustomLabel decayRateLabel { "DECAY" };
+    CustomLabel avgDurationLabel { "AVG" };
+    CustomLabel meterViewLabel { "METER" };
+};
+
+//==============================================================================
+struct GuiControlsGroupB : juce::Component
+{
+    GuiControlsGroupB();
+    void resized() override;
+    
+    CustomRotary gonioScaleKnob;
+    
+    CustomToggle holdButton { "HOLD" };
+    juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
+    CustomComboBox holdTimeCombo { holdTimeChoices, 2 };
+    CustomTextBtn holdResetButton { "RESET" };
+    
+    juce::StringArray histViewChoices { "Stacked", "Side-by-Side" };
+    CustomComboBox histViewCombo { histViewChoices, 1 };
+    
+private:
+    CustomLabel gonioScaleLabel { "SCALE" };
+    CustomLabel histViewLabel { "HIST VIEW" };
 };
 
 //==============================================================================
@@ -371,10 +558,12 @@ private:
     StereoMeter stereoMeterRms{"RMS"};
     StereoMeter stereoMeterPeak{"PEAK"};
     
-    Histogram rmsHistogram{"RMS"};
-    Histogram peakHistogram{"PEAK"};
+    HistogramContainer histograms;
     
     StereoImageMeter stereoImageMeter;
+    
+    GuiControlsGroupA guiControlsA;
+    GuiControlsGroupB guiControlsB;
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
