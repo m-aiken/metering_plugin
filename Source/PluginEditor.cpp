@@ -163,7 +163,7 @@ void Histogram::paint(juce::Graphics& g)
 
     if ( view == HistView::sideBySide )
     {
-        readIdx = (readIdx + (bufferSize / 2) ) % bufferSize;
+        readIdx = (readIdx + (bufferSize / 2)) % bufferSize;
     }
     
     juce::Path p;
