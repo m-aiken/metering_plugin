@@ -236,8 +236,8 @@ private:
 //==============================================================================
 struct DecayingValueHolder : ValueHolderBase
 {
-    DecayingValueHolder() { }
-    ~DecayingValueHolder() { }
+    DecayingValueHolder() { setDecayRate(initDecayRate); }
+    ~DecayingValueHolder() = default;
     
     void updateHeldValue(const float& input);
     void setDecayRate(const float& dbPerSecond);
