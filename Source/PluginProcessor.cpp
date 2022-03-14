@@ -200,12 +200,20 @@ void PFMProject10AudioProcessor::getStateInformation (juce::MemoryBlock& destDat
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream outputStream(destData, true);
+    valueTree.writeToStream(outputStream);
 }
 
 void PFMProject10AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    auto storedTree = juce::ValueTree::readFromData(data, sizeInBytes);
+    
+    if ( storedTree.isValid() )
+    {
+        valueTree = storedTree;
+    }
 }
 #if defined(GAIN_TEST_ACTIVE)
 juce::AudioProcessorValueTreeState::ParameterLayout PFMProject10AudioProcessor::getParameterLayout()
