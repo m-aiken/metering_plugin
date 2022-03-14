@@ -22,6 +22,16 @@ PFMProject10AudioProcessor::PFMProject10AudioProcessor()
                        )
 #endif
 {
+    // default values for value tree
+    valueTree.setProperty("DecayTime",          3, nullptr); // -12dB/s
+    valueTree.setProperty("AverageTime",        3, nullptr); // 500ms
+    valueTree.setProperty("MeterViewMode",      1, nullptr); // Both
+    valueTree.setProperty("GoniometerScale",  100, nullptr);
+    valueTree.setProperty("EnableHold",      true, nullptr);
+    valueTree.setProperty("HistogramView",      1, nullptr); // Stacked
+    valueTree.setProperty("PeakThreshold",      1, nullptr);
+    valueTree.setProperty("RMSThreshold",       1, nullptr);
+    
 #if defined(GAIN_TEST_ACTIVE)
     gainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Gain"));
     jassert(gainParam != nullptr);
@@ -208,11 +218,22 @@ void PFMProject10AudioProcessor::setStateInformation (const void* data, int size
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
-    auto storedTree = juce::ValueTree::readFromData(data, sizeInBytes);
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
     
-    if ( storedTree.isValid() )
+    if
+    (
+        tree.isValid() &&
+        tree.hasProperty("DecayTime") &&
+        tree.hasProperty("AverageTime") &&
+        tree.hasProperty("MeterViewMode") &&
+        tree.hasProperty("GoniometerScale") &&
+        tree.hasProperty("EnableHold") &&
+        tree.hasProperty("HistogramView") &&
+        tree.hasProperty("PeakThreshold") &&
+        tree.hasProperty("RMSThreshold")
+    )
     {
-        valueTree = storedTree;
+        valueTree = tree;
     }
 }
 #if defined(GAIN_TEST_ACTIVE)
