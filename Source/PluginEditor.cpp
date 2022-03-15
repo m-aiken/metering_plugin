@@ -1071,12 +1071,10 @@ void StereoMeter::resizeAverager(const int& durationId)
 }
 
 //==============================================================================
-CustomComboBox::CustomComboBox(const juce::StringArray& choices,
-                               const int& initSelectionId)
+CustomComboBox::CustomComboBox(const juce::StringArray& choices)
 {
     setLookAndFeel(&lnf);
     addItemList(choices, 1);
-    setSelectedId(initSelectionId);
 }
 
 void CustomComboBox::paint(juce::Graphics& g)
@@ -1117,7 +1115,6 @@ CustomToggle::CustomToggle(const juce::String& buttonText)
 {
     setLookAndFeel(&lnf);
     setButtonText(buttonText);
-    setToggleState(true, juce::NotificationType::dontSendNotification);
 }
 
 void CustomToggle::paint(juce::Graphics& g)
@@ -1330,6 +1327,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(guiControlsA);
     addAndMakeVisible(guiControlsB);
     
+    auto& state = audioProcessor.valueTree;
+    
     // link widgets to valueTree
     guiControlsA.decayRateCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("DecayTime", nullptr));
     
@@ -1341,6 +1340,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     
     guiControlsB.holdButton.getToggleStateValue().referTo(audioProcessor.valueTree.getPropertyAsValue("EnableHold", nullptr));
     
+    guiControlsB.holdTimeCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("HoldTime", nullptr));
+    
     guiControlsB.histViewCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("HistogramView", nullptr));
     
     stereoMeterRms.threshCtrl.getValueObject().referTo(audioProcessor.valueTree.getPropertyAsValue("RMSThreshold", nullptr));
@@ -1348,29 +1349,41 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     stereoMeterPeak.threshCtrl.getValueObject().referTo(audioProcessor.valueTree.getPropertyAsValue("PeakThreshold", nullptr));
     
     // set initial values
-    auto dbPerSecond = guiControlsA.getCurrentDecayRate();
-    stereoMeterRms.setDecayRate(dbPerSecond);
-    stereoMeterPeak.setDecayRate(dbPerSecond);
+    int decayRate = state.getPropertyAsValue("DecayTime", nullptr).getValue();
+    stereoMeterRms.setDecayRate(decayRate);
+    stereoMeterPeak.setDecayRate(decayRate);
     
-    auto duration = guiControlsA.avgDurationCombo.getSelectedId();
-    stereoMeterRms.resizeAverager(duration);
-    stereoMeterPeak.resizeAverager(duration);
+    int avgTime = state.getPropertyAsValue("AverageTime", nullptr).getValue();
+    stereoMeterRms.resizeAverager(avgTime);
+    stereoMeterPeak.resizeAverager(avgTime);
     
-    auto gonioScale = guiControlsB.gonioScaleKnob.getValue();
+    int meterView = state.getPropertyAsValue("MeterViewMode", nullptr).getValue();
+    stereoMeterRms.setMeterView(meterView);
+    stereoMeterPeak.setMeterView(meterView);
+    
+    double gonioScale = state.getPropertyAsValue("GoniometerScale", nullptr).getValue();
     stereoImageMeter.setGoniometerScale(gonioScale);
     
-    auto holdButtonState = guiControlsB.holdButton.getToggleState();
+    bool holdButtonState = state.getPropertyAsValue("EnableHold", nullptr).getValue();
     stereoMeterRms.setTickVisibility(holdButtonState);
     stereoMeterPeak.setTickVisibility(holdButtonState);
     
-    auto holdTime = guiControlsB.holdTimeCombo.getSelectedId();
+    int holdTime = state.getPropertyAsValue("HoldTime", nullptr).getValue();
     stereoMeterRms.setTickHoldTime(holdTime);
     stereoMeterPeak.setTickHoldTime(holdTime);
     guiControlsB.holdResetButton.setVisible( (holdTime == 6) );
     
-    auto histView = guiControlsB.histViewCombo.getSelectedId();
+    int histView = state.getPropertyAsValue("HistogramView", nullptr).getValue();
     histograms.setView(histView == HistView::stacked ? HistView::stacked
                                                      : HistView::sideBySide);
+    
+    float rmsThresh = state.getPropertyAsValue("RMSThreshold", nullptr).getValue();
+    stereoMeterRms.setThreshold(rmsThresh);
+    histograms.setThreshold(HistogramTypes::RMS, rmsThresh);
+    
+    float peakThresh = state.getPropertyAsValue("PeakThreshold", nullptr).getValue();
+    stereoMeterPeak.setThreshold(peakThresh);
+    histograms.setThreshold(HistogramTypes::PEAK, peakThresh);
     
     // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]

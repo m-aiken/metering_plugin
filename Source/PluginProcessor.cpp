@@ -28,6 +28,7 @@ PFMProject10AudioProcessor::PFMProject10AudioProcessor()
     valueTree.setProperty("MeterViewMode",       1, nullptr); // Both
     valueTree.setProperty("GoniometerScale", 100.0, nullptr);
     valueTree.setProperty("EnableHold",       true, nullptr);
+    valueTree.setProperty("HoldTime",            2, nullptr); // 0.5s
     valueTree.setProperty("HistogramView",       1, nullptr); // Stacked
     valueTree.setProperty("RMSThreshold",      0.f, nullptr);
     valueTree.setProperty("PeakThreshold",     0.f, nullptr);
@@ -228,6 +229,7 @@ void PFMProject10AudioProcessor::setStateInformation (const void* data, int size
         tree.hasProperty("MeterViewMode") &&
         tree.hasProperty("GoniometerScale") &&
         tree.hasProperty("EnableHold") &&
+        tree.hasProperty("HoldTime") &&
         tree.hasProperty("HistogramView") &&
         tree.hasProperty("RMSThreshold") &&
         tree.hasProperty("PeakThreshold")
