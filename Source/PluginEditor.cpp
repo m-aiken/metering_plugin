@@ -1330,6 +1330,23 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(guiControlsA);
     addAndMakeVisible(guiControlsB);
     
+    // link widgets to valueTree
+    guiControlsA.decayRateCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("DecayTime", nullptr));
+    
+    guiControlsA.avgDurationCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("AverageTime", nullptr));
+    
+    guiControlsA.meterViewCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("MeterViewMode", nullptr));
+    
+    guiControlsB.gonioScaleKnob.getValueObject().referTo(audioProcessor.valueTree.getPropertyAsValue("GoniometerScale", nullptr));
+    
+    guiControlsB.holdButton.getToggleStateValue().referTo(audioProcessor.valueTree.getPropertyAsValue("EnableHold", nullptr));
+    
+    guiControlsB.histViewCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("HistogramView", nullptr));
+    
+    stereoMeterRms.threshCtrl.getValueObject().referTo(audioProcessor.valueTree.getPropertyAsValue("RMSThreshold", nullptr));
+    
+    stereoMeterPeak.threshCtrl.getValueObject().referTo(audioProcessor.valueTree.getPropertyAsValue("PeakThreshold", nullptr));
+    
     // set initial values
     auto dbPerSecond = guiControlsA.getCurrentDecayRate();
     stereoMeterRms.setDecayRate(dbPerSecond);
@@ -1437,6 +1454,13 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         auto selectedId = guiControlsB.histViewCombo.getSelectedId();
         histograms.setView(selectedId == HistView::stacked ? HistView::stacked
                                                            : HistView::sideBySide);
+        
+//        audioProcessor.valueTree.setProperty("HistogramView", selectedId, nullptr);
+        
+        auto v = audioProcessor.valueTree.getPropertyAsValue("HistogramView", nullptr);
+        int val = v.getValue();
+        DBG(val);
+        
     };
     
 #if defined(GAIN_TEST_ACTIVE)
