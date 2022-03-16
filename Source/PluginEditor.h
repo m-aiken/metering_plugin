@@ -91,15 +91,18 @@ struct Histogram : juce::Component
     void resized() override;
     void update(const float& inputL, const float& inputR);
     
-    void setThreshold(const float& threshAsDecibels);
+    //void setThreshold(const float& threshAsDecibels);
     
     void setView(const HistView& v);
+    
+    juce::Value& getValueObject() { return threshold; }
     
 private:
     CircularBuffer<float> circularBuffer{776, NegativeInfinity};
     
     juce::String label;
-    float threshold = 0.f;
+//    float threshold = 0.f;
+    juce::Value threshold;
     juce::ColourGradient colourGrad;
     
     HistView view;
@@ -111,9 +114,11 @@ struct HistogramContainer : juce::Component
     void resized() override;
     
     void update(const HistogramTypes& histoType, const float& inputL, const float& inputR);
-    void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
+    //void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
     
     void setView(const HistView& v);
+    
+    juce::Value& linkToValueTree(const HistogramTypes& histoType);
     
 private:
     Histogram rmsHistogram{"RMS"};
