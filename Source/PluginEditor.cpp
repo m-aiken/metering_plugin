@@ -1330,23 +1330,15 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     auto& state = audioProcessor.valueTree;
     
     // link widgets to valueTree
-    guiControlsA.decayRateCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("DecayTime", nullptr));
-    
-    guiControlsA.avgDurationCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("AverageTime", nullptr));
-    
-    guiControlsA.meterViewCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("MeterViewMode", nullptr));
-    
-    guiControlsB.gonioScaleKnob.getValueObject().referTo(audioProcessor.valueTree.getPropertyAsValue("GoniometerScale", nullptr));
-    
-    guiControlsB.holdButton.getToggleStateValue().referTo(audioProcessor.valueTree.getPropertyAsValue("EnableHold", nullptr));
-    
-    guiControlsB.holdTimeCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("HoldTime", nullptr));
-    
-    guiControlsB.histViewCombo.getSelectedIdAsValue().referTo(audioProcessor.valueTree.getPropertyAsValue("HistogramView", nullptr));
-    
-    stereoMeterRms.threshCtrl.getValueObject().referTo(audioProcessor.valueTree.getPropertyAsValue("RMSThreshold", nullptr));
-    
-    stereoMeterPeak.threshCtrl.getValueObject().referTo(audioProcessor.valueTree.getPropertyAsValue("PeakThreshold", nullptr));
+    guiControlsA.decayRateCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("DecayTime", nullptr));
+    guiControlsA.avgDurationCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("AverageTime", nullptr));
+    guiControlsA.meterViewCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
+    guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
+    guiControlsB.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
+    guiControlsB.holdTimeCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HoldTime", nullptr));
+    guiControlsB.histViewCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HistogramView", nullptr));
+    stereoMeterRms.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
+    stereoMeterPeak.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
     
     // set initial values
     int decayRate = state.getPropertyAsValue("DecayTime", nullptr).getValue();
