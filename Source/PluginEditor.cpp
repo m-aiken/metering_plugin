@@ -228,12 +228,12 @@ void Histogram::update(const float& inputL, const float& inputR)
     
     repaint();
 }
-/*
+
 void Histogram::setThreshold(const float& threshAsDecibels)
 {
     threshold.setValue(threshAsDecibels);
 }
-*/
+
 void Histogram::setView(const HistView& v)
 {
     view = v;
@@ -271,7 +271,7 @@ void HistogramContainer::update(const HistogramTypes& histoType,
     else
         peakHistogram.update(inputL, inputR);
 }
-/*
+
 void HistogramContainer::setThreshold(const HistogramTypes& histoType,
                                       const float& threshAsDecibels)
 {
@@ -280,7 +280,7 @@ void HistogramContainer::setThreshold(const HistogramTypes& histoType,
     else
         peakHistogram.setThreshold(threshAsDecibels);
 }
-*/
+
 void HistogramContainer::setView(const HistView& v)
 {
     view = v;
@@ -290,12 +290,12 @@ void HistogramContainer::setView(const HistView& v)
     peakHistogram.setView(v);
 }
 
-juce::Value& HistogramContainer::linkToValueTree(const HistogramTypes& histoType)
+juce::Value& HistogramContainer::getThresholdValueObject(const HistogramTypes& histoType)
 {
     if ( histoType == HistogramTypes::RMS )
-        return rmsHistogram.getValueObject();
+        return rmsHistogram.getThresholdValueObject();
     else
-        return peakHistogram.getValueObject();
+        return peakHistogram.getThresholdValueObject();
 }
 
 //==============================================================================
@@ -1347,9 +1347,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     guiControlsB.histViewCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HistogramView", nullptr));
     stereoMeterRms.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
     stereoMeterPeak.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
-    
-    histograms.linkToValueTree(HistogramTypes::RMS).referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
-    histograms.linkToValueTree(HistogramTypes::PEAK).referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
+    histograms.getThresholdValueObject(HistogramTypes::RMS).referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
+    histograms.getThresholdValueObject(HistogramTypes::PEAK).referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
     
     // set initial values
     int decayRate = state.getPropertyAsValue("DecayTime", nullptr).getValue();
@@ -1379,7 +1378,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     int histView = state.getPropertyAsValue("HistogramView", nullptr).getValue();
     histograms.setView(histView == HistView::stacked ? HistView::stacked
                                                      : HistView::sideBySide);
-    /*
+    
     float rmsThresh = state.getPropertyAsValue("RMSThreshold", nullptr).getValue();
     stereoMeterRms.setThreshold(rmsThresh);
     histograms.setThreshold(HistogramTypes::RMS, rmsThresh);
@@ -1387,20 +1386,16 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     float peakThresh = state.getPropertyAsValue("PeakThreshold", nullptr).getValue();
     stereoMeterPeak.setThreshold(peakThresh);
     histograms.setThreshold(HistogramTypes::PEAK, peakThresh);
-    */
+    
     // handle change events
     stereoMeterRms.threshCtrl.onValueChange = [this]
     {
-        auto v = stereoMeterRms.threshCtrl.getValue();
-        stereoMeterRms.setThreshold(v);
-        //histograms.setThreshold(HistogramTypes::RMS, v);
+        stereoMeterRms.setThreshold(stereoMeterRms.threshCtrl.getValue());
     };
     
     stereoMeterPeak.threshCtrl.onValueChange = [this]
     {
-        auto v = stereoMeterPeak.threshCtrl.getValue();
-        stereoMeterPeak.setThreshold(v);
-        //histograms.setThreshold(HistogramTypes::PEAK, v);
+        stereoMeterPeak.setThreshold(stereoMeterPeak.threshCtrl.getValue());
     };
     
     guiControlsA.decayRateCombo.onChange = [this]
@@ -1470,13 +1465,6 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         auto selectedId = guiControlsB.histViewCombo.getSelectedId();
         histograms.setView(selectedId == HistView::stacked ? HistView::stacked
                                                            : HistView::sideBySide);
-        
-//        audioProcessor.valueTree.setProperty("HistogramView", selectedId, nullptr);
-        
-        auto v = audioProcessor.valueTree.getPropertyAsValue("HistogramView", nullptr);
-        int val = v.getValue();
-        DBG(val);
-        
     };
     
 #if defined(GAIN_TEST_ACTIVE)
