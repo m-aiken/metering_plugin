@@ -92,14 +92,14 @@ struct Histogram : juce::Component
     void update(const float& inputL, const float& inputR);
     
     void setThreshold(const float& threshAsDecibels);
-    
     void setView(const HistView& v);
+    juce::Value& getThresholdValueObject() { return threshold; }
     
 private:
     CircularBuffer<float> circularBuffer{776, NegativeInfinity};
     
     juce::String label;
-    float threshold = 0.f;
+    juce::Value threshold;
     juce::ColourGradient colourGrad;
     
     HistView view;
@@ -114,6 +114,7 @@ struct HistogramContainer : juce::Component
     void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
     
     void setView(const HistView& v);
+    juce::Value& getThresholdValueObject(const HistogramTypes& histoType);
     
 private:
     Histogram rmsHistogram{"RMS"};
@@ -435,7 +436,7 @@ private:
 //==============================================================================
 struct CustomComboBox : juce::ComboBox
 {
-    CustomComboBox(const juce::StringArray& choices, const int& initSelectionId);
+    CustomComboBox(const juce::StringArray& choices);
     ~CustomComboBox() { setLookAndFeel(nullptr); }
     void paint(juce::Graphics& g) override;
 private:
@@ -502,9 +503,9 @@ struct GuiControlsGroupA : juce::Component
     juce::StringArray avgDurationChoices { "100ms", "250ms", "500ms", "1000ms", "2000ms" };
     juce::StringArray meterViewChoices { "Both", "Peak", "Avg" };
     
-    CustomComboBox decayRateCombo { decayRateChoices, 3 };
-    CustomComboBox avgDurationCombo { avgDurationChoices, 3 };
-    CustomComboBox meterViewCombo { meterViewChoices, 1 };
+    CustomComboBox decayRateCombo { decayRateChoices };
+    CustomComboBox avgDurationCombo { avgDurationChoices };
+    CustomComboBox meterViewCombo { meterViewChoices };
     
 private:
     CustomLabel decayRateLabel { "DECAY" };
@@ -522,11 +523,11 @@ struct GuiControlsGroupB : juce::Component
     
     CustomToggle holdButton { "HOLD" };
     juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
-    CustomComboBox holdTimeCombo { holdTimeChoices, 2 };
+    CustomComboBox holdTimeCombo { holdTimeChoices };
     CustomTextBtn holdResetButton { "RESET" };
     
     juce::StringArray histViewChoices { "Stacked", "Side-by-Side" };
-    CustomComboBox histViewCombo { histViewChoices, 1 };
+    CustomComboBox histViewCombo { histViewChoices };
     
 private:
     CustomLabel gonioScaleLabel { "SCALE" };

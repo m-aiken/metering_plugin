@@ -104,6 +104,8 @@ public:
     
     Fifo<juce::AudioBuffer<float>> fifo;
     
+    juce::ValueTree valueTree { "state" };
+    
 #if defined(GAIN_TEST_ACTIVE)
     static juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout();
     

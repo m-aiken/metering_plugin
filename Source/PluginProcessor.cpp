@@ -22,6 +22,17 @@ PFMProject10AudioProcessor::PFMProject10AudioProcessor()
                        )
 #endif
 {
+    // default values for value tree
+    valueTree.setProperty("DecayTime",           3, nullptr); // -12dB/s
+    valueTree.setProperty("AverageTime",         3, nullptr); // 500ms
+    valueTree.setProperty("MeterViewMode",       1, nullptr); // Both
+    valueTree.setProperty("GoniometerScale", 100.0, nullptr);
+    valueTree.setProperty("EnableHold",       true, nullptr);
+    valueTree.setProperty("HoldTime",            2, nullptr); // 0.5s
+    valueTree.setProperty("HistogramView",       1, nullptr); // Stacked
+    valueTree.setProperty("RMSThreshold",      0.f, nullptr);
+    valueTree.setProperty("PeakThreshold",     0.f, nullptr);
+    
 #if defined(GAIN_TEST_ACTIVE)
     gainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Gain"));
     jassert(gainParam != nullptr);
@@ -200,12 +211,32 @@ void PFMProject10AudioProcessor::getStateInformation (juce::MemoryBlock& destDat
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream outputStream(destData, true);
+    valueTree.writeToStream(outputStream);
 }
 
 void PFMProject10AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    
+    if
+    (
+        tree.isValid() &&
+        tree.hasProperty("DecayTime") &&
+        tree.hasProperty("AverageTime") &&
+        tree.hasProperty("MeterViewMode") &&
+        tree.hasProperty("GoniometerScale") &&
+        tree.hasProperty("EnableHold") &&
+        tree.hasProperty("HoldTime") &&
+        tree.hasProperty("HistogramView") &&
+        tree.hasProperty("RMSThreshold") &&
+        tree.hasProperty("PeakThreshold")
+    )
+    {
+        valueTree = tree;
+    }
 }
 #if defined(GAIN_TEST_ACTIVE)
 juce::AudioProcessorValueTreeState::ParameterLayout PFMProject10AudioProcessor::getParameterLayout()
