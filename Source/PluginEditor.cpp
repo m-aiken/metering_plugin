@@ -450,8 +450,7 @@ void StereoImageMeter::setGoniometerScale(const double& rotaryValue)
 //==============================================================================
 void ValueHolderBase::timerCallback()
 {
-    now = juce::Time::currentTimeMillis();
-    if ( now - peakTime > holdTime )
+    if ( getNow() - peakTime > holdTime )
         handleOverHoldTime();
 }
 
@@ -460,8 +459,9 @@ void DecayingValueHolder::updateHeldValue(const float& input)
 {
     if (input > currentValue)
     {
+        peakTime = getNow();
         currentValue = input;
-        peakTime = juce::Time::currentTimeMillis();
+        resetDecayRateMultiplier();
     }
 }
 
@@ -474,12 +474,12 @@ void DecayingValueHolder::handleOverHoldTime()
 {
     currentValue = juce::jlimit(NegativeInfinity,
                                 MaxDecibels,
-                                currentValue - decayRatePerFrame);
-        
+                                currentValue - (decayRatePerFrame * decayRateMultiplier));
+    
+    decayRateMultiplier *= 1.04f;
+    
     if ( currentValue == NegativeInfinity )
-        setDecayRate(initDecayRate); // reset decayRatePerFrame
-    else
-        decayRatePerFrame *= 1.04f;
+        resetDecayRateMultiplier();
 }
 
 //==============================================================================
@@ -492,18 +492,23 @@ void ValueHolder::updateHeldValue(const float& input)
 {
     currentValue = input;
     
-    if (input > threshold)
+    if (isOverThreshold())
     {
-        isOverThreshold = true;
+//        isOverThreshold = true;
         peakTime = juce::Time::currentTimeMillis();
         if (input > heldValue)
             heldValue = input;
     }
 }
 
+bool ValueHolder::isOverThreshold() const
+{
+    return currentValue > threshold;
+}
+
 void ValueHolder::handleOverHoldTime()
 {
-    isOverThreshold = currentValue > threshold;
+//    isOverThreshold = currentValue > threshold;
     heldValue = NegativeInfinity;
 }
 
@@ -512,7 +517,7 @@ void TextMeter::paint(juce::Graphics& g)
 {
     juce::String str;
     
-    if ( valueHolder.getIsOverThreshold() )
+    if ( valueHolder.isOverThreshold() )
     {
         str = juce::String(valueHolder.getHeldValue(), 1);
         g.fillAll(juce::Colour(196u, 55u, 55u)); // red background

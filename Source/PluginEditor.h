@@ -214,7 +214,7 @@ struct ValueHolderBase : juce::Timer
     ValueHolderBase() { startTimerHz(40); }
     ~ValueHolderBase() { stopTimer(); }
     
-    void setHoldTime(const long long& ms) { holdTime = ms; }
+    void setHoldTime(const juce::int64& ms) { holdTime = ms; }
     long long getHoldTime() { return holdTime; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
@@ -229,9 +229,10 @@ private:
     float currentValue = NegativeInfinity;
     float heldValue = NegativeInfinity;
    
-    long long now = juce::Time::currentTimeMillis();
-    long long peakTime = 0;
-    long long holdTime;
+    juce::int64 peakTime = getNow();
+    juce::int64 holdTime = 2000;
+    
+    static juce::int64 getNow() { return juce::Time::currentTimeMillis(); }
 };
 
 //==============================================================================
@@ -246,9 +247,12 @@ struct DecayingValueHolder : ValueHolderBase
     void handleOverHoldTime() override;
     
 private:
-    int timerFrequency = 30;
+    int timerFrequency = 40;
     float initDecayRate = 12.f;
-    float decayRatePerFrame;
+    float decayRatePerFrame = 0.f;
+    float decayRateMultiplier = 1.f;
+    
+    void resetDecayRateMultiplier() { decayRateMultiplier = 1.f; }
 };
 
 //==============================================================================
@@ -259,13 +263,14 @@ struct ValueHolder : ValueHolderBase
     
     void setThreshold(const float& threshAsDecibels);
     void updateHeldValue(const float& input);
-    bool getIsOverThreshold() const { return isOverThreshold; }
+    bool isOverThreshold() const;
+//    bool getIsOverThreshold() const { return isOverThreshold; }
     
     void handleOverHoldTime() override;
     
 private:
     float threshold = 0.f;
-    bool isOverThreshold = false;
+//    bool isOverThreshold = false;
 };
 
 //==============================================================================
