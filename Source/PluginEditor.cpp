@@ -195,8 +195,8 @@ void Histogram::paint(juce::Graphics& g)
     p.lineTo(bufferSize - 1, height);
     p.closeSubPath();
     
-    auto green = juce::Colour(89u, 255u, 103u).withAlpha(0.6f);
-    auto red = juce::Colour(196u, 55u, 55u);
+    auto underThreshColour = MyColours::getColour(MyColours::Green);
+    auto overThreshColour = MyColours::getColour(MyColours::Red);
     
     auto thresholdProportion = juce::jmap<float>(threshold.getValue(),
                                                  NegativeInfinity,
@@ -206,10 +206,10 @@ void Histogram::paint(juce::Graphics& g)
     
     colourGrad.clearColours();
     
-    // bottom to boundary = green, boundary+ = red
-    colourGrad.addColour(0, green);                   // negative infinity
-    colourGrad.addColour(thresholdProportion, green); // threshold boundary
-    colourGrad.addColour(thresholdProportion, red);   // threshold boundary
+    // bottom to boundary = underThreshColour, boundary+ = overThreshColour
+    colourGrad.addColour(0, underThreshColour); // negative infinity
+    colourGrad.addColour(thresholdProportion, underThreshColour); // threshold boundary
+    colourGrad.addColour(thresholdProportion, overThreshColour); // threshold boundary
 
     g.setGradientFill(colourGrad);
     g.fillPath(p);
@@ -334,13 +334,13 @@ void CorrelationMeter::paint(juce::Graphics& g)
     auto meterWidth = width - (padding * 2);
     
     // labels
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
     // draw fitted text args = text, x, y, width, height, justification, maxNumLines
     g.drawFittedText("-1", 0, 0, padding, height, juce::Justification::centred, 1);
     g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);
     
     // meter background
-    g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    g.setColour(MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f)); // background
     
     auto meterBounds = juce::Rectangle<int>(bounds.getCentreX() - (meterWidth / 2), // x
                                             bounds.getY(),                          // y
@@ -350,7 +350,7 @@ void CorrelationMeter::paint(juce::Graphics& g)
     g.fillRect(meterBounds);
     
     // meters
-    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
+    g.setColour(MyColours::getColour(MyColours::Green));
     
     juce::Rectangle<int> averageCorrelationMeter = paintMeter(meterBounds,            // container bounds
                                                    meterBounds.getY(),                // y
@@ -518,14 +518,14 @@ void TextMeter::paint(juce::Graphics& g)
     if ( valueHolder.isOverThreshold() )
     {
         str = juce::String(valueHolder.getHeldValue(), 1);
-        g.fillAll(juce::Colour(196u, 55u, 55u)); // red background
+        g.fillAll(MyColours::getColour(MyColours::Red)); // background
     }
     else
     {
         str = juce::String(valueHolder.getCurrentValue(), 1);
     }
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
     g.setFont(14.0f);
     g.drawFittedText(str,                                      // text
                      getLocalBounds(),                         // area
@@ -551,7 +551,7 @@ void DbScale::paint(juce::Graphics& g)
 
     int textHeight = 8;
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
     
     for ( int i = 0; i < ticks.size(); ++i)
     {
@@ -573,21 +573,21 @@ void Meter::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto h = bounds.getHeight();
     
-    g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background colour
+    g.setColour(MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f)); // background colour
     g.fillRect(bounds);
     
-    auto green = juce::Colour(89u, 255u, 103u).withAlpha(0.6f);
-    auto red = juce::Colour(196u, 55u, 55u);
-    g.setColour(green); // green
+    auto underThreshColour = MyColours::getColour(MyColours::Green);
+    auto overThreshColour = MyColours::getColour(MyColours::Red);
+    g.setColour(underThreshColour);
     auto levelJmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     auto thrshJmap = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, h, 0);
     
-    g.setColour(green);
+    g.setColour(underThreshColour);
     if ( threshold <= level )
     {
-        g.setColour(red);
+        g.setColour(overThreshColour);
         g.fillRect(bounds.withHeight((h * levelJmap) - (thrshJmap - 1)).withY(levelJmap));
-        g.setColour(green);
+        g.setColour(underThreshColour);
         g.fillRect(bounds.withHeight(h * (thrshJmap + 1)).withY(thrshJmap + 1));
     }
     else
@@ -598,8 +598,7 @@ void Meter::paint(juce::Graphics& g)
     // falling tick
     if ( fallingTickEnabled )
     {
-        auto yellow = juce::Colour(217, 193, 56);
-        g.setColour(yellow);
+        g.setColour(MyColours::getColour(MyColours::Yellow));
         
         auto tickValue = fallingTick.getHoldTime() == 0 ? level :   fallingTick.getCurrentValue();
         
@@ -807,7 +806,7 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
     slider.setSliderStyle(style);
     
     auto threshold = juce::Rectangle<float>(x, sliderPos, width, 2.f);
-    g.setColour(juce::Colour(196u, 55u, 55u)); // red
+    g.setColour(MyColours::getColour(MyColours::Red));
     g.fillRect(threshold);
 }
 
@@ -818,9 +817,8 @@ void CustomLookAndFeel::drawComboBox(juce::Graphics& g,
                                      int buttonW, int buttonH,
                                      juce::ComboBox& comboBox)
 {
-    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
-    auto lightGrey = juce::Colour(201u, 209u, 217u);
-    comboBox.setColour(juce::ComboBox::textColourId, lightGrey);
+    g.fillAll(MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f));
+    comboBox.setColour(juce::ComboBox::textColourId, MyColours::getColour(MyColours::Text));
 }
 
 void CustomLookAndFeel::drawToggleButton(juce::Graphics& g,
@@ -830,15 +828,15 @@ void CustomLookAndFeel::drawToggleButton(juce::Graphics& g,
 {
     auto bounds = toggleButton.getLocalBounds();
     
-    auto yellow = juce::Colour(217, 193, 56);
-    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
-    auto lightGrey = juce::Colour(201u, 209u, 217u);
-    
     // background
-    g.fillAll( toggleButton.getToggleState() ? yellow : darkGrey );
+    g.fillAll(toggleButton.getToggleState()
+              ? MyColours::getColour(MyColours::Yellow)
+              : MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f));
     
     // text colour
-    g.setColour( toggleButton.getToggleState() ? darkGrey : lightGrey );
+    g.setColour(toggleButton.getToggleState()
+                ? MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f)
+                : MyColours::getColour(MyColours::Text));
     
     g.drawFittedText(toggleButton.getButtonText(),
                      bounds.getX(),
@@ -859,7 +857,7 @@ void CustomLookAndFeel::drawButtonBackground(juce::Graphics& g,
     
     g.fillAll(backgroundColour);
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
     g.drawFittedText(button.getButtonText(),
                      bounds.getX(),
                      bounds.getY(),
@@ -878,14 +876,10 @@ void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g,
 {
     auto bounds = juce::Rectangle<float>(x, y, width, height);
     
-    auto yellow = juce::Colour(217, 193, 56);
-    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
-    auto lightGrey = juce::Colour(201u, 209u, 217u);
-    
-    g.setColour(darkGrey);
+    g.setColour(MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f));
     g.fillEllipse(bounds);
     
-    g.setColour(lightGrey);
+    g.setColour(MyColours::getColour(MyColours::Text));
     g.drawEllipse(bounds, 1.f);
     
     juce::Path p;
@@ -960,7 +954,7 @@ void StereoMeter::paint(juce::Graphics& g)
     auto labelContainerY = static_cast<int>(h * dbScaleLabelCrossover);
     auto labelContainerH = static_cast<int>(h - labelContainerY);
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
     
     std::vector<juce::String> labels{"L", label, "R"};
     std::vector<int> xPositions{0, static_cast<int>(w / 3), static_cast<int>(w - (w / 3))};
@@ -1111,7 +1105,7 @@ void CustomLabel::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
     
-    g.setColour(juce::Colour(201u, 209u, 217u));
+    g.setColour(MyColours::getColour(MyColours::Text));
     
     g.drawFittedText(getText(),
                      bounds.getX(),
@@ -1144,7 +1138,9 @@ CustomTextBtn::CustomTextBtn(const juce::String& buttonText)
 
 void CustomTextBtn::paint(juce::Graphics& g)
 {
-    auto buttonColour = (selectedColour == Colours::standardRed ? juce::Colour(196u, 55u, 55u) : juce::Colour(255u, 55u, 55u));
+    auto buttonColour = (inClickState
+                         ? MyColours::getColour(MyColours::RedBright)
+                         : MyColours::getColour(MyColours::Red));
     
     getLookAndFeel().drawButtonBackground(g,
                                           *this,        // button
@@ -1155,7 +1151,7 @@ void CustomTextBtn::paint(juce::Graphics& g)
 
 void CustomTextBtn::animateButton()
 {
-    selectedColour = Colours::brighterRed;
+    inClickState = true;
     repaint();
     
     juce::Timer::callAfterDelay(100, resetColour);
@@ -1486,7 +1482,7 @@ PFMProject10AudioProcessorEditor::~PFMProject10AudioProcessorEditor()
 //==============================================================================
 void PFMProject10AudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll(juce::Colour(13u, 17u, 23u));
+    g.fillAll(MyColours::getColour(MyColours::DarkGrey));
 }
 
 void PFMProject10AudioProcessorEditor::resized()
