@@ -494,7 +494,6 @@ void ValueHolder::updateHeldValue(const float& input)
     
     if (isOverThreshold())
     {
-//        isOverThreshold = true;
         peakTime = juce::Time::currentTimeMillis();
         if (input > heldValue)
             heldValue = input;
@@ -508,7 +507,6 @@ bool ValueHolder::isOverThreshold() const
 
 void ValueHolder::handleOverHoldTime()
 {
-//    isOverThreshold = currentValue > threshold;
     heldValue = NegativeInfinity;
 }
 

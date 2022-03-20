@@ -243,7 +243,6 @@ struct DecayingValueHolder : ValueHolderBase
     
     void updateHeldValue(const float& input);
     void setDecayRate(const float& dbPerSecond);
-    
     void handleOverHoldTime() override;
     
 private:
@@ -264,13 +263,10 @@ struct ValueHolder : ValueHolderBase
     void setThreshold(const float& threshAsDecibels);
     void updateHeldValue(const float& input);
     bool isOverThreshold() const;
-//    bool getIsOverThreshold() const { return isOverThreshold; }
-    
     void handleOverHoldTime() override;
     
 private:
     float threshold = 0.f;
-//    bool isOverThreshold = false;
 };
 
 //==============================================================================
