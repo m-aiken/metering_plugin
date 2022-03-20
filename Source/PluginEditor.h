@@ -215,7 +215,7 @@ struct ValueHolderBase : juce::Timer
     ~ValueHolderBase() { stopTimer(); }
     
     void setHoldTime(const juce::int64& ms) { holdTime = ms; }
-    long long getHoldTime() { return holdTime; }
+    juce::int64 getHoldTime() { return holdTime; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
     void reset() { currentValue = NegativeInfinity; }
