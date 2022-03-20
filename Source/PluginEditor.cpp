@@ -340,7 +340,7 @@ void CorrelationMeter::paint(juce::Graphics& g)
     g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);
     
     // meter background
-    g.setColour(MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f)); // background
+    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f)); // background
     
     auto meterBounds = juce::Rectangle<int>(bounds.getCentreX() - (meterWidth / 2), // x
                                             bounds.getY(),                          // y
@@ -573,7 +573,7 @@ void Meter::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto h = bounds.getHeight();
     
-    g.setColour(MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f)); // background colour
+    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f)); // background colour
     g.fillRect(bounds);
     
     auto underThreshColour = MyColours::getColour(MyColours::Green);
@@ -817,7 +817,7 @@ void CustomLookAndFeel::drawComboBox(juce::Graphics& g,
                                      int buttonW, int buttonH,
                                      juce::ComboBox& comboBox)
 {
-    g.fillAll(MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f));
+    g.fillAll(MyColours::getColour(MyColours::Background).contrasting(0.05f));
     comboBox.setColour(juce::ComboBox::textColourId, MyColours::getColour(MyColours::Text));
 }
 
@@ -831,11 +831,11 @@ void CustomLookAndFeel::drawToggleButton(juce::Graphics& g,
     // background
     g.fillAll(toggleButton.getToggleState()
               ? MyColours::getColour(MyColours::Yellow)
-              : MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f));
+              : MyColours::getColour(MyColours::Background).contrasting(0.05f));
     
     // text colour
     g.setColour(toggleButton.getToggleState()
-                ? MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f)
+                ? MyColours::getColour(MyColours::Background).contrasting(0.05f)
                 : MyColours::getColour(MyColours::Text));
     
     g.drawFittedText(toggleButton.getButtonText(),
@@ -876,7 +876,7 @@ void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g,
 {
     auto bounds = juce::Rectangle<float>(x, y, width, height);
     
-    g.setColour(MyColours::getColour(MyColours::DarkGrey).contrasting(0.05f));
+    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
     g.fillEllipse(bounds);
     
     g.setColour(MyColours::getColour(MyColours::Text));
@@ -1482,7 +1482,7 @@ PFMProject10AudioProcessorEditor::~PFMProject10AudioProcessorEditor()
 //==============================================================================
 void PFMProject10AudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll(MyColours::getColour(MyColours::DarkGrey));
+    g.fillAll(MyColours::getColour(MyColours::Background));
 }
 
 void PFMProject10AudioProcessorEditor::resized()
