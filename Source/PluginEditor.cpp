@@ -687,8 +687,8 @@ void MacroMeter::resized()
     // setBounds args (int x, int y, int width, int height)
     textMeter.setBounds(0, 0, w, textBoxHeight);
     
-    auto averageMeterWidth = static_cast<int>(w * 0.75f);
-    auto instantMeterWidth = static_cast<int>(w * 0.20f);
+    auto averageMeterWidth = static_cast<int>(w * 0.7f);
+    auto instantMeterWidth = static_cast<int>(w * 0.25f);
     auto meterPadding = static_cast<int>(w * 0.05f);
     
     auto avgMeterX = (channel == Channel::Left ? 0 : instantMeterWidth + meterPadding);
@@ -1204,14 +1204,15 @@ void DecayRateToggleGroup::resized()
      
     using Track = juce::Grid::TrackInfo;
     using Fr = juce::Grid::Fr;
-     
-    grid.templateRows    = { Track(Fr(1)), Track(Fr(1)) };
+    
     grid.templateColumns = { Track(Fr(1)), Track(Fr(1)), Track(Fr(1)) };
-
+    grid.autoRows = Track(Fr(1));
+    
     for ( auto& toggle : toggles )
         grid.items.add(juce::GridItem(*toggle));
     
-    grid.performLayout (getLocalBounds());
+    grid.setGap(juce::Grid::Px{4});
+    grid.performLayout(getLocalBounds());
 }
 
 void DecayRateToggleGroup::setSelectedToggleFromState()
@@ -1525,42 +1526,41 @@ void PFMProject10AudioProcessorEditor::resized()
     // subcomponents in your editor..
     auto bounds = getLocalBounds();
     auto width = bounds.getWidth();
-    auto margin = 10;
-    auto stereoMeterWidth = 100;
+    auto padding = 10;
+    auto stereoMeterWidth = 90;
     auto stereoMeterHeight = 350;
     
     // setBounds args (int x, int y, int width, int height)
-    stereoMeterRms.setBounds(margin,
-                             margin,
+    stereoMeterRms.setBounds(padding,
+                             padding,
                              stereoMeterWidth,
                              stereoMeterHeight);
     
-    stereoMeterPeak.setBounds(width - (stereoMeterWidth + margin),
-                              margin,
+    stereoMeterPeak.setBounds(width - (stereoMeterWidth + padding),
+                              padding,
                               stereoMeterWidth,
                               stereoMeterHeight);
     
-    histograms.setBounds(margin,
-                         stereoMeterRms.getBottom() + (margin * 2),
-                         width - (margin * 2),
+    histograms.setBounds(padding,
+                         stereoMeterRms.getBottom() + (padding * 2),
+                         width - (padding * 2),
                          210);
     
-    auto stereoImageMeterWidth = 300; // this will also be the height of the goniometer
-    stereoImageMeter.setBounds((width / 2) - (stereoImageMeterWidth / 2),
+    auto stereoImageMeterWidth = 280; // this will also be the height of the goniometer
+    stereoImageMeter.setBounds(bounds.getCentreX() - (stereoImageMeterWidth / 2),
                               (histograms.getY() - stereoImageMeterWidth) / 2,
                               stereoImageMeterWidth,
                               stereoImageMeterWidth + 20); // +20 to account for correlation meter
     
-    auto comboPadding = 20;
-    auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (comboPadding * 2);
+    auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (padding * 2);
     
-    toggles.setBounds(stereoMeterRms.getRight() + comboPadding,
-                           margin,
-                           comboWidth,
-                           stereoMeterHeight);
+    toggles.setBounds(stereoMeterRms.getRight() + padding,
+                      padding,
+                      comboWidth,
+                      stereoMeterHeight);
     
-    guiControlsB.setBounds(stereoMeterPeak.getX() - comboPadding - comboWidth,
-                           margin,
+    guiControlsB.setBounds(stereoMeterPeak.getX() - padding - comboWidth,
+                           padding,
                            comboWidth,
                            stereoMeterHeight);
     
