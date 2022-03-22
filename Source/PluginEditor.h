@@ -440,7 +440,7 @@ struct StereoMeter : juce::Component
     void update(const float& inputL, const float& inputR);
     
     void setThreshold(const float& threshAsDecibels);
-    void setDecayRate(const float& dbPerSecond);
+    void setDecayRate(const int& selectedId);
     
     void setTickVisibility(const bool& toggleState);
     void setTickHoldTime(const int& selectedId);
@@ -514,23 +514,37 @@ private:
 };
 
 //==============================================================================
+struct DecayRateToggleGroup : juce::Component
+{
+    DecayRateToggleGroup();
+    void resized() override;
+    juce::Value& getValueObject() { return selectedValue; }
+    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
+    void setSelectedToggleFromState();
+    
+    CustomToggle optionA{"-3"}, optionB{"-6"}, optionC{"-12"}, optionD{"-24"}, optionE{"-36"};
+    
+    std::array<CustomToggle*, 5> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE };
+    
+private:
+    juce::Value selectedValue;
+};
+
+//==============================================================================
 struct GuiControlsGroupA : juce::Component
 {
     GuiControlsGroupA();
     void resized() override;
-    
-    float getCurrentDecayRate();
-    
-    juce::StringArray decayRateChoices { "-3dB/s", "-6dB/s", "-12dB/s", "-24dB/s", "-36dB/s" };
+        
     juce::StringArray avgDurationChoices { "100ms", "250ms", "500ms", "1000ms", "2000ms" };
     juce::StringArray meterViewChoices { "Both", "Peak", "Avg" };
     
-    CustomComboBox decayRateCombo { decayRateChoices };
+    DecayRateToggleGroup decayRate;
     CustomComboBox avgDurationCombo { avgDurationChoices };
     CustomComboBox meterViewCombo { meterViewChoices };
     
 private:
-    CustomLabel decayRateLabel { "DECAY" };
+    CustomLabel decayRateLabel { "DECAY RATE (dB/s)" };
     CustomLabel avgDurationLabel { "AVG" };
     CustomLabel meterViewLabel { "METER" };
 };
@@ -585,8 +599,10 @@ private:
     
     StereoImageMeter stereoImageMeter;
     
-    GuiControlsGroupA guiControlsA;
+    GuiControlsGroupA toggles;
     GuiControlsGroupB guiControlsB;
+    
+    void updateDecayRate(const int& selectedId);
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;
