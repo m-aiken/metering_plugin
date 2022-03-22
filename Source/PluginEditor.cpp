@@ -1189,16 +1189,7 @@ void CustomRotary::paint(juce::Graphics& g)
 }
 
 //==============================================================================
-DecayRateToggleGroup::DecayRateToggleGroup()
-{
-    for ( auto& toggle : toggles )
-    {
-        addAndMakeVisible(toggle);
-        toggle->setRadioGroupId(1);
-    }
-}
-
-void DecayRateToggleGroup::resized()
+juce::Grid ToggleGroupBase::generateGrid(std::vector<CustomToggle*>& toggles)
 {
     juce::Grid grid;
      
@@ -1212,8 +1203,40 @@ void DecayRateToggleGroup::resized()
         grid.items.add(juce::GridItem(*toggle));
     
     grid.setGap(juce::Grid::Px{4});
+    return grid;
+}
+
+DecayRateToggleGroup::DecayRateToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(1);
+    }
+}
+
+void DecayRateToggleGroup::resized()
+{
+    /*
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
+    
+    grid.templateColumns = { Track(Fr(1)), Track(Fr(1)), Track(Fr(1)) };
+    grid.autoRows = Track(Fr(1));
+    
+    for ( auto& toggle : toggles )
+        grid.items.add(juce::GridItem(*toggle));
+    
+    grid.setGap(juce::Grid::Px{4});
+    grid.performLayout(getLocalBounds());
+    */
+    juce::Grid grid = generateGrid(toggles);
     grid.performLayout(getLocalBounds());
 }
+
+
 
 void DecayRateToggleGroup::setSelectedToggleFromState()
 {

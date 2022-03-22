@@ -514,7 +514,12 @@ private:
 };
 
 //==============================================================================
-struct DecayRateToggleGroup : juce::Component
+struct ToggleGroupBase
+{
+    juce::Grid generateGrid(std::vector<CustomToggle*>& toggles);
+};
+
+struct DecayRateToggleGroup : ToggleGroupBase, juce::Component
 {
     DecayRateToggleGroup();
     void resized() override;
@@ -524,7 +529,7 @@ struct DecayRateToggleGroup : juce::Component
     
     CustomToggle optionA{"-3"}, optionB{"-6"}, optionC{"-12"}, optionD{"-24"}, optionE{"-36"};
     
-    std::array<CustomToggle*, 5> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE };
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE };
     
 private:
     juce::Value selectedValue;
