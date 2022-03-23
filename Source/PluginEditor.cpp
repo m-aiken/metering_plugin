@@ -1217,37 +1217,21 @@ DecayRateToggleGroup::DecayRateToggleGroup()
 
 void DecayRateToggleGroup::resized()
 {
-    /*
-    juce::Grid grid;
-     
-    using Track = juce::Grid::TrackInfo;
-    using Fr = juce::Grid::Fr;
-    
-    grid.templateColumns = { Track(Fr(1)), Track(Fr(1)), Track(Fr(1)) };
-    grid.autoRows = Track(Fr(1));
-    
-    for ( auto& toggle : toggles )
-        grid.items.add(juce::GridItem(*toggle));
-    
-    grid.setGap(juce::Grid::Px{4});
-    grid.performLayout(getLocalBounds());
-    */
     juce::Grid grid = generateGrid(toggles);
     grid.performLayout(getLocalBounds());
 }
 
-
-
 void DecayRateToggleGroup::setSelectedToggleFromState()
 {
+    using nt = juce::NotificationType;
     switch (static_cast<int>(selectedValue.getValue()))
     {
-        case 1:  optionA.setToggleState(true, juce::NotificationType::dontSendNotification); break;
-        case 2:  optionB.setToggleState(true, juce::NotificationType::dontSendNotification); break;
-        case 3:  optionC.setToggleState(true, juce::NotificationType::dontSendNotification); break;
-        case 4:  optionD.setToggleState(true, juce::NotificationType::dontSendNotification); break;
-        case 5:  optionE.setToggleState(true, juce::NotificationType::dontSendNotification); break;
-        default: optionC.setToggleState(true, juce::NotificationType::dontSendNotification); break;
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        case 4:  optionD.setToggleState(true, nt::dontSendNotification); break;
+        case 5:  optionE.setToggleState(true, nt::dontSendNotification); break;
+        default: optionC.setToggleState(true, nt::dontSendNotification); break;
     }
 }
 
