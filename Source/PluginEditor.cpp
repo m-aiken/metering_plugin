@@ -1235,7 +1235,6 @@ void DecayRateToggleGroup::setSelectedToggleFromState()
     }
 }
 
-///
 AverageTimeToggleGroup::AverageTimeToggleGroup()
 {
     for ( auto& toggle : toggles )
@@ -1265,7 +1264,42 @@ void AverageTimeToggleGroup::setSelectedToggleFromState()
     }
 }
 
+//
+MeterViewToggleGroup::MeterViewToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(2);
+    }
+}
+
+void MeterViewToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void MeterViewToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(selectedValue.getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        default: optionA.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
 //==============================================================================
+void LineBreak::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    g.setColour(juce::Colour(201u, 209u, 217u).withAlpha(0.025f));
+    g.drawLine(0, bounds.getCentreY(), bounds.getRight(), bounds.getCentreY(), 2.f);
+}
+
 GuiControlsGroupA::GuiControlsGroupA()
 {
     addAndMakeVisible(decayRateLabel);
@@ -1274,7 +1308,10 @@ GuiControlsGroupA::GuiControlsGroupA()
     
     addAndMakeVisible(decayRate);
     addAndMakeVisible(avgDuration);
-    addAndMakeVisible(meterViewCombo);
+    addAndMakeVisible(meterView);
+    
+    addAndMakeVisible(lineBreak1);
+    addAndMakeVisible(lineBreak2);
 }
 
 void GuiControlsGroupA::resized()
@@ -1289,20 +1326,24 @@ void GuiControlsGroupA::resized()
     {
         Track(Fr(1)),
         Track(Fr(2)),
+        Track(Fr(2)), // line break
         Track(Fr(1)),
         Track(Fr(2)),
+        Track(Fr(2)), // line break
         Track(Fr(1)),
-        Track(Fr(2))
+        Track(Fr(1))
     };
     
     grid.items =
     {
         juce::GridItem(decayRateLabel),
         juce::GridItem(decayRate),
+        juce::GridItem(lineBreak1),
         juce::GridItem(avgDurationLabel),
         juce::GridItem(avgDuration),
+        juce::GridItem(lineBreak2),
         juce::GridItem(meterViewLabel),
-        juce::GridItem(meterViewCombo)
+        juce::GridItem(meterView)
     };
     
     grid.performLayout(getLocalBounds());
@@ -1392,8 +1433,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     // link widgets to valueTree
     toggles.decayRate.getValueObject().referTo(state.getPropertyAsValue("DecayTime", nullptr));
     toggles.avgDuration.getValueObject().referTo(state.getPropertyAsValue("AverageTime", nullptr));
+    toggles.meterView.getValueObject().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
     
-    toggles.meterViewCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
     guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
     guiControlsB.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
     guiControlsB.holdTimeCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HoldTime", nullptr));
@@ -1404,16 +1445,14 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     histograms.getThresholdValueObject(HistogramTypes::PEAK).referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
     
     // set initial values
-    
-    updateDecayRate(state.getPropertyAsValue("DecayTime", nullptr).getValue());
+    updateParams(ToggleGroup::DecayRate, state.getPropertyAsValue("DecayTime", nullptr).getValue());
     toggles.decayRate.setSelectedToggleFromState();
     
-    updateAverageDuration(state.getPropertyAsValue("AverageTime", nullptr).getValue());
+    updateParams(ToggleGroup::AverageTime, state.getPropertyAsValue("AverageTime", nullptr).getValue());
     toggles.avgDuration.setSelectedToggleFromState();
     
-    int meterView = state.getPropertyAsValue("MeterViewMode", nullptr).getValue();
-    stereoMeterRms.setMeterView(meterView);
-    stereoMeterPeak.setMeterView(meterView);
+    updateParams(ToggleGroup::MeterView, state.getPropertyAsValue("MeterViewMode", nullptr).getValue());
+    toggles.meterView.setSelectedToggleFromState();
     
     double gonioScale = state.getPropertyAsValue("GoniometerScale", nullptr).getValue();
     stereoImageMeter.setGoniometerScale(gonioScale);
@@ -1450,24 +1489,21 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setThreshold(stereoMeterPeak.threshCtrl.getValue());
     };
     
-    toggles.decayRate.optionA.onClick = [this]{ updateDecayRate(1); };
-    toggles.decayRate.optionB.onClick = [this]{ updateDecayRate(2); };
-    toggles.decayRate.optionC.onClick = [this]{ updateDecayRate(3); };
-    toggles.decayRate.optionD.onClick = [this]{ updateDecayRate(4); };
-    toggles.decayRate.optionE.onClick = [this]{ updateDecayRate(5); };
+    toggles.decayRate.optionA.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 1); };
+    toggles.decayRate.optionB.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 2); };
+    toggles.decayRate.optionC.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 3); };
+    toggles.decayRate.optionD.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 4); };
+    toggles.decayRate.optionE.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 5); };
     
-    toggles.avgDuration.optionA.onClick = [this]{ updateAverageDuration(1); };
-    toggles.avgDuration.optionB.onClick = [this]{ updateAverageDuration(2); };
-    toggles.avgDuration.optionC.onClick = [this]{ updateAverageDuration(3); };
-    toggles.avgDuration.optionD.onClick = [this]{ updateAverageDuration(4); };
-    toggles.avgDuration.optionE.onClick = [this]{ updateAverageDuration(5); };
+    toggles.avgDuration.optionA.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 1); };
+    toggles.avgDuration.optionB.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 2); };
+    toggles.avgDuration.optionC.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 3); };
+    toggles.avgDuration.optionD.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 4); };
+    toggles.avgDuration.optionE.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 5); };
     
-    toggles.meterViewCombo.onChange = [this]
-    {
-        auto selectedId = toggles.meterViewCombo.getSelectedId();
-        stereoMeterRms.setMeterView(selectedId);
-        stereoMeterPeak.setMeterView(selectedId);
-    };
+    toggles.meterView.optionA.onClick = [this]{ updateParams(ToggleGroup::MeterView, 1); };
+    toggles.meterView.optionB.onClick = [this]{ updateParams(ToggleGroup::MeterView, 2); };
+    toggles.meterView.optionC.onClick = [this]{ updateParams(ToggleGroup::MeterView, 3); };
     
     guiControlsB.gonioScaleKnob.onValueChange = [this]
     {
@@ -1615,16 +1651,24 @@ void PFMProject10AudioProcessorEditor::timerCallback()
     }
 }
 
-void PFMProject10AudioProcessorEditor::updateDecayRate(const int& selectedId)
+void PFMProject10AudioProcessorEditor::updateParams(const ToggleGroup& toggleGroup, const int& selectedId)
 {
-    stereoMeterRms.setDecayRate(selectedId);
-    stereoMeterPeak.setDecayRate(selectedId);
-    toggles.decayRate.setSelectedValue(selectedId);
-};
-
-void PFMProject10AudioProcessorEditor::updateAverageDuration(const int& selectedId)
-{
-    stereoMeterRms.resizeAverager(selectedId);
-    stereoMeterPeak.resizeAverager(selectedId);
-    toggles.avgDuration.setSelectedValue(selectedId);
-};
+    switch (toggleGroup)
+    {
+        case ToggleGroup::DecayRate:
+            stereoMeterRms.setDecayRate(selectedId);
+            stereoMeterPeak.setDecayRate(selectedId);
+            toggles.decayRate.setSelectedValue(selectedId);
+            break;
+        case ToggleGroup::AverageTime:
+            stereoMeterRms.resizeAverager(selectedId);
+            stereoMeterPeak.resizeAverager(selectedId);
+            toggles.avgDuration.setSelectedValue(selectedId);
+            break;
+        case ToggleGroup::MeterView:
+            stereoMeterRms.setMeterView(selectedId);
+            stereoMeterPeak.setMeterView(selectedId);
+            toggles.meterView.setSelectedValue(selectedId);
+            break;
+    }
+}
