@@ -1265,38 +1265,33 @@ GuiControlsGroupA::GuiControlsGroupA()
 
 void GuiControlsGroupA::resized()
 {
-    auto bounds = getLocalBounds();
-    auto boundsHeight = bounds.getHeight();
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
     
-    auto boxHeight = 30;
-    auto width = bounds.getWidth();
-
-    decayRateLabel.setBounds(0,
-                             (boundsHeight * 0.15f) - boxHeight,
-                             width,
-                             boxHeight);
-    decayRate.setBounds(0,
-                        (boundsHeight * 0.15f),
-                        width,
-                        boxHeight * 2);
+    grid.autoColumns = Track(Fr(1));
+    grid.templateRows =
+    {
+        Track(Fr(1)),
+        Track(Fr(2)),
+        Track(Fr(1)),
+        Track(Fr(2)),
+        Track(Fr(1)),
+        Track(Fr(2))
+    };
     
-    avgDurationLabel.setBounds(0,
-                               (boundsHeight * 0.5f) - boxHeight,
-                               width,
-                               boxHeight);
-    avgDurationCombo.setBounds(0,
-                               (boundsHeight * 0.5f),
-                               width,
-                               boxHeight);
+    grid.items =
+    {
+        juce::GridItem(decayRateLabel),
+        juce::GridItem(decayRate),
+        juce::GridItem(avgDurationLabel),
+        juce::GridItem(avgDurationCombo),
+        juce::GridItem(meterViewLabel),
+        juce::GridItem(meterViewCombo)
+    };
     
-    meterViewLabel.setBounds(0,
-                             (boundsHeight * 0.85f) - boxHeight,
-                             width,
-                             boxHeight);
-    meterViewCombo.setBounds(0,
-                             (boundsHeight * 0.85f),
-                             width,
-                             boxHeight);
+    grid.performLayout(getLocalBounds());
 }
 
 //==============================================================================
