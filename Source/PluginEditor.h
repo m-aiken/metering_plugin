@@ -535,22 +535,37 @@ private:
     juce::Value selectedValue;
 };
 
+struct AverageTimeToggleGroup : ToggleGroupBase, juce::Component
+{
+    AverageTimeToggleGroup();
+    void resized() override;
+    juce::Value& getValueObject() { return selectedValue; }
+    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
+    void setSelectedToggleFromState();
+    
+    CustomToggle optionA{"100ms"}, optionB{"250ms"}, optionC{"500ms"}, optionD{"1000ms"}, optionE{"2000ms"};
+    
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE };
+    
+private:
+    juce::Value selectedValue;
+};
+
 //==============================================================================
 struct GuiControlsGroupA : juce::Component
 {
     GuiControlsGroupA();
     void resized() override;
-        
-    juce::StringArray avgDurationChoices { "100ms", "250ms", "500ms", "1000ms", "2000ms" };
+    
     juce::StringArray meterViewChoices { "Both", "Peak", "Avg" };
     
     DecayRateToggleGroup decayRate;
-    CustomComboBox avgDurationCombo { avgDurationChoices };
+    AverageTimeToggleGroup avgDuration;
     CustomComboBox meterViewCombo { meterViewChoices };
     
 private:
     CustomLabel decayRateLabel { "DECAY RATE (dB/s)" };
-    CustomLabel avgDurationLabel { "AVG" };
+    CustomLabel avgDurationLabel { "AVERAGE DURATION" };
     CustomLabel meterViewLabel { "METER" };
 };
 
@@ -608,6 +623,7 @@ private:
     GuiControlsGroupB guiControlsB;
     
     void updateDecayRate(const int& selectedId);
+    void updateAverageDuration(const int& selectedId);
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;

@@ -1235,6 +1235,36 @@ void DecayRateToggleGroup::setSelectedToggleFromState()
     }
 }
 
+///
+AverageTimeToggleGroup::AverageTimeToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(2);
+    }
+}
+
+void AverageTimeToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void AverageTimeToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(selectedValue.getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        case 4:  optionD.setToggleState(true, nt::dontSendNotification); break;
+        case 5:  optionE.setToggleState(true, nt::dontSendNotification); break;
+        default: optionC.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
 //==============================================================================
 GuiControlsGroupA::GuiControlsGroupA()
 {
@@ -1243,7 +1273,7 @@ GuiControlsGroupA::GuiControlsGroupA()
     addAndMakeVisible(meterViewLabel);
     
     addAndMakeVisible(decayRate);
-    addAndMakeVisible(avgDurationCombo);
+    addAndMakeVisible(avgDuration);
     addAndMakeVisible(meterViewCombo);
 }
 
@@ -1270,7 +1300,7 @@ void GuiControlsGroupA::resized()
         juce::GridItem(decayRateLabel),
         juce::GridItem(decayRate),
         juce::GridItem(avgDurationLabel),
-        juce::GridItem(avgDurationCombo),
+        juce::GridItem(avgDuration),
         juce::GridItem(meterViewLabel),
         juce::GridItem(meterViewCombo)
     };
@@ -1360,9 +1390,9 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     auto& state = audioProcessor.valueTree;
     
     // link widgets to valueTree
-//    guiControlsA.decayRateCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("DecayTime", nullptr));
     toggles.decayRate.getValueObject().referTo(state.getPropertyAsValue("DecayTime", nullptr));
-    toggles.avgDurationCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("AverageTime", nullptr));
+    toggles.avgDuration.getValueObject().referTo(state.getPropertyAsValue("AverageTime", nullptr));
+    
     toggles.meterViewCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
     guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
     guiControlsB.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
@@ -1374,18 +1404,12 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     histograms.getThresholdValueObject(HistogramTypes::PEAK).referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
     
     // set initial values
-//    int decayRate = state.getPropertyAsValue("DecayTime", nullptr).getValue();
-//    stereoMeterRms.setDecayRate(decayRate);
-//    stereoMeterPeak.setDecayRate(decayRate);
-    int decayRate = state.getPropertyAsValue("DecayTime", nullptr).getValue();
-    stereoMeterRms.setDecayRate(decayRate);
-    stereoMeterPeak.setDecayRate(decayRate);
-    toggles.decayRate.setSelectedValue(decayRate);
+    
+    updateDecayRate(state.getPropertyAsValue("DecayTime", nullptr).getValue());
     toggles.decayRate.setSelectedToggleFromState();
     
-    int avgTime = state.getPropertyAsValue("AverageTime", nullptr).getValue();
-    stereoMeterRms.resizeAverager(avgTime);
-    stereoMeterPeak.resizeAverager(avgTime);
+    updateAverageDuration(state.getPropertyAsValue("AverageTime", nullptr).getValue());
+    toggles.avgDuration.setSelectedToggleFromState();
     
     int meterView = state.getPropertyAsValue("MeterViewMode", nullptr).getValue();
     stereoMeterRms.setMeterView(meterView);
@@ -1425,28 +1449,18 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     {
         stereoMeterPeak.setThreshold(stereoMeterPeak.threshCtrl.getValue());
     };
-    /*
-    guiControlsA.decayRateCombo.onChange = [this]
-    {
-        auto dbPerSecond = guiControlsA.getCurrentDecayRate();
-        stereoMeterRms.setDecayRate(dbPerSecond);
-        stereoMeterPeak.setDecayRate(dbPerSecond);
-    };
-    */
+    
     toggles.decayRate.optionA.onClick = [this]{ updateDecayRate(1); };
     toggles.decayRate.optionB.onClick = [this]{ updateDecayRate(2); };
     toggles.decayRate.optionC.onClick = [this]{ updateDecayRate(3); };
     toggles.decayRate.optionD.onClick = [this]{ updateDecayRate(4); };
     toggles.decayRate.optionE.onClick = [this]{ updateDecayRate(5); };
     
-    
-    
-    toggles.avgDurationCombo.onChange = [this]
-    {
-        auto durationId = toggles.avgDurationCombo.getSelectedId();
-        stereoMeterRms.resizeAverager(durationId);
-        stereoMeterPeak.resizeAverager(durationId);
-    };
+    toggles.avgDuration.optionA.onClick = [this]{ updateAverageDuration(1); };
+    toggles.avgDuration.optionB.onClick = [this]{ updateAverageDuration(2); };
+    toggles.avgDuration.optionC.onClick = [this]{ updateAverageDuration(3); };
+    toggles.avgDuration.optionD.onClick = [this]{ updateAverageDuration(4); };
+    toggles.avgDuration.optionE.onClick = [this]{ updateAverageDuration(5); };
     
     toggles.meterViewCombo.onChange = [this]
     {
@@ -1606,4 +1620,11 @@ void PFMProject10AudioProcessorEditor::updateDecayRate(const int& selectedId)
     stereoMeterRms.setDecayRate(selectedId);
     stereoMeterPeak.setDecayRate(selectedId);
     toggles.decayRate.setSelectedValue(selectedId);
+};
+
+void PFMProject10AudioProcessorEditor::updateAverageDuration(const int& selectedId)
+{
+    stereoMeterRms.resizeAverager(selectedId);
+    stereoMeterPeak.resizeAverager(selectedId);
+    toggles.avgDuration.setSelectedValue(selectedId);
 };
