@@ -1371,22 +1371,25 @@ TimeControls::TimeControls()
 
 void TimeControls::resized()
 {
+    auto bounds = getLocalBounds();
+    auto buttonHeight = bounds.getHeight() / 10;
+    
     juce::Grid grid;
      
     using Track = juce::Grid::TrackInfo;
-    using Fr = juce::Grid::Fr;
+    using Px = juce::Grid::Px;
     
-    grid.autoColumns = Track(Fr(1));
+    grid.autoColumns = Track(Px(bounds.getWidth()));
     grid.templateRows =
     {
-        Track(Fr(2)),
-        Track(Fr(4)),
-        Track(Fr(1)), // line break
-        Track(Fr(2)),
-        Track(Fr(4)),
-        Track(Fr(1)), // line break
-        Track(Fr(2)),
-        Track(Fr(4))
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight * 2)),
+        Track(Px(buttonHeight / 2)), // line break
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight * 2)),
+        Track(Px(buttonHeight / 2)), // line break
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight * 2))
     };
     
     grid.items =
@@ -1401,7 +1404,7 @@ void TimeControls::resized()
         juce::GridItem(holdTime)
     };
     
-    grid.performLayout(getLocalBounds());
+    grid.performLayout(bounds);
 }
 
 //==============================================================================
@@ -1457,22 +1460,26 @@ void GuiControlsGroupB::resized()
     auto rotaryRadius = rotaryDiameter / 2;
     
     */
+    
+    auto bounds = getLocalBounds();
+    auto buttonHeight = bounds.getHeight() / 10;
+    
     juce::Grid grid;
      
     using Track = juce::Grid::TrackInfo;
-    using Fr = juce::Grid::Fr;
+    using Px = juce::Grid::Px;
     
-    grid.autoColumns = Track(Fr(1));
+    grid.autoColumns = Track(Px(bounds.getWidth()));
     grid.templateRows =
     {
-        Track(Fr(2)),
-        Track(Fr(4)),
-        Track(Fr(1)), // line break
-        Track(Fr(2)),
-        Track(Fr(2)),
-        Track(Fr(1)), // line break
-        Track(Fr(2)),
-        Track(Fr(2))
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight * 4)),
+        Track(Px(buttonHeight / 2)), // line break
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight / 2)), // line break
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight))
     };
     
     grid.items =
@@ -1487,7 +1494,7 @@ void GuiControlsGroupB::resized()
         juce::GridItem(histView)
     };
     
-    grid.performLayout(getLocalBounds());
+    grid.performLayout(bounds);
 }
 
 //==============================================================================
@@ -1682,17 +1689,17 @@ void PFMProject10AudioProcessorEditor::resized()
     timeToggles.setBounds(stereoMeterRms.getRight() + (padding * 2),
                       padding,
                       comboWidth,
-                      320);
+                      300);
     
     holdResetBtns.setBounds(timeToggles.getX(),
-                            timeToggles.getBottom() + padding,
+                            timeToggles.getBottom() + (padding * 2),
                             comboWidth,
-                            histograms.getY() - timeToggles.getBottom() - (padding * 2));
+                            histograms.getY() - timeToggles.getBottom() - (padding * 4));
     
     guiControlsB.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
                            padding,
                            comboWidth,
-                           320);
+                           300);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
