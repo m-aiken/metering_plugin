@@ -519,6 +519,7 @@ enum class ToggleGroup
     DecayRate,
     AverageTime,
     MeterView,
+    HoldTime,
     HistView
 };
 
@@ -575,6 +576,22 @@ private:
     juce::Value selectedValue;
 };
 
+struct HoldTimeToggleGroup : ToggleGroupBase, juce::Component
+{
+    HoldTimeToggleGroup();
+    void resized() override;
+    juce::Value& getValueObject() { return selectedValue; }
+    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
+    void setSelectedToggleFromState();
+    
+    CustomToggle optionA{"0s"}, optionB{"0.5s"}, optionC{"2s"}, optionD{"4s"}, optionE{"6s"}, optionF{"inf"};
+    
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE, &optionF };
+    
+private:
+    juce::Value selectedValue;
+};
+
 struct HistViewToggleGroup : ToggleGroupBase, juce::Component
 {
     HistViewToggleGroup();
@@ -623,14 +640,15 @@ struct GuiControlsGroupB : juce::Component
     CustomRotary gonioScaleKnob;
     
     CustomToggle holdButton { "HOLD" };
-    juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
-    CustomComboBox holdTimeCombo { holdTimeChoices };
+//    juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
+    HoldTimeToggleGroup holdTime;
+//    CustomComboBox holdTimeCombo { holdTimeChoices };
     CustomTextBtn holdResetButton { "RESET" };
     
     HistViewToggleGroup histView;
     
 private:
-    CustomLabel gonioScaleLabel { "SCALE" };
+    CustomLabel gonioScaleLabel { "Scale" };
     CustomLabel histViewLabel { "Histogram View" };
     
     LineBreak lineBreak1, lineBreak2;

@@ -1269,7 +1269,7 @@ MeterViewToggleGroup::MeterViewToggleGroup()
     for ( auto& toggle : toggles )
     {
         addAndMakeVisible(toggle);
-        toggle->setRadioGroupId(2);
+        toggle->setRadioGroupId(3);
     }
 }
 
@@ -1291,12 +1291,42 @@ void MeterViewToggleGroup::setSelectedToggleFromState()
     }
 }
 
+HoldTimeToggleGroup::HoldTimeToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(4);
+    }
+}
+
+void HoldTimeToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void HoldTimeToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(selectedValue.getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        case 4:  optionD.setToggleState(true, nt::dontSendNotification); break;
+        case 5:  optionE.setToggleState(true, nt::dontSendNotification); break;
+        case 6:  optionF.setToggleState(true, nt::dontSendNotification); break;
+        default: optionB.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
 HistViewToggleGroup::HistViewToggleGroup()
 {
     for ( auto& toggle : toggles )
     {
         addAndMakeVisible(toggle);
-        toggle->setRadioGroupId(2);
+        toggle->setRadioGroupId(5);
     }
 }
 
@@ -1385,7 +1415,8 @@ GuiControlsGroupB::GuiControlsGroupB()
     gonioScaleKnob.setValue(100.0);
     
     addAndMakeVisible(holdButton);
-    addAndMakeVisible(holdTimeCombo);
+//    addAndMakeVisible(holdTimeCombo);
+    addAndMakeVisible(holdTime);
     addAndMakeVisible(holdResetButton);
     
     addAndMakeVisible(histViewLabel);
@@ -1464,7 +1495,7 @@ void GuiControlsGroupB::resized()
         juce::GridItem(gonioScaleKnob),
         juce::GridItem(lineBreak1),
         juce::GridItem(holdButton),
-        juce::GridItem(holdTimeCombo),
+        juce::GridItem(holdTime),
         juce::GridItem(lineBreak2),
         juce::GridItem(histViewLabel),
         juce::GridItem(histView)
@@ -1497,7 +1528,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     
     guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
     guiControlsB.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
-    guiControlsB.holdTimeCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HoldTime", nullptr));
+    
+    guiControlsB.holdTime.getValueObject().referTo(state.getPropertyAsValue("HoldTime", nullptr));
     
     guiControlsB.histView.getValueObject().referTo(state.getPropertyAsValue("HistogramView", nullptr));
     
@@ -1524,10 +1556,11 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     stereoMeterRms.setTickVisibility(holdButtonState);
     stereoMeterPeak.setTickVisibility(holdButtonState);
     
-    int holdTime = state.getPropertyAsValue("HoldTime", nullptr).getValue();
-    stereoMeterRms.setTickHoldTime(holdTime);
-    stereoMeterPeak.setTickHoldTime(holdTime);
-    guiControlsB.holdResetButton.setVisible( (holdTime == 6) );
+    updateParams(ToggleGroup::HoldTime, state.getPropertyAsValue("HoldTime", nullptr).getValue());
+    auto id = state.getPropertyAsValue("HoldTime", nullptr).getValue();
+    juce::String test{id};
+    DBG(test);
+    guiControlsB.holdTime.setSelectedToggleFromState();
     
     updateParams(ToggleGroup::HistView, state.getPropertyAsValue("HistogramView", nullptr).getValue());
     guiControlsB.histView.setSelectedToggleFromState();
@@ -1580,26 +1613,23 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setTickVisibility(toggleState);
         
         auto resetIsVisible = guiControlsB.holdResetButton.isVisible();
-        auto holdTimeId = guiControlsB.holdTimeCombo.getSelectedId();;
+        auto holdTimeId = guiControlsB.holdTime.getValueObject().getValue();
         if ( !toggleState && resetIsVisible )
         {
             guiControlsB.holdResetButton.setVisible(false);
         }
-        else if ( toggleState && holdTimeId == 6 && !resetIsVisible )
+        else if ( toggleState && static_cast<int>(holdTimeId) == 6 && !resetIsVisible )
         {
             guiControlsB.holdResetButton.setVisible(true);
         }
     };
     
-    guiControlsB.holdTimeCombo.onChange = [this]
-    {
-        auto selectedId = guiControlsB.holdTimeCombo.getSelectedId();
-        stereoMeterRms.setTickHoldTime(selectedId);
-        stereoMeterPeak.setTickHoldTime(selectedId);
-        
-        auto holdEnabled = guiControlsB.holdButton.getToggleState();
-        guiControlsB.holdResetButton.setVisible( (selectedId == 6 && holdEnabled) );
-    };
+    guiControlsB.holdTime.optionA.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 1); };
+    guiControlsB.holdTime.optionB.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 2); };
+    guiControlsB.holdTime.optionC.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 3); };
+    guiControlsB.holdTime.optionD.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 4); };
+    guiControlsB.holdTime.optionE.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 5); };
+    guiControlsB.holdTime.optionF.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 6); };
     
     guiControlsB.holdResetButton.onClick = [this]
     {
@@ -1728,10 +1758,16 @@ void PFMProject10AudioProcessorEditor::updateParams(const ToggleGroup& toggleGro
             stereoMeterPeak.setMeterView(selectedId);
             toggles.meterView.setSelectedValue(selectedId);
             break;
+        case ToggleGroup::HoldTime:
+            stereoMeterRms.setTickHoldTime(selectedId);
+            stereoMeterPeak.setTickHoldTime(selectedId);
+            guiControlsB.holdResetButton.setVisible( (selectedId == 6 && guiControlsB.holdButton.getToggleState()) );
+            break;
         case ToggleGroup::HistView:
             histograms.setView(selectedId == HistView::rows
                                ? HistView::rows
                                : HistView::columns);
             guiControlsB.histView.setSelectedValue(selectedId);
+            break;
     }
 }
