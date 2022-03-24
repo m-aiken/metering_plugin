@@ -161,7 +161,7 @@ void Histogram::paint(juce::Graphics& g)
     auto readIdx = circularBuffer.getReadIndex();
     auto bufferSize = circularBuffer.getSize();
 
-    if ( view == HistView::sideBySide )
+    if ( view == HistView::columns )
     {
         readIdx = (readIdx + (bufferSize / 2)) % bufferSize;
     }
@@ -250,8 +250,8 @@ HistogramContainer::HistogramContainer()
 void HistogramContainer::resized()
 {
     juce::FlexBox fb;
-    fb.flexDirection = ( view == stacked ? juce::FlexBox::Direction::column
-                                         : juce::FlexBox::Direction::row);
+    fb.flexDirection = ( view == rows ? juce::FlexBox::Direction::column
+                                      : juce::FlexBox::Direction::row);
     
     auto rms = juce::FlexItem(rmsHistogram).withFlex(1.f).withMargin(2.f);
     auto peak = juce::FlexItem(peakHistogram).withFlex(1.f).withMargin(2.f);
@@ -1264,7 +1264,6 @@ void AverageTimeToggleGroup::setSelectedToggleFromState()
     }
 }
 
-//
 MeterViewToggleGroup::MeterViewToggleGroup()
 {
     for ( auto& toggle : toggles )
@@ -1288,6 +1287,32 @@ void MeterViewToggleGroup::setSelectedToggleFromState()
         case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
         case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
         case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        default: optionA.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
+HistViewToggleGroup::HistViewToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(2);
+    }
+}
+
+void HistViewToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void HistViewToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(selectedValue.getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
         default: optionA.setToggleState(true, nt::dontSendNotification); break;
     }
 }
@@ -1364,7 +1389,10 @@ GuiControlsGroupB::GuiControlsGroupB()
     addAndMakeVisible(holdResetButton);
     
     addAndMakeVisible(histViewLabel);
-    addAndMakeVisible(histViewCombo);
+    addAndMakeVisible(histView);
+    
+    addAndMakeVisible(lineBreak1);
+    addAndMakeVisible(lineBreak2);
 }
 
 void GuiControlsGroupB::resized()
@@ -1376,7 +1404,7 @@ void GuiControlsGroupB::resized()
     auto width = bounds.getWidth();
     auto rotaryDiameter = width * 0.8f;
     auto rotaryRadius = rotaryDiameter / 2;
-    
+    /*
     gonioScaleLabel.setBounds(0,
                               (boundsHeight * 0.15f) - boxHeight,
                               width,
@@ -1411,6 +1439,38 @@ void GuiControlsGroupB::resized()
                             (boundsHeight * 0.85f),
                             width,
                             boxHeight);
+    */
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
+    
+    grid.autoColumns = Track(Fr(1));
+    grid.templateRows =
+    {
+        Track(Fr(1)),
+        Track(Fr(2)),
+        Track(Fr(2)), // line break
+        Track(Fr(1)),
+        Track(Fr(2)),
+        Track(Fr(2)), // line break
+        Track(Fr(1)),
+        Track(Fr(1))
+    };
+    
+    grid.items =
+    {
+        juce::GridItem(gonioScaleLabel),
+        juce::GridItem(gonioScaleKnob),
+        juce::GridItem(lineBreak1),
+        juce::GridItem(holdButton),
+        juce::GridItem(holdTimeCombo),
+        juce::GridItem(lineBreak2),
+        juce::GridItem(histViewLabel),
+        juce::GridItem(histView)
+    };
+    
+    grid.performLayout(getLocalBounds());
 }
 
 //==============================================================================
@@ -1438,7 +1498,10 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
     guiControlsB.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
     guiControlsB.holdTimeCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HoldTime", nullptr));
-    guiControlsB.histViewCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HistogramView", nullptr));
+    
+    guiControlsB.histView.getValueObject().referTo(state.getPropertyAsValue("HistogramView", nullptr));
+    
+    
     stereoMeterRms.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
     stereoMeterPeak.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
     histograms.getThresholdValueObject(HistogramTypes::RMS).referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
@@ -1466,9 +1529,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     stereoMeterPeak.setTickHoldTime(holdTime);
     guiControlsB.holdResetButton.setVisible( (holdTime == 6) );
     
-    int histView = state.getPropertyAsValue("HistogramView", nullptr).getValue();
-    histograms.setView(histView == HistView::stacked ? HistView::stacked
-                                                     : HistView::sideBySide);
+    updateParams(ToggleGroup::HistView, state.getPropertyAsValue("HistogramView", nullptr).getValue());
+    guiControlsB.histView.setSelectedToggleFromState();
     
     float rmsThresh = state.getPropertyAsValue("RMSThreshold", nullptr).getValue();
     stereoMeterRms.setThreshold(rmsThresh);
@@ -1546,12 +1608,8 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         guiControlsB.holdResetButton.animateButton();
     };
     
-    guiControlsB.histViewCombo.onChange = [this]
-    {
-        auto selectedId = guiControlsB.histViewCombo.getSelectedId();
-        histograms.setView(selectedId == HistView::stacked ? HistView::stacked
-                                                           : HistView::sideBySide);
-    };
+    guiControlsB.histView.optionA.onClick = [this]{ updateParams(ToggleGroup::HistView, 1); };
+    guiControlsB.histView.optionB.onClick = [this]{ updateParams(ToggleGroup::HistView, 2); };
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -1670,5 +1728,10 @@ void PFMProject10AudioProcessorEditor::updateParams(const ToggleGroup& toggleGro
             stereoMeterPeak.setMeterView(selectedId);
             toggles.meterView.setSelectedValue(selectedId);
             break;
+        case ToggleGroup::HistView:
+            histograms.setView(selectedId == HistView::rows
+                               ? HistView::rows
+                               : HistView::columns);
+            guiControlsB.histView.setSelectedValue(selectedId);
     }
 }

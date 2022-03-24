@@ -108,8 +108,8 @@ enum class HistogramTypes
 
 enum HistView
 {
-    stacked = 1,
-    sideBySide
+    rows = 1,
+    columns
 };
 
 struct Histogram : juce::Component
@@ -518,7 +518,8 @@ enum class ToggleGroup
 {
     DecayRate,
     AverageTime,
-    MeterView
+    MeterView,
+    HistView
 };
 
 struct ToggleGroupBase
@@ -574,6 +575,22 @@ private:
     juce::Value selectedValue;
 };
 
+struct HistViewToggleGroup : ToggleGroupBase, juce::Component
+{
+    HistViewToggleGroup();
+    void resized() override;
+    juce::Value& getValueObject() { return selectedValue; }
+    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
+    void setSelectedToggleFromState();
+    
+    CustomToggle optionA{"Rows"}, optionB{"Columns"};
+    
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB };
+    
+private:
+    juce::Value selectedValue;
+};
+
 //==============================================================================
 struct LineBreak : juce::Component
 {
@@ -610,12 +627,13 @@ struct GuiControlsGroupB : juce::Component
     CustomComboBox holdTimeCombo { holdTimeChoices };
     CustomTextBtn holdResetButton { "RESET" };
     
-    juce::StringArray histViewChoices { "Stacked", "Side-by-Side" };
-    CustomComboBox histViewCombo { histViewChoices };
+    HistViewToggleGroup histView;
     
 private:
     CustomLabel gonioScaleLabel { "SCALE" };
-    CustomLabel histViewLabel { "HIST VIEW" };
+    CustomLabel histViewLabel { "Histogram View" };
+    
+    LineBreak lineBreak1, lineBreak2;
 };
 
 //==============================================================================
