@@ -614,21 +614,33 @@ struct LineBreak : juce::Component
     void paint(juce::Graphics& g) override;
 };
 
-struct GuiControlsGroupA : juce::Component
+struct TimeControls : juce::Component
 {
-    GuiControlsGroupA();
+    TimeControls();
     void resized() override;
     
     DecayRateToggleGroup decayRate;
     AverageTimeToggleGroup avgDuration;
-    MeterViewToggleGroup meterView;
+    
+    HoldTimeToggleGroup holdTime;
+    CustomToggle holdButton { "HOLD" };
+    CustomTextBtn holdResetButton { "RESET" };
     
 private:
     CustomLabel decayRateLabel { "Decay Rate (dB/s)" };
     CustomLabel avgDurationLabel { "Average Duration (ms)" };
-    CustomLabel meterViewLabel { "Meter View" };
+    CustomLabel holdTimeLabel { "Hold Time" };
     
     LineBreak lineBreak1, lineBreak2;
+};
+
+struct HoldResetButtons : juce::Component
+{
+    HoldResetButtons();
+    void resized() override;
+    
+    CustomToggle holdButton { "HOLD" };
+    CustomTextBtn resetButton { "RESET" };
 };
 
 //==============================================================================
@@ -638,17 +650,13 @@ struct GuiControlsGroupB : juce::Component
     void resized() override;
     
     CustomRotary gonioScaleKnob;
-    
-    CustomToggle holdButton { "HOLD" };
-//    juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
-    HoldTimeToggleGroup holdTime;
-//    CustomComboBox holdTimeCombo { holdTimeChoices };
-    CustomTextBtn holdResetButton { "RESET" };
-    
+        
+    MeterViewToggleGroup meterView;
     HistViewToggleGroup histView;
     
 private:
     CustomLabel gonioScaleLabel { "Scale" };
+    CustomLabel meterViewLabel { "Meter View" };
     CustomLabel histViewLabel { "Histogram View" };
     
     LineBreak lineBreak1, lineBreak2;
@@ -683,7 +691,8 @@ private:
     
     StereoImageMeter stereoImageMeter;
     
-    GuiControlsGroupA toggles;
+    TimeControls timeToggles;
+    HoldResetButtons holdResetBtns;
     GuiControlsGroupB guiControlsB;
     
     void updateParams(const ToggleGroup& toggleGroup, const int& selectedId);
