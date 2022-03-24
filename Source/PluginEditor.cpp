@@ -1379,14 +1379,14 @@ void GuiControlsGroupA::resized()
     grid.autoColumns = Track(Fr(1));
     grid.templateRows =
     {
-        Track(Fr(1)),
         Track(Fr(2)),
-        Track(Fr(2)), // line break
-        Track(Fr(1)),
+        Track(Fr(4)),
+        Track(Fr(1)), // line break
         Track(Fr(2)),
-        Track(Fr(2)), // line break
-        Track(Fr(1)),
-        Track(Fr(1))
+        Track(Fr(4)),
+        Track(Fr(1)), // line break
+        Track(Fr(2)),
+        Track(Fr(2))
     };
     
     grid.items =
@@ -1479,14 +1479,14 @@ void GuiControlsGroupB::resized()
     grid.autoColumns = Track(Fr(1));
     grid.templateRows =
     {
-        Track(Fr(1)),
         Track(Fr(2)),
-        Track(Fr(2)), // line break
-        Track(Fr(1)),
+        Track(Fr(4)),
+        Track(Fr(1)), // line break
         Track(Fr(2)),
-        Track(Fr(2)), // line break
-        Track(Fr(1)),
-        Track(Fr(1))
+        Track(Fr(4)),
+        Track(Fr(1)), // line break
+        Track(Fr(2)),
+        Track(Fr(2))
     };
     
     grid.items =
@@ -1692,17 +1692,17 @@ void PFMProject10AudioProcessorEditor::resized()
                               stereoImageMeterWidth,
                               stereoImageMeterWidth + 20); // +20 to account for correlation meter
     
-    auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (padding * 2);
+    auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (padding * 4);
     
-    toggles.setBounds(stereoMeterRms.getRight() + padding,
+    toggles.setBounds(stereoMeterRms.getRight() + (padding * 2),
                       padding,
                       comboWidth,
-                      stereoMeterHeight);
+                      320);
     
-    guiControlsB.setBounds(stereoMeterPeak.getX() - padding - comboWidth,
+    guiControlsB.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
                            padding,
                            comboWidth,
-                           stereoMeterHeight);
+                           320);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
