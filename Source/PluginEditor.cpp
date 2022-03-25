@@ -1518,19 +1518,17 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     // link widgets to valueTree
     timeToggles.decayRate.getValueObject().referTo(state.getPropertyAsValue("DecayTime", nullptr));
     timeToggles.avgDuration.getValueObject().referTo(state.getPropertyAsValue("AverageTime", nullptr));
-    guiControlsB.meterView.getValueObject().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
-    
-    guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
+    timeToggles.holdTime.getValueObject().referTo(state.getPropertyAsValue("HoldTime", nullptr));
     
     holdResetBtns.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
     
-    timeToggles.holdTime.getValueObject().referTo(state.getPropertyAsValue("HoldTime", nullptr));
-    
+    guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
+    guiControlsB.meterView.getValueObject().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
     guiControlsB.histView.getValueObject().referTo(state.getPropertyAsValue("HistogramView", nullptr));
-    
     
     stereoMeterRms.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
     stereoMeterPeak.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
+    
     histograms.getThresholdValueObject(HistogramTypes::RMS).referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
     histograms.getThresholdValueObject(HistogramTypes::PEAK).referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
     
@@ -1541,18 +1539,18 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     updateParams(ToggleGroup::AverageTime, state.getPropertyAsValue("AverageTime", nullptr).getValue());
     timeToggles.avgDuration.setSelectedToggleFromState();
     
-    updateParams(ToggleGroup::MeterView, state.getPropertyAsValue("MeterViewMode", nullptr).getValue());
-    guiControlsB.meterView.setSelectedToggleFromState();
-    
-    double gonioScale = state.getPropertyAsValue("GoniometerScale", nullptr).getValue();
-    stereoImageMeter.setGoniometerScale(gonioScale);
+    updateParams(ToggleGroup::HoldTime, state.getPropertyAsValue("HoldTime", nullptr).getValue());
+    timeToggles.holdTime.setSelectedToggleFromState();
     
     bool holdButtonState = state.getPropertyAsValue("EnableHold", nullptr).getValue();
     stereoMeterRms.setTickVisibility(holdButtonState);
     stereoMeterPeak.setTickVisibility(holdButtonState);
     
-    updateParams(ToggleGroup::HoldTime, state.getPropertyAsValue("HoldTime", nullptr).getValue());
-    timeToggles.holdTime.setSelectedToggleFromState();
+    double gonioScale = state.getPropertyAsValue("GoniometerScale", nullptr).getValue();
+    stereoImageMeter.setGoniometerScale(gonioScale);
+    
+    updateParams(ToggleGroup::MeterView, state.getPropertyAsValue("MeterViewMode", nullptr).getValue());
+    guiControlsB.meterView.setSelectedToggleFromState();
     
     updateParams(ToggleGroup::HistView, state.getPropertyAsValue("HistogramView", nullptr).getValue());
     guiControlsB.histView.setSelectedToggleFromState();
@@ -1588,15 +1586,12 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     timeToggles.avgDuration.optionD.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 4); };
     timeToggles.avgDuration.optionE.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 5); };
     
-    guiControlsB.meterView.optionA.onClick = [this]{ updateParams(ToggleGroup::MeterView, 1); };
-    guiControlsB.meterView.optionB.onClick = [this]{ updateParams(ToggleGroup::MeterView, 2); };
-    guiControlsB.meterView.optionC.onClick = [this]{ updateParams(ToggleGroup::MeterView, 3); };
-    
-    guiControlsB.gonioScaleKnob.onValueChange = [this]
-    {
-        auto rotaryValue = guiControlsB.gonioScaleKnob.getValue();
-        stereoImageMeter.setGoniometerScale(rotaryValue);
-    };
+    timeToggles.holdTime.optionA.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 1); };
+    timeToggles.holdTime.optionB.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 2); };
+    timeToggles.holdTime.optionC.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 3); };
+    timeToggles.holdTime.optionD.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 4); };
+    timeToggles.holdTime.optionE.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 5); };
+    timeToggles.holdTime.optionF.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 6); };
     
     holdResetBtns.holdButton.onClick = [this]
     {
@@ -1616,19 +1611,22 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         }
     };
     
-    timeToggles.holdTime.optionA.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 1); };
-    timeToggles.holdTime.optionB.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 2); };
-    timeToggles.holdTime.optionC.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 3); };
-    timeToggles.holdTime.optionD.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 4); };
-    timeToggles.holdTime.optionE.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 5); };
-    timeToggles.holdTime.optionF.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 6); };
-    
     holdResetBtns.resetButton.onClick = [this]
     {
         stereoMeterRms.resetValueHolder();
         stereoMeterPeak.resetValueHolder();
         holdResetBtns.resetButton.animateButton();
     };
+    
+    guiControlsB.gonioScaleKnob.onValueChange = [this]
+    {
+        auto rotaryValue = guiControlsB.gonioScaleKnob.getValue();
+        stereoImageMeter.setGoniometerScale(rotaryValue);
+    };
+    
+    guiControlsB.meterView.optionA.onClick = [this]{ updateParams(ToggleGroup::MeterView, 1); };
+    guiControlsB.meterView.optionB.onClick = [this]{ updateParams(ToggleGroup::MeterView, 2); };
+    guiControlsB.meterView.optionC.onClick = [this]{ updateParams(ToggleGroup::MeterView, 3); };
     
     guiControlsB.histView.optionA.onClick = [this]{ updateParams(ToggleGroup::HistView, 1); };
     guiControlsB.histView.optionB.onClick = [this]{ updateParams(ToggleGroup::HistView, 2); };
