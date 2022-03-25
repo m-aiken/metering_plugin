@@ -526,86 +526,66 @@ enum class ToggleGroup
 struct ToggleGroupBase
 {
     juce::Grid generateGrid(std::vector<CustomToggle*>& toggles);
+    juce::Value& getValueObject() { return selectedValue; }
+    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
+    
+private:
+    juce::Value selectedValue;
 };
 
 struct DecayRateToggleGroup : ToggleGroupBase, juce::Component
 {
     DecayRateToggleGroup();
+    ~DecayRateToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
-    juce::Value& getValueObject() { return selectedValue; }
-    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
     void setSelectedToggleFromState();
     
     CustomToggle optionA{"-3"}, optionB{"-6"}, optionC{"-12"}, optionD{"-24"}, optionE{"-36"};
-    
     std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE };
-    
-private:
-    juce::Value selectedValue;
 };
 
 struct AverageTimeToggleGroup : ToggleGroupBase, juce::Component
 {
     AverageTimeToggleGroup();
+    ~AverageTimeToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
-    juce::Value& getValueObject() { return selectedValue; }
-    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
     void setSelectedToggleFromState();
     
     CustomToggle optionA{"100"}, optionB{"250"}, optionC{"500"}, optionD{"1000"}, optionE{"2000"};
-    
     std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE };
-    
-private:
-    juce::Value selectedValue;
 };
 
 struct MeterViewToggleGroup : ToggleGroupBase, juce::Component
 {
     MeterViewToggleGroup();
+    ~MeterViewToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
-    juce::Value& getValueObject() { return selectedValue; }
-    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
     void setSelectedToggleFromState();
     
     CustomToggle optionA{"Both"}, optionB{"Peak"}, optionC{"Avg"};
-    
     std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC };
-    
-private:
-    juce::Value selectedValue;
 };
 
 struct HoldTimeToggleGroup : ToggleGroupBase, juce::Component
 {
     HoldTimeToggleGroup();
+    ~HoldTimeToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
-    juce::Value& getValueObject() { return selectedValue; }
-    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
     void setSelectedToggleFromState();
     
     CustomToggle optionA{"0s"}, optionB{"0.5s"}, optionC{"2s"}, optionD{"4s"}, optionE{"6s"}, optionF{"inf"};
-    
     std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE, &optionF };
-    
-private:
-    juce::Value selectedValue;
 };
 
 struct HistViewToggleGroup : ToggleGroupBase, juce::Component
 {
     HistViewToggleGroup();
+    ~HistViewToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
-    juce::Value& getValueObject() { return selectedValue; }
-    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
     void setSelectedToggleFromState();
     
     CustomToggle optionA{"Rows"}, optionB{"Columns"};
-    
     std::vector<CustomToggle*> toggles = { &optionA, &optionB };
-    
-private:
-    juce::Value selectedValue;
 };
 
 //==============================================================================

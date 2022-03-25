@@ -1224,7 +1224,7 @@ void DecayRateToggleGroup::resized()
 void DecayRateToggleGroup::setSelectedToggleFromState()
 {
     using nt = juce::NotificationType;
-    switch (static_cast<int>(selectedValue.getValue()))
+    switch (static_cast<int>(getValueObject().getValue()))
     {
         case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
         case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
@@ -1253,7 +1253,7 @@ void AverageTimeToggleGroup::resized()
 void AverageTimeToggleGroup::setSelectedToggleFromState()
 {
     using nt = juce::NotificationType;
-    switch (static_cast<int>(selectedValue.getValue()))
+    switch (static_cast<int>(getValueObject().getValue()))
     {
         case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
         case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
@@ -1282,7 +1282,7 @@ void MeterViewToggleGroup::resized()
 void MeterViewToggleGroup::setSelectedToggleFromState()
 {
     using nt = juce::NotificationType;
-    switch (static_cast<int>(selectedValue.getValue()))
+    switch (static_cast<int>(getValueObject().getValue()))
     {
         case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
         case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
@@ -1309,7 +1309,7 @@ void HoldTimeToggleGroup::resized()
 void HoldTimeToggleGroup::setSelectedToggleFromState()
 {
     using nt = juce::NotificationType;
-    switch (static_cast<int>(selectedValue.getValue()))
+    switch (static_cast<int>(getValueObject().getValue()))
     {
         case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
         case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
@@ -1339,7 +1339,7 @@ void HistViewToggleGroup::resized()
 void HistViewToggleGroup::setSelectedToggleFromState()
 {
     using nt = juce::NotificationType;
-    switch (static_cast<int>(selectedValue.getValue()))
+    switch (static_cast<int>(getValueObject().getValue()))
     {
         case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
         case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
