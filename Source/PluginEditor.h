@@ -30,12 +30,12 @@ enum Palette
 
 inline std::map<Palette, juce::Colour> colourMap =
 {
-    { Green,      juce::Colour(89u, 255u, 103u).withAlpha(0.6f) },
-    { Red,        juce::Colour(196u, 55u, 55u)                  },
-    { RedBright,  juce::Colour(255u, 55u, 55u)                  },
-    { Text,       juce::Colour(201u, 209u, 217u)                },
-    { Background, juce::Colour(13u, 17u, 23u)                   },
-    { Yellow,     juce::Colour(217, 193, 56)                    }
+    { Green,      juce::Colour(10u, 255u, 120u).withAlpha(0.6f) },
+    { Red,        juce::Colour(187u, 62u, 3u).withAlpha(0.9f)   },
+    { RedBright,  juce::Colour(202u, 103u, 2u)                  },
+    { Text,       juce::Colour(233u, 216u, 166u)                },
+    { Background, juce::Colour(0u, 18u, 25u)                    },
+    { Yellow,     juce::Colour(238u, 155u, 0u)                  }
 };
 
 inline juce::Colour getColour(Palette c) { return colourMap[c]; }
