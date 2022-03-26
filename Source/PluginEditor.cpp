@@ -575,7 +575,7 @@ void Meter::paint(juce::Graphics& g)
     auto h = bounds.getHeight();
     
     g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
-    g.fillRect(bounds);
+    g.drawRect(bounds);
     
     auto underThreshColour = MyColours::getColour(MyColours::Green);
     auto overThreshColour = MyColours::getColour(MyColours::Red);
