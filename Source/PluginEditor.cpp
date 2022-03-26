@@ -341,17 +341,17 @@ void CorrelationMeter::paint(juce::Graphics& g)
     g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);
     
     // meter background
-    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f)); // background
-    
     auto meterBounds = juce::Rectangle<int>(bounds.getCentreX() - (meterWidth / 2), // x
                                             bounds.getY(),                          // y
                                             meterWidth,                             // width
                                             height);                                // height
 
-    g.fillRect(meterBounds);
+    auto shadow = MyColours::getDropShadow();
+    shadow.drawForRectangle(g, meterBounds);
     
     // meters
-    g.setColour(MyColours::getColour(MyColours::Green));
+    auto gradient = MyColours::getMeterGradient(bounds.getCentreX(), bounds.getRight(), MyColours::GradientOrientation::Horizontal);
+    g.setGradientFill(gradient);
     
     juce::Rectangle<int> averageCorrelationMeter = paintMeter(meterBounds,            // container bounds
                                                    meterBounds.getY(),                // y
@@ -583,7 +583,7 @@ void Meter::paint(juce::Graphics& g)
     auto levelJmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     auto thrshJmap = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, h, 0);
     
-    auto underThreshGradient = MyColours::getMeterGradient(bounds.getHeight(), bounds.getHeight() / 3);
+    auto underThreshGradient = MyColours::getMeterGradient(bounds.getHeight(), bounds.getHeight() / 3, MyColours::GradientOrientation::Vertical);
     
     g.setGradientFill(underThreshGradient);
     if ( threshold <= level )
@@ -1725,7 +1725,7 @@ void PFMProject10AudioProcessorEditor::resized()
                            toggleContainerHeight);
     
 #if defined(GAIN_TEST_ACTIVE)
-    gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
+    gainSlider.setBounds(stereoMeterRms.getRight(), padding * 2, 20, 320);
 #endif
 }
 

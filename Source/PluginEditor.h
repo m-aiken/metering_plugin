@@ -42,19 +42,30 @@ inline std::map<Palette, juce::Colour> colourMap =
 
 inline juce::Colour getColour(Palette c) { return colourMap[c]; }
 
-inline juce::ColourGradient getMeterGradient(float y1, float y2)
+enum GradientOrientation
 {
-    juce::ColourGradient gradient
-    {
-        juce::Colour(153u,226u,180u), // colour 1
-        0,                            // x1
-        y1,                           // y1
-        juce::Colour(3u,102u,102u),   // colour 2
-        0,                            // x2
-        y2,                           // y2
-        false                         // isRadial
-    };
+    Vertical,
+    Horizontal
+};
 
+inline juce::ColourGradient getMeterGradient(const float startCoord, const float endCoord, const GradientOrientation orientation)
+{
+    juce::ColourGradient gradient;
+    if ( orientation == Vertical )
+    {
+        gradient = juce::ColourGradient().vertical(juce::Colour(153u,226u,180u),
+                          startCoord,
+                          juce::Colour(3u,102u,102u),
+                          endCoord);
+    }
+    else
+    {
+        gradient = juce::ColourGradient().horizontal(juce::Colour(153u,226u,180u),
+                            startCoord,
+                            juce::Colour(3u,102u,102u),
+                            endCoord);
+    }
+    
     gradient.addColour(0.2, juce::Colour(136u,212u,171u));
     gradient.addColour(0.3, juce::Colour(120u,198u,163u));
     gradient.addColour(0.4, juce::Colour(103u,185u,154u));
