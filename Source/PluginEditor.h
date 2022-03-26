@@ -42,6 +42,31 @@ inline std::map<Palette, juce::Colour> colourMap =
 
 inline juce::Colour getColour(Palette c) { return colourMap[c]; }
 
+inline juce::ColourGradient getMeterGradient(float y1, float y2)
+{
+    juce::ColourGradient gradient
+    {
+        juce::Colour(153u,226u,180u), // colour 1
+        0,                            // x1
+        y1,                           // y1
+        juce::Colour(3u,102u,102u),   // colour 2
+        0,                            // x2
+        y2,                           // y2
+        false                         // isRadial
+    };
+
+    gradient.addColour(0.2, juce::Colour(136u,212u,171u));
+    gradient.addColour(0.3, juce::Colour(120u,198u,163u));
+    gradient.addColour(0.4, juce::Colour(103u,185u,154u));
+    gradient.addColour(0.5, juce::Colour(86u,171u,145u));
+    gradient.addColour(0.6, juce::Colour(70u,157u,137u));
+    gradient.addColour(0.7, juce::Colour(53u,143u,128u));
+    gradient.addColour(0.8, juce::Colour(36u,130u,119u));
+    gradient.addColour(0.9, juce::Colour(20u,116u,111u));
+    
+    return gradient;
+}
+
 }
 
 //==============================================================================
