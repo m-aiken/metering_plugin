@@ -525,7 +525,8 @@ enum class ToggleGroup
 
 struct ToggleGroupBase
 {
-    juce::Grid generateGrid(std::vector<CustomToggle*>& toggles);
+    virtual ~ToggleGroupBase() { }
+    virtual juce::Grid generateGrid(std::vector<CustomToggle*>& toggles);
     juce::Value& getValueObject() { return selectedValue; }
     void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
     
@@ -583,6 +584,8 @@ struct HistViewToggleGroup : ToggleGroupBase, juce::Component
     ~HistViewToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
     void setSelectedToggleFromState();
+    
+    juce::Grid generateGrid(std::vector<CustomToggle*>& toggles) override;
     
     CustomToggle optionA{"Rows"}, optionB{"Columns"};
     std::vector<CustomToggle*> toggles = { &optionA, &optionB };

@@ -1347,6 +1347,23 @@ void HistViewToggleGroup::setSelectedToggleFromState()
     }
 }
 
+juce::Grid HistViewToggleGroup::generateGrid(std::vector<CustomToggle*>& toggles)
+{
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
+    
+    grid.templateColumns = { Track(Fr(1)), Track(Fr(1)) };
+    grid.autoRows = Track(Fr(1));
+    
+    for ( auto& toggle : toggles )
+        grid.items.add(juce::GridItem(*toggle));
+    
+    grid.setGap(juce::Grid::Px{4});
+    return grid;
+}
+
 //==============================================================================
 void LineBreak::paint(juce::Graphics& g)
 {
