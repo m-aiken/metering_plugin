@@ -23,7 +23,7 @@ void Goniometer::paint(juce::Graphics& g)
     
     g.drawImage(this->canvas, bounds.toFloat());
     
-    g.setColour(Colour(96u, 188u, 224u));
+    g.setColour(MyColours::getColour(MyColours::GoniometerPath));
     
     Path p;
     
@@ -61,10 +61,10 @@ void Goniometer::resized()
     auto padding = width / 10;
     auto diameter = width - (padding * 2);
     
-    auto backgroundColour = Colour(13u, 17u, 23u);
-    auto textColour = Colour(201u, 209u, 217u);
-    auto ellipseColour = Colour(201u, 209u, 217u).withAlpha(0.1f);
-    auto lineColour = Colour(201u, 209u, 217u).withAlpha(0.025f);
+    auto backgroundColour = MyColours::getColour(MyColours::Background);
+    auto textColour = MyColours::getColour(MyColours::Text);
+    auto ellipseColour = textColour.withAlpha(0.1f);
+    auto lineColour = textColour.withAlpha(0.025f);
     
     canvas = Image(Image::RGB, width, height, true);
     
@@ -148,9 +148,9 @@ void Histogram::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto height = bounds.getHeight();
 
-    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    g.fillAll(MyColours::getColour(MyColours::Background).contrasting(0.05f));
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
     g.setFont(16.0f);
     g.drawFittedText(label,                              // text
                      bounds,                             // area
@@ -573,7 +573,7 @@ void Meter::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto h = bounds.getHeight();
     
-    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f)); // background colour
+    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
     g.fillRect(bounds);
     
     auto underThreshColour = MyColours::getColour(MyColours::Green);
