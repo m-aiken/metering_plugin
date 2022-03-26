@@ -892,7 +892,6 @@ void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g,
     g.fillEllipse(bounds);
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    g.drawEllipse(bounds, 1.f);
     
     juce::Path p;
     

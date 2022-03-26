@@ -175,8 +175,6 @@ private:
     
     juce::String label;
     juce::Value threshold;
-//    juce::ColourGradient colourGrad;
-//    juce::ColourGradient gradient;
     
     HistView view;
 };
