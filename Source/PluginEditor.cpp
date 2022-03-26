@@ -148,12 +148,13 @@ void Histogram::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto height = bounds.getHeight();
 
-    g.fillAll(MyColours::getColour(MyColours::Background).contrasting(0.05f));
+    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
+    g.drawRect(bounds);
     
     g.setColour(MyColours::getColour(MyColours::Text));
     g.setFont(16.0f);
     g.drawFittedText(label,                              // text
-                     bounds,                             // area
+                     bounds.reduced(4),                  // area
                      juce::Justification::centredBottom, // justification
                      1);                                 // max num lines
     
