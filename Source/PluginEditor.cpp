@@ -588,12 +588,24 @@ void Meter::paint(juce::Graphics& g)
     auto levelJmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     auto thrshJmap = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, h, 0);
     
-    g.setColour(underThreshColour);
+    juce::ColourGradient underThreshGradient { juce::Colour(153u,226u,180u), 0, 300, juce::Colour(3u,102u,102u), 0, 100 , false };
+
+    underThreshGradient.addColour(0.2, juce::Colour(136u,212u,171u));
+    underThreshGradient.addColour(0.3, juce::Colour(120u,198u,163u));
+    underThreshGradient.addColour(0.4, juce::Colour(103u,185u,154u));
+    underThreshGradient.addColour(0.5, juce::Colour(86u,171u,145u));
+    underThreshGradient.addColour(0.6, juce::Colour(70u,157u,137u));
+    underThreshGradient.addColour(0.7, juce::Colour(53u,143u,128u));
+    underThreshGradient.addColour(0.8, juce::Colour(36u,130u,119u));
+    underThreshGradient.addColour(0.9, juce::Colour(20u,116u,111u));
+    
+    g.setGradientFill(underThreshGradient);
     if ( threshold <= level )
     {
         g.setColour(overThreshColour);
         g.fillRect(bounds.withHeight((h * levelJmap) - (thrshJmap - 1)).withY(levelJmap));
-        g.setColour(underThreshColour);
+        
+        g.setGradientFill(underThreshGradient);
         g.fillRect(bounds.withHeight(h * (thrshJmap + 1)).withY(thrshJmap + 1));
     }
     else
