@@ -37,7 +37,7 @@ inline std::map<Palette, juce::Colour> colourMap =
     { Text,           juce::Colour(233u, 216u, 166u)                },
     { Background,     juce::Colour(0u, 18u, 25u)                    },
     { Yellow,         juce::Colour(238u, 155u, 0u)                  },
-    { GoniometerPath, juce::Colour(96u, 188u, 224u)                 }
+    { GoniometerPath, juce::Colour(153u, 226u, 180u)                }
 };
 
 inline juce::Colour getColour(Palette c) { return colourMap[c]; }
