@@ -147,16 +147,31 @@ void Histogram::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
     auto height = bounds.getHeight();
-
-    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
-    g.drawRect(bounds);
+    auto width = bounds.getWidth();
     
-    g.setColour(MyColours::getColour(MyColours::Text));
-    g.setFont(16.0f);
-    g.drawFittedText(label,                              // text
-                     bounds.reduced(4),                  // area
-                     juce::Justification::centredBottom, // justification
-                     1);                                 // max num lines
+    /*
+    Filling the entire container with the gradient and threshold colours
+    The path to fill is the negative of the buffer data
+    That path hides anything not from the proper signal with "Background Colour"
+    */
+    auto gradient = MyColours::getMeterGradient(bounds.getHeight(), 0, MyColours::GradientOrientation::Vertical);
+    
+    g.setGradientFill(gradient);
+    g.fillAll();
+
+    auto mappedThresh = juce::jmap<float>(threshold.getValue(),
+                                          NegativeInfinity,
+                                          MaxDecibels,
+                                          bounds.getHeight(),
+                                          0);
+    
+    juce::Rectangle<float> redRect (0,
+                                    0,
+                                    bounds.getWidth(),
+                                    mappedThresh);
+    
+    g.setColour(MyColours::getColour(MyColours::Red));
+    g.fillRect(redRect);
     
     auto& data = circularBuffer.getData();
     auto readIdx = circularBuffer.getReadIndex();
@@ -167,10 +182,11 @@ void Histogram::paint(juce::Graphics& g)
         readIdx = (readIdx + (bufferSize / 2)) % bufferSize;
     }
     
+    g.setColour(MyColours::getColour(MyColours::Background));
     juce::Path p;
     
     // manually setting first and last pixel's column (x) outside of the loops
-    p.startNewSubPath(0, height);
+    p.startNewSubPath(0, 0);
     
     auto x = 1;
     
@@ -193,33 +209,25 @@ void Histogram::paint(juce::Graphics& g)
         ++x;
     }
     
-    p.lineTo(bufferSize - 1, height);
+    p.lineTo(bufferSize - 1, 0);
     p.closeSubPath();
-    
-    auto underThreshColour = MyColours::getColour(MyColours::Green);
-    auto overThreshColour = MyColours::getColour(MyColours::Red);
-    
-    auto thresholdProportion = juce::jmap<float>(threshold.getValue(),
-                                                 NegativeInfinity,
-                                                 MaxDecibels,
-                                                 0.f,
-                                                 1.f);
-    
-    colourGrad.clearColours();
-    
-    // bottom to boundary = underThreshColour, boundary+ = overThreshColour
-    colourGrad.addColour(0, underThreshColour); // negative infinity
-    colourGrad.addColour(thresholdProportion, underThreshColour); // threshold boundary
-    colourGrad.addColour(thresholdProportion, overThreshColour); // threshold boundary
-
-    g.setGradientFill(colourGrad);
     g.fillPath(p);
-}
-
-void Histogram::resized()
-{
-    colourGrad.point1 = juce::Point<float>(0, getLocalBounds().getHeight()); // bottom
-    colourGrad.point2 = juce::Point<float>(0, 0);      // top
+    
+    g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(16.0f);
+    g.drawFittedText(label,                              // text
+                     bounds.reduced(4),                  // area
+                     juce::Justification::centredTop, // justification
+                     1);                                 // max num lines
+    
+    
+    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
+    // startX, startY, endX, endY, thickness
+    g.drawLine(0, 0, 0, height, 2.f);
+    g.drawLine(width, 0, width, height, 2.f);
+    
+    g.drawLine(0, 0, width, 0, 2.f);
+    g.drawLine(0, height, width, height, 2.f);
 }
 
 void Histogram::update(const float& inputL, const float& inputR)
