@@ -592,6 +592,15 @@ struct HistViewToggleGroup : ToggleGroupBase, juce::Component
 };
 
 //==============================================================================
+struct HoldResetButtons : juce::Component
+{
+    HoldResetButtons();
+    void resized() override;
+    
+    CustomToggle holdButton { "HOLD" };
+    CustomTextBtn resetButton { "RESET" };
+};
+
 struct LineBreak : juce::Component
 {
     void paint(juce::Graphics& g) override;
@@ -602,28 +611,19 @@ struct TimeControls : juce::Component
     TimeControls();
     void resized() override;
     
-    DecayRateToggleGroup decayRate;
-    AverageTimeToggleGroup avgDuration;
-    
     HoldTimeToggleGroup holdTime;
     CustomToggle holdButton { "HOLD" };
     CustomTextBtn holdResetButton { "RESET" };
     
+    DecayRateToggleGroup decayRate;
+    AverageTimeToggleGroup avgDuration;
+    
 private:
+    CustomLabel holdTimeLabel { "Hold Time" };
     CustomLabel decayRateLabel { "Decay Rate (dB/s)" };
     CustomLabel avgDurationLabel { "Average Duration (ms)" };
-    CustomLabel holdTimeLabel { "Hold Time" };
     
     LineBreak lineBreak1, lineBreak2;
-};
-
-struct HoldResetButtons : juce::Component
-{
-    HoldResetButtons();
-    void resized() override;
-    
-    CustomToggle holdButton { "HOLD" };
-    CustomTextBtn resetButton { "RESET" };
 };
 
 //==============================================================================
@@ -676,8 +676,9 @@ private:
     
     StereoImageMeter stereoImageMeter;
     
-    TimeControls timeToggles;
     HoldResetButtons holdResetBtns;
+    TimeControls timeToggles;
+    
     GuiControlsGroupB guiControlsB;
     
     void updateParams(const ToggleGroup& toggleGroup, const int& selectedId);

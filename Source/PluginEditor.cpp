@@ -1365,6 +1365,28 @@ juce::Grid HistViewToggleGroup::generateGrid(std::vector<CustomToggle*>& toggles
 }
 
 //==============================================================================
+HoldResetButtons::HoldResetButtons()
+{
+    addAndMakeVisible(holdButton);
+    addAndMakeVisible(resetButton);
+}
+
+void HoldResetButtons::resized()
+{
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
+    
+    grid.templateColumns = { Track(Fr(2)), Track(Fr(1)) };
+    grid.autoRows = Track(Fr(1));
+    grid.items = { juce::GridItem(holdButton), juce::GridItem(resetButton) };
+    
+    grid.setGap(juce::Grid::Px{4});
+    grid.performLayout(getLocalBounds());
+}
+
+//==============================================================================
 void LineBreak::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
@@ -1374,13 +1396,13 @@ void LineBreak::paint(juce::Graphics& g)
 
 TimeControls::TimeControls()
 {
+    addAndMakeVisible(holdTimeLabel);
     addAndMakeVisible(decayRateLabel);
     addAndMakeVisible(avgDurationLabel);
-    addAndMakeVisible(holdTimeLabel);
     
+    addAndMakeVisible(holdTime);
     addAndMakeVisible(decayRate);
     addAndMakeVisible(avgDuration);
-    addAndMakeVisible(holdTime);
     
     addAndMakeVisible(lineBreak1);
     addAndMakeVisible(lineBreak2);
@@ -1411,39 +1433,17 @@ void TimeControls::resized()
     
     grid.items =
     {
+        juce::GridItem(holdTimeLabel),
+        juce::GridItem(holdTime),
+        juce::GridItem(lineBreak1),
         juce::GridItem(decayRateLabel),
         juce::GridItem(decayRate),
-        juce::GridItem(lineBreak1),
-        juce::GridItem(avgDurationLabel),
-        juce::GridItem(avgDuration),
         juce::GridItem(lineBreak2),
-        juce::GridItem(holdTimeLabel),
-        juce::GridItem(holdTime)
+        juce::GridItem(avgDurationLabel),
+        juce::GridItem(avgDuration)
     };
     
     grid.performLayout(bounds);
-}
-
-//==============================================================================
-HoldResetButtons::HoldResetButtons()
-{
-    addAndMakeVisible(holdButton);
-    addAndMakeVisible(resetButton);
-}
-
-void HoldResetButtons::resized()
-{
-    juce::Grid grid;
-     
-    using Track = juce::Grid::TrackInfo;
-    using Fr = juce::Grid::Fr;
-    
-    grid.templateColumns = { Track(Fr(2)), Track(Fr(1)) };
-    grid.autoRows = Track(Fr(1));
-    grid.items = { juce::GridItem(holdButton), juce::GridItem(resetButton) };
-    
-    grid.setGap(juce::Grid::Px{4});
-    grid.performLayout(getLocalBounds());
 }
 
 //==============================================================================
@@ -1526,18 +1526,18 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoMeterPeak);
     addAndMakeVisible(histograms);
     addAndMakeVisible(stereoImageMeter);
-    addAndMakeVisible(timeToggles);
     addAndMakeVisible(holdResetBtns);
+    addAndMakeVisible(timeToggles);
     addAndMakeVisible(guiControlsB);
     
     auto& state = audioProcessor.valueTree;
     
     // link widgets to valueTree
+    holdResetBtns.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
+    
     timeToggles.decayRate.getValueObject().referTo(state.getPropertyAsValue("DecayTime", nullptr));
     timeToggles.avgDuration.getValueObject().referTo(state.getPropertyAsValue("AverageTime", nullptr));
     timeToggles.holdTime.getValueObject().referTo(state.getPropertyAsValue("HoldTime", nullptr));
-    
-    holdResetBtns.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
     
     guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
     guiControlsB.meterView.getValueObject().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
@@ -1550,6 +1550,10 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     histograms.getThresholdValueObject(HistogramTypes::PEAK).referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
     
     // set initial values
+    bool holdButtonState = state.getPropertyAsValue("EnableHold", nullptr).getValue();
+    stereoMeterRms.setTickVisibility(holdButtonState);
+    stereoMeterPeak.setTickVisibility(holdButtonState);
+    
     updateParams(ToggleGroup::DecayRate, state.getPropertyAsValue("DecayTime", nullptr).getValue());
     timeToggles.decayRate.setSelectedToggleFromState();
     
@@ -1558,10 +1562,6 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     
     updateParams(ToggleGroup::HoldTime, state.getPropertyAsValue("HoldTime", nullptr).getValue());
     timeToggles.holdTime.setSelectedToggleFromState();
-    
-    bool holdButtonState = state.getPropertyAsValue("EnableHold", nullptr).getValue();
-    stereoMeterRms.setTickVisibility(holdButtonState);
-    stereoMeterPeak.setTickVisibility(holdButtonState);
     
     double gonioScale = state.getPropertyAsValue("GoniometerScale", nullptr).getValue();
     stereoImageMeter.setGoniometerScale(gonioScale);
@@ -1591,25 +1591,6 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setThreshold(stereoMeterPeak.threshCtrl.getValue());
     };
     
-    timeToggles.decayRate.optionA.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 1); };
-    timeToggles.decayRate.optionB.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 2); };
-    timeToggles.decayRate.optionC.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 3); };
-    timeToggles.decayRate.optionD.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 4); };
-    timeToggles.decayRate.optionE.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 5); };
-    
-    timeToggles.avgDuration.optionA.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 1); };
-    timeToggles.avgDuration.optionB.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 2); };
-    timeToggles.avgDuration.optionC.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 3); };
-    timeToggles.avgDuration.optionD.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 4); };
-    timeToggles.avgDuration.optionE.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 5); };
-    
-    timeToggles.holdTime.optionA.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 1); };
-    timeToggles.holdTime.optionB.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 2); };
-    timeToggles.holdTime.optionC.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 3); };
-    timeToggles.holdTime.optionD.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 4); };
-    timeToggles.holdTime.optionE.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 5); };
-    timeToggles.holdTime.optionF.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 6); };
-    
     holdResetBtns.holdButton.onClick = [this]
     {
         auto toggleState = holdResetBtns.holdButton.getToggleState();
@@ -1634,6 +1615,25 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.resetValueHolder();
         holdResetBtns.resetButton.animateButton();
     };
+    
+    timeToggles.decayRate.optionA.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 1); };
+    timeToggles.decayRate.optionB.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 2); };
+    timeToggles.decayRate.optionC.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 3); };
+    timeToggles.decayRate.optionD.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 4); };
+    timeToggles.decayRate.optionE.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 5); };
+    
+    timeToggles.avgDuration.optionA.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 1); };
+    timeToggles.avgDuration.optionB.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 2); };
+    timeToggles.avgDuration.optionC.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 3); };
+    timeToggles.avgDuration.optionD.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 4); };
+    timeToggles.avgDuration.optionE.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 5); };
+    
+    timeToggles.holdTime.optionA.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 1); };
+    timeToggles.holdTime.optionB.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 2); };
+    timeToggles.holdTime.optionC.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 3); };
+    timeToggles.holdTime.optionD.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 4); };
+    timeToggles.holdTime.optionE.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 5); };
+    timeToggles.holdTime.optionF.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 6); };
     
     guiControlsB.gonioScaleKnob.onValueChange = [this]
     {
@@ -1694,27 +1694,31 @@ void PFMProject10AudioProcessorEditor::resized()
                          210);
     
     auto stereoImageMeterWidth = 280; // this will also be the height of the goniometer
+    auto stereoImageMeterHeight = 300;
+    
     stereoImageMeter.setBounds(bounds.getCentreX() - (stereoImageMeterWidth / 2),
-                              (histograms.getY() - stereoImageMeterWidth) / 2,
+                              (histograms.getY() / 2) - (stereoImageMeterHeight / 2),
                               stereoImageMeterWidth,
-                              stereoImageMeterWidth + 20); // +20 to account for correlation meter
+                              stereoImageMeterHeight);
     
     auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (padding * 4);
     
+    auto toggleContainerHeight = 300;
     timeToggles.setBounds(stereoMeterRms.getRight() + (padding * 2),
-                      padding,
-                      comboWidth,
-                      300);
+                          stereoImageMeter.getBottom() - toggleContainerHeight,
+                          comboWidth,
+                          toggleContainerHeight);
     
+    auto btnHeight = timeToggles.getY() - (padding * 2);
     holdResetBtns.setBounds(timeToggles.getX(),
-                            timeToggles.getBottom() + (padding * 2),
+                            timeToggles.getY() - btnHeight,
                             comboWidth,
-                            histograms.getY() - timeToggles.getBottom() - (padding * 4));
+                            btnHeight);
     
     guiControlsB.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
-                           padding,
+                           stereoImageMeter.getBottom() - toggleContainerHeight,
                            comboWidth,
-                           300);
+                           toggleContainerHeight);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
