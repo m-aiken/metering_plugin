@@ -1174,7 +1174,7 @@ CustomRotary::CustomRotary()
 void CustomRotary::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
-    auto diameter = bounds.getWidth() * 0.8f;
+    auto diameter = bounds.getWidth() * 0.7f;
     auto radius = diameter / 2;
     
     auto startAngle = juce::degreesToRadians(180.f + 45.f);
@@ -1478,17 +1478,6 @@ GuiControlsGroupB::GuiControlsGroupB()
 
 void GuiControlsGroupB::resized()
 {
-    /*
-    auto bounds = getLocalBounds();
-    auto boundsHeight = bounds.getHeight();
-    
-    auto boxHeight = 30;
-    auto width = bounds.getWidth();
-    auto rotaryDiameter = width * 0.8f;
-    auto rotaryRadius = rotaryDiameter / 2;
-    
-    */
-    
     auto bounds = getLocalBounds();
     auto buttonHeight = bounds.getHeight() / 10;
     
@@ -1501,7 +1490,8 @@ void GuiControlsGroupB::resized()
     grid.templateRows =
     {
         Track(Px(buttonHeight)),
-        Track(Px(buttonHeight * 4)),
+        Track(Px(buttonHeight * 3)),
+        Track(Px(buttonHeight)),
         Track(Px(buttonHeight / 2)), // line break
         Track(Px(buttonHeight)),
         Track(Px(buttonHeight)),
@@ -1514,6 +1504,7 @@ void GuiControlsGroupB::resized()
     {
         juce::GridItem(gonioScaleLabel),
         juce::GridItem(gonioScaleKnob),
+        juce::GridItem(),
         juce::GridItem(lineBreak1),
         juce::GridItem(meterViewLabel),
         juce::GridItem(meterView),
