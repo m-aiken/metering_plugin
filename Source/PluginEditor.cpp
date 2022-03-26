@@ -574,8 +574,13 @@ void Meter::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto h = bounds.getHeight();
     
-    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
-    g.drawRect(bounds);
+    juce::DropShadow shadow
+    {
+        MyColours::getColour(MyColours::Background).contrasting(0.03f),
+        10,
+        juce::Point<int>(0,0)
+    };
+    shadow.drawForRectangle(g, bounds);
     
     auto underThreshColour = MyColours::getColour(MyColours::Green);
     auto overThreshColour = MyColours::getColour(MyColours::Red);
