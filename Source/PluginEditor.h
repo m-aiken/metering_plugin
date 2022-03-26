@@ -67,6 +67,16 @@ inline juce::ColourGradient getMeterGradient(float y1, float y2)
     return gradient;
 }
 
+inline juce::DropShadow getDropShadow()
+{
+    return juce::DropShadow
+    {
+        getColour(Background).contrasting(0.03f),
+        10,
+        juce::Point<int>(0,0)
+    };
+}
+
 }
 
 //==============================================================================
