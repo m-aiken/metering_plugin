@@ -586,9 +586,8 @@ void Meter::paint(juce::Graphics& g)
     auto shadow = MyColours::getDropShadow();
     shadow.drawForRectangle(g, bounds);
     
-    auto underThreshColour = MyColours::getColour(MyColours::Green);
     auto overThreshColour = MyColours::getColour(MyColours::Red);
-    g.setColour(underThreshColour);
+
     auto levelJmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     auto thrshJmap = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, h, 0);
     
@@ -1402,7 +1401,7 @@ void HoldResetButtons::resized()
 void LineBreak::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
-    g.setColour(juce::Colour(201u, 209u, 217u).withAlpha(0.025f));
+    g.setColour(MyColours::getColour(MyColours::Text).withAlpha(0.025f));
     g.drawLine(0, bounds.getCentreY(), bounds.getRight(), bounds.getCentreY(), 2.f);
 }
 
