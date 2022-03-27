@@ -682,7 +682,6 @@ struct GonioScaleControl : juce::Component
     
 private:
     CustomLabel gonioScaleLabel { "Scale" };
-    LineBreak lineBreak;
 };
 
 //==============================================================================

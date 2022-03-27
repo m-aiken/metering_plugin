@@ -1467,39 +1467,16 @@ GonioScaleControl::GonioScaleControl()
     gonioScaleKnob.setRange(50.0, 200.0);
     gonioScaleKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     gonioScaleKnob.setValue(100.0);
-    
-    addAndMakeVisible(lineBreak);
 }
 
 void GonioScaleControl::resized()
 {
     auto bounds = getLocalBounds();
-    auto buttonHeight = bounds.getHeight() / 5.5f;
+    auto width = bounds.getWidth();
+    auto block = bounds.getHeight() / 4;
     
-    juce::Grid grid;
-     
-    using Track = juce::Grid::TrackInfo;
-    using Px = juce::Grid::Px;
-    
-    grid.autoColumns = Track(Px(bounds.getWidth()));
-    
-    grid.templateRows =
-    {
-        Track(Px(buttonHeight)),
-        Track(Px(buttonHeight * 3)),
-        Track(Px(buttonHeight)),
-        Track(Px(buttonHeight / 2)), // line break
-    };
-    
-    grid.items =
-    {
-        juce::GridItem(gonioScaleLabel),
-        juce::GridItem(gonioScaleKnob),
-        juce::GridItem(),
-        juce::GridItem(lineBreak)
-    };
-    
-    grid.performLayout(bounds);
+    gonioScaleLabel.setBounds(0, 0, width, block);
+    gonioScaleKnob.setBounds(0, gonioScaleLabel.getBottom(), width, block * 3);
 }
 
 //==============================================================================
@@ -1751,7 +1728,7 @@ void PFMProject10AudioProcessorEditor::resized()
     gonioControl.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
                            stereoImageMeter.getBottom() - 300,
                            comboWidth,
-                           165);
+                           120);
     
     viewToggles.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
                            stereoImageMeter.getBottom() - 135,
