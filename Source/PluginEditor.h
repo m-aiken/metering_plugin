@@ -187,7 +187,7 @@ struct HistogramContainer : juce::Component
     void update(const HistogramTypes& histoType, const float& inputL, const float& inputR);
     void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
     
-    void setView(const HistView& v);
+    void setView(const int& selectedId);
     juce::Value& getThresholdValueObject(const HistogramTypes& histoType);
     
 private:
@@ -673,9 +673,9 @@ private:
 };
 
 //==============================================================================
-struct GuiControlsGroupB : juce::Component
+struct ViewControls : juce::Component
 {
-    GuiControlsGroupB();
+    ViewControls();
     void resized() override;
     
     CustomRotary gonioScaleKnob;
@@ -723,7 +723,7 @@ private:
     HoldResetButtons holdResetBtns;
     TimeControls timeToggles;
     
-    GuiControlsGroupB guiControlsB;
+    ViewControls viewToggles;
     
     void updateParams(const ToggleGroup& toggleGroup, const int& selectedId);
     

@@ -290,8 +290,9 @@ void HistogramContainer::setThreshold(const HistogramTypes& histoType,
         peakHistogram.setThreshold(threshAsDecibels);
 }
 
-void HistogramContainer::setView(const HistView& v)
+void HistogramContainer::setView(const int& selectedId)
 {
+    auto v = (selectedId == HistView::rows) ? HistView::rows : HistView::columns;
     view = v;
     resized();
     
@@ -1458,7 +1459,7 @@ void TimeControls::resized()
 }
 
 //==============================================================================
-GuiControlsGroupB::GuiControlsGroupB()
+ViewControls::ViewControls()
 {
     addAndMakeVisible(gonioScaleLabel);
     addAndMakeVisible(gonioScaleKnob);
@@ -1476,7 +1477,7 @@ GuiControlsGroupB::GuiControlsGroupB()
     addAndMakeVisible(lineBreak2);
 }
 
-void GuiControlsGroupB::resized()
+void ViewControls::resized()
 {
     auto bounds = getLocalBounds();
     auto buttonHeight = bounds.getHeight() / 10;
@@ -1530,7 +1531,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoImageMeter);
     addAndMakeVisible(holdResetBtns);
     addAndMakeVisible(timeToggles);
-    addAndMakeVisible(guiControlsB);
+    addAndMakeVisible(viewToggles);
     
     auto& state = audioProcessor.valueTree;
     
@@ -1541,9 +1542,9 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     timeToggles.avgDuration.getValueObject().referTo(state.getPropertyAsValue("AverageTime", nullptr));
     timeToggles.holdTime.getValueObject().referTo(state.getPropertyAsValue("HoldTime", nullptr));
     
-    guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
-    guiControlsB.meterView.getValueObject().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
-    guiControlsB.histView.getValueObject().referTo(state.getPropertyAsValue("HistogramView", nullptr));
+    viewToggles.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
+    viewToggles.meterView.getValueObject().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
+    viewToggles.histView.getValueObject().referTo(state.getPropertyAsValue("HistogramView", nullptr));
     
     stereoMeterRms.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
     stereoMeterPeak.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
@@ -1569,10 +1570,10 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     stereoImageMeter.setGoniometerScale(gonioScale);
     
     updateParams(ToggleGroup::MeterView, state.getPropertyAsValue("MeterViewMode", nullptr).getValue());
-    guiControlsB.meterView.setSelectedToggleFromState();
+    viewToggles.meterView.setSelectedToggleFromState();
     
     updateParams(ToggleGroup::HistView, state.getPropertyAsValue("HistogramView", nullptr).getValue());
-    guiControlsB.histView.setSelectedToggleFromState();
+    viewToggles.histView.setSelectedToggleFromState();
     
     float rmsThresh = state.getPropertyAsValue("RMSThreshold", nullptr).getValue();
     stereoMeterRms.setThreshold(rmsThresh);
@@ -1637,18 +1638,18 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     timeToggles.holdTime.optionE.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 5); };
     timeToggles.holdTime.optionF.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 6); };
     
-    guiControlsB.gonioScaleKnob.onValueChange = [this]
+    viewToggles.gonioScaleKnob.onValueChange = [this]
     {
-        auto rotaryValue = guiControlsB.gonioScaleKnob.getValue();
+        auto rotaryValue = viewToggles.gonioScaleKnob.getValue();
         stereoImageMeter.setGoniometerScale(rotaryValue);
     };
     
-    guiControlsB.meterView.optionA.onClick = [this]{ updateParams(ToggleGroup::MeterView, 1); };
-    guiControlsB.meterView.optionB.onClick = [this]{ updateParams(ToggleGroup::MeterView, 2); };
-    guiControlsB.meterView.optionC.onClick = [this]{ updateParams(ToggleGroup::MeterView, 3); };
+    viewToggles.meterView.optionA.onClick = [this]{ updateParams(ToggleGroup::MeterView, 1); };
+    viewToggles.meterView.optionB.onClick = [this]{ updateParams(ToggleGroup::MeterView, 2); };
+    viewToggles.meterView.optionC.onClick = [this]{ updateParams(ToggleGroup::MeterView, 3); };
     
-    guiControlsB.histView.optionA.onClick = [this]{ updateParams(ToggleGroup::HistView, 1); };
-    guiControlsB.histView.optionB.onClick = [this]{ updateParams(ToggleGroup::HistView, 2); };
+    viewToggles.histView.optionA.onClick = [this]{ updateParams(ToggleGroup::HistView, 1); };
+    viewToggles.histView.optionB.onClick = [this]{ updateParams(ToggleGroup::HistView, 2); };
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -1717,7 +1718,7 @@ void PFMProject10AudioProcessorEditor::resized()
                             comboWidth,
                             btnHeight);
     
-    guiControlsB.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
+    viewToggles.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
                            stereoImageMeter.getBottom() - toggleContainerHeight,
                            comboWidth,
                            toggleContainerHeight);
@@ -1774,7 +1775,7 @@ void PFMProject10AudioProcessorEditor::updateParams(const ToggleGroup& toggleGro
         case ToggleGroup::MeterView:
             stereoMeterRms.setMeterView(selectedId);
             stereoMeterPeak.setMeterView(selectedId);
-            guiControlsB.meterView.setSelectedValue(selectedId);
+            viewToggles.meterView.setSelectedValue(selectedId);
             break;
         case ToggleGroup::HoldTime:
             stereoMeterRms.setTickHoldTime(selectedId);
@@ -1783,10 +1784,8 @@ void PFMProject10AudioProcessorEditor::updateParams(const ToggleGroup& toggleGro
             holdResetBtns.resetButton.setVisible( (selectedId == 6 && holdResetBtns.holdButton.getToggleState()) );
             break;
         case ToggleGroup::HistView:
-            histograms.setView(selectedId == HistView::rows
-                               ? HistView::rows
-                               : HistView::columns);
-            guiControlsB.histView.setSelectedValue(selectedId);
+            histograms.setView(selectedId);
+            viewToggles.histView.setSelectedValue(selectedId);
             break;
     }
 }
