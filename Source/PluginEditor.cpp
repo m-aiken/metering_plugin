@@ -1730,7 +1730,7 @@ void PFMProject10AudioProcessorEditor::resized()
                             btnHeight);
     
     gonioControl.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
-                           stereoImageMeter.getBottom() - 300,
+                           padding,
                            comboWidth,
                            120);
     
