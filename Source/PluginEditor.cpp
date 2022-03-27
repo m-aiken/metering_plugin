@@ -214,11 +214,11 @@ void Histogram::paint(juce::Graphics& g)
     g.fillPath(p);
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    g.setFont(16.0f);
-    g.drawFittedText(label,                              // text
-                     bounds.reduced(4),                  // area
+    g.setFont(GlobalFont);
+    g.drawFittedText(label,                           // text
+                     bounds.reduced(4),               // area
                      juce::Justification::centredTop, // justification
-                     1);                                 // max num lines
+                     1);                              // max num lines
     
     
     g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
@@ -536,7 +536,7 @@ void TextMeter::paint(juce::Graphics& g)
     }
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    g.setFont(14.0f);
+    g.setFont(GlobalFont);
     g.drawFittedText(str,                                      // text
                      getLocalBounds(),                         // area
                      juce::Justification::horizontallyCentred, // justification
@@ -559,9 +559,10 @@ void DbScale::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
 
-    int textHeight = 8;
+    int textHeight = 12;
     
     g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(GlobalFont);
     
     for ( int i = 0; i < ticks.size(); ++i)
     {
@@ -966,6 +967,7 @@ void StereoMeter::paint(juce::Graphics& g)
     auto labelContainerH = static_cast<int>(h - labelContainerY);
     
     g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(GlobalFont);
     
     std::vector<juce::String> labels{"L", label, "R"};
     std::vector<int> xPositions{0, static_cast<int>(w / 3), static_cast<int>(w - (w / 3))};
@@ -1115,7 +1117,7 @@ void CustomLabel::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    
+    g.setFont(GlobalFont);
     g.drawFittedText(getText(),
                      bounds.getX(),
                      bounds.getY(),
@@ -1133,6 +1135,7 @@ CustomToggle::CustomToggle(const juce::String& buttonText)
 
 void CustomToggle::paint(juce::Graphics& g)
 {
+    g.setFont(GlobalFont);
     getLookAndFeel().drawToggleButton(g,
                                       *this, // toggle button
                                       true,  // draw as highlighted
@@ -1150,6 +1153,8 @@ void CustomTextBtn::paint(juce::Graphics& g)
     auto buttonColour = (inClickState
                          ? MyColours::getColour(MyColours::RedBright)
                          : MyColours::getColour(MyColours::Red));
+    
+    g.setFont(GlobalFont);
     
     getLookAndFeel().drawButtonBackground(g,
                                           *this,        // button

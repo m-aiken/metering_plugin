@@ -13,6 +13,7 @@
 
 #define MaxDecibels 6.f
 #define NegativeInfinity -48.f
+#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
 
 //==============================================================================
 namespace MyColours
