@@ -1459,7 +1459,7 @@ void TimeControls::resized()
 }
 
 //==============================================================================
-ViewControls::ViewControls()
+GonioScaleControl::GonioScaleControl()
 {
     addAndMakeVisible(gonioScaleLabel);
     addAndMakeVisible(gonioScaleKnob);
@@ -1467,20 +1467,14 @@ ViewControls::ViewControls()
     gonioScaleKnob.setRange(50.0, 200.0);
     gonioScaleKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     gonioScaleKnob.setValue(100.0);
-        
-    addAndMakeVisible(meterViewLabel);
-    addAndMakeVisible(meterView);
-    addAndMakeVisible(histViewLabel);
-    addAndMakeVisible(histView);
     
-    addAndMakeVisible(lineBreak1);
-    addAndMakeVisible(lineBreak2);
+    addAndMakeVisible(lineBreak);
 }
 
-void ViewControls::resized()
+void GonioScaleControl::resized()
 {
     auto bounds = getLocalBounds();
-    auto buttonHeight = bounds.getHeight() / 10;
+    auto buttonHeight = bounds.getHeight() / 5.5f;
     
     juce::Grid grid;
      
@@ -1488,12 +1482,51 @@ void ViewControls::resized()
     using Px = juce::Grid::Px;
     
     grid.autoColumns = Track(Px(bounds.getWidth()));
+    
     grid.templateRows =
     {
         Track(Px(buttonHeight)),
         Track(Px(buttonHeight * 3)),
         Track(Px(buttonHeight)),
         Track(Px(buttonHeight / 2)), // line break
+    };
+    
+    grid.items =
+    {
+        juce::GridItem(gonioScaleLabel),
+        juce::GridItem(gonioScaleKnob),
+        juce::GridItem(),
+        juce::GridItem(lineBreak)
+    };
+    
+    grid.performLayout(bounds);
+}
+
+//==============================================================================
+ViewControls::ViewControls()
+{
+    addAndMakeVisible(meterViewLabel);
+    addAndMakeVisible(meterView);
+    addAndMakeVisible(histViewLabel);
+    addAndMakeVisible(histView);
+    
+    addAndMakeVisible(lineBreak);
+}
+
+void ViewControls::resized()
+{
+    auto bounds = getLocalBounds();
+    auto buttonHeight = bounds.getHeight() / 4.5f;
+    
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Px = juce::Grid::Px;
+    
+    grid.autoColumns = Track(Px(bounds.getWidth()));
+    
+    grid.templateRows =
+    {
         Track(Px(buttonHeight)),
         Track(Px(buttonHeight)),
         Track(Px(buttonHeight / 2)), // line break
@@ -1503,13 +1536,9 @@ void ViewControls::resized()
     
     grid.items =
     {
-        juce::GridItem(gonioScaleLabel),
-        juce::GridItem(gonioScaleKnob),
-        juce::GridItem(),
-        juce::GridItem(lineBreak1),
         juce::GridItem(meterViewLabel),
         juce::GridItem(meterView),
-        juce::GridItem(lineBreak2),
+        juce::GridItem(lineBreak),
         juce::GridItem(histViewLabel),
         juce::GridItem(histView)
     };
@@ -1531,6 +1560,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoImageMeter);
     addAndMakeVisible(holdResetBtns);
     addAndMakeVisible(timeToggles);
+    addAndMakeVisible(gonioControl);
     addAndMakeVisible(viewToggles);
     
     auto& state = audioProcessor.valueTree;
@@ -1542,7 +1572,7 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     timeToggles.avgDuration.getValueObject().referTo(state.getPropertyAsValue("AverageTime", nullptr));
     timeToggles.holdTime.getValueObject().referTo(state.getPropertyAsValue("HoldTime", nullptr));
     
-    viewToggles.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
+    gonioControl.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
     viewToggles.meterView.getValueObject().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
     viewToggles.histView.getValueObject().referTo(state.getPropertyAsValue("HistogramView", nullptr));
     
@@ -1638,9 +1668,9 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     timeToggles.holdTime.optionE.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 5); };
     timeToggles.holdTime.optionF.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 6); };
     
-    viewToggles.gonioScaleKnob.onValueChange = [this]
+    gonioControl.gonioScaleKnob.onValueChange = [this]
     {
-        auto rotaryValue = viewToggles.gonioScaleKnob.getValue();
+        auto rotaryValue = gonioControl.gonioScaleKnob.getValue();
         stereoImageMeter.setGoniometerScale(rotaryValue);
     };
     
@@ -1718,10 +1748,15 @@ void PFMProject10AudioProcessorEditor::resized()
                             comboWidth,
                             btnHeight);
     
-    viewToggles.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
-                           stereoImageMeter.getBottom() - toggleContainerHeight,
+    gonioControl.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
+                           stereoImageMeter.getBottom() - 300,
                            comboWidth,
-                           toggleContainerHeight);
+                           165);
+    
+    viewToggles.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
+                           stereoImageMeter.getBottom() - 135,
+                           comboWidth,
+                           135);
     
 #if defined(GAIN_TEST_ACTIVE)
     gainSlider.setBounds(stereoMeterRms.getRight(), padding * 2, 20, 320);

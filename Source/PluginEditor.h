@@ -673,22 +673,32 @@ private:
 };
 
 //==============================================================================
+struct GonioScaleControl : juce::Component
+{
+    GonioScaleControl();
+    void resized() override;
+    
+    CustomRotary gonioScaleKnob;
+    
+private:
+    CustomLabel gonioScaleLabel { "Scale" };
+    LineBreak lineBreak;
+};
+
+//==============================================================================
 struct ViewControls : juce::Component
 {
     ViewControls();
     void resized() override;
-    
-    CustomRotary gonioScaleKnob;
-        
+            
     MeterViewToggleGroup meterView;
     HistViewToggleGroup histView;
     
 private:
-    CustomLabel gonioScaleLabel { "Scale" };
     CustomLabel meterViewLabel { "Meter View" };
     CustomLabel histViewLabel { "Histogram View" };
     
-    LineBreak lineBreak1, lineBreak2;
+    LineBreak lineBreak;
 };
 
 //==============================================================================
@@ -723,6 +733,7 @@ private:
     HoldResetButtons holdResetBtns;
     TimeControls timeToggles;
     
+    GonioScaleControl gonioControl;
     ViewControls viewToggles;
     
     void updateParams(const ToggleGroup& toggleGroup, const int& selectedId);
