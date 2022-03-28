@@ -1630,24 +1630,20 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         holdResetBtns.resetButton.animateButton();
     };
     
-    timeToggles.decayRate.optionA.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 1); };
-    timeToggles.decayRate.optionB.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 2); };
-    timeToggles.decayRate.optionC.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 3); };
-    timeToggles.decayRate.optionD.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 4); };
-    timeToggles.decayRate.optionE.onClick = [this]{ updateParams(ToggleGroup::DecayRate, 5); };
+    for ( size_t i = 0; i < timeToggles.decayRate.toggles.size(); ++i )
+    {
+        timeToggles.decayRate.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::DecayRate, i+1); };
+    }
     
-    timeToggles.avgDuration.optionA.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 1); };
-    timeToggles.avgDuration.optionB.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 2); };
-    timeToggles.avgDuration.optionC.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 3); };
-    timeToggles.avgDuration.optionD.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 4); };
-    timeToggles.avgDuration.optionE.onClick = [this]{ updateParams(ToggleGroup::AverageTime, 5); };
+    for ( size_t i = 0; i < timeToggles.avgDuration.toggles.size(); ++i )
+    {
+        timeToggles.avgDuration.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::AverageTime, i+1); };
+    }
     
-    timeToggles.holdTime.optionA.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 1); };
-    timeToggles.holdTime.optionB.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 2); };
-    timeToggles.holdTime.optionC.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 3); };
-    timeToggles.holdTime.optionD.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 4); };
-    timeToggles.holdTime.optionE.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 5); };
-    timeToggles.holdTime.optionF.onClick = [this]{ updateParams(ToggleGroup::HoldTime, 6); };
+    for ( size_t i = 0; i < timeToggles.holdTime.toggles.size(); ++i )
+    {
+        timeToggles.holdTime.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::HoldTime, i+1); };
+    }
     
     gonioControl.gonioScaleKnob.onValueChange = [this]
     {
@@ -1655,12 +1651,15 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoImageMeter.setGoniometerScale(rotaryValue);
     };
     
-    viewToggles.meterView.optionA.onClick = [this]{ updateParams(ToggleGroup::MeterView, 1); };
-    viewToggles.meterView.optionB.onClick = [this]{ updateParams(ToggleGroup::MeterView, 2); };
-    viewToggles.meterView.optionC.onClick = [this]{ updateParams(ToggleGroup::MeterView, 3); };
+    for ( size_t i = 0; i < viewToggles.meterView.toggles.size(); ++i )
+    {
+        viewToggles.meterView.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::MeterView, i+1); };
+    }
     
-    viewToggles.histView.optionA.onClick = [this]{ updateParams(ToggleGroup::HistView, 1); };
-    viewToggles.histView.optionB.onClick = [this]{ updateParams(ToggleGroup::HistView, 2); };
+    for ( size_t i = 0; i < viewToggles.histView.toggles.size(); ++i )
+    {
+        viewToggles.histView.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::HistView, i+1); };
+    }
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
