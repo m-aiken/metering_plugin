@@ -582,7 +582,6 @@ private:
 struct DecayRateToggleGroup : ToggleGroupBase, juce::Component
 {
     DecayRateToggleGroup();
-    ~DecayRateToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
     void setSelectedToggleFromState();
     
@@ -593,7 +592,6 @@ struct DecayRateToggleGroup : ToggleGroupBase, juce::Component
 struct AverageTimeToggleGroup : ToggleGroupBase, juce::Component
 {
     AverageTimeToggleGroup();
-    ~AverageTimeToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
     void setSelectedToggleFromState();
     
@@ -604,7 +602,6 @@ struct AverageTimeToggleGroup : ToggleGroupBase, juce::Component
 struct MeterViewToggleGroup : ToggleGroupBase, juce::Component
 {
     MeterViewToggleGroup();
-    ~MeterViewToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
     void setSelectedToggleFromState();
     
@@ -615,7 +612,6 @@ struct MeterViewToggleGroup : ToggleGroupBase, juce::Component
 struct HoldTimeToggleGroup : ToggleGroupBase, juce::Component
 {
     HoldTimeToggleGroup();
-    ~HoldTimeToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
     void setSelectedToggleFromState();
     
@@ -626,7 +622,6 @@ struct HoldTimeToggleGroup : ToggleGroupBase, juce::Component
 struct HistViewToggleGroup : ToggleGroupBase, juce::Component
 {
     HistViewToggleGroup();
-    ~HistViewToggleGroup() { toggles.clear(); toggles.shrink_to_fit(); }
     void resized() override;
     void setSelectedToggleFromState();
     
