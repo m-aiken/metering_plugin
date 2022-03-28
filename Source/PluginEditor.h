@@ -729,6 +729,8 @@ private:
     GonioScaleControl gonioControl;
     ViewControls viewToggles;
     
+    void initToggleGroupCallbacks(const ToggleGroup& toggleGroup, const std::vector<CustomToggle*>& togglePtrs);
+    
     void updateParams(const ToggleGroup& toggleGroup, const int& selectedId);
     
 #if defined(GAIN_TEST_ACTIVE)

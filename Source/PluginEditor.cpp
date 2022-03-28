@@ -1630,36 +1630,17 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         holdResetBtns.resetButton.animateButton();
     };
     
-    for ( size_t i = 0; i < timeToggles.decayRate.toggles.size(); ++i )
-    {
-        timeToggles.decayRate.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::DecayRate, i+1); };
-    }
-    
-    for ( size_t i = 0; i < timeToggles.avgDuration.toggles.size(); ++i )
-    {
-        timeToggles.avgDuration.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::AverageTime, i+1); };
-    }
-    
-    for ( size_t i = 0; i < timeToggles.holdTime.toggles.size(); ++i )
-    {
-        timeToggles.holdTime.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::HoldTime, i+1); };
-    }
-    
     gonioControl.gonioScaleKnob.onValueChange = [this]
     {
         auto rotaryValue = gonioControl.gonioScaleKnob.getValue();
         stereoImageMeter.setGoniometerScale(rotaryValue);
     };
     
-    for ( size_t i = 0; i < viewToggles.meterView.toggles.size(); ++i )
-    {
-        viewToggles.meterView.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::MeterView, i+1); };
-    }
-    
-    for ( size_t i = 0; i < viewToggles.histView.toggles.size(); ++i )
-    {
-        viewToggles.histView.toggles[i]->onClick = [i, this] { updateParams(ToggleGroup::HistView, i+1); };
-    }
+    initToggleGroupCallbacks(ToggleGroup::DecayRate,   timeToggles.decayRate.toggles);
+    initToggleGroupCallbacks(ToggleGroup::AverageTime, timeToggles.avgDuration.toggles);
+    initToggleGroupCallbacks(ToggleGroup::HoldTime,    timeToggles.holdTime.toggles);
+    initToggleGroupCallbacks(ToggleGroup::MeterView,   viewToggles.meterView.toggles);
+    initToggleGroupCallbacks(ToggleGroup::HistView,    viewToggles.histView.toggles);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -1770,6 +1751,14 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         histograms.update(HistogramTypes::PEAK, peakDbL, peakDbR);
         
         stereoImageMeter.update(incomingBuffer);
+    }
+}
+
+void PFMProject10AudioProcessorEditor::initToggleGroupCallbacks(const ToggleGroup& toggleGroup, const std::vector<CustomToggle*>& togglePtrs)
+{
+    for ( size_t i = 0; i < togglePtrs.size(); ++i )
+    {
+        togglePtrs[i]->onClick = [i, this, toggleGroup] { updateParams(toggleGroup, i+1); };
     }
 }
 
