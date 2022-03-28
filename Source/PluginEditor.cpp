@@ -1779,29 +1779,39 @@ void PFMProject10AudioProcessorEditor::updateParams(const ToggleGroup& toggleGro
     switch (toggleGroup)
     {
         case ToggleGroup::DecayRate:
+        {
             stereoMeterRms.setDecayRate(selectedId);
             stereoMeterPeak.setDecayRate(selectedId);
             timeToggles.decayRate.setSelectedValue(selectedId);
             break;
+        }
         case ToggleGroup::AverageTime:
+        {
             stereoMeterRms.resizeAverager(selectedId);
             stereoMeterPeak.resizeAverager(selectedId);
             timeToggles.avgDuration.setSelectedValue(selectedId);
             break;
+        }
         case ToggleGroup::MeterView:
+        {
             stereoMeterRms.setMeterView(selectedId);
             stereoMeterPeak.setMeterView(selectedId);
             viewToggles.meterView.setSelectedValue(selectedId);
             break;
+        }
         case ToggleGroup::HoldTime:
+        {
             stereoMeterRms.setTickHoldTime(selectedId);
             stereoMeterPeak.setTickHoldTime(selectedId);
             timeToggles.holdTime.setSelectedValue(selectedId);
             holdResetBtns.resetButton.setVisible( (selectedId == 6 && holdResetBtns.holdButton.getToggleState()) );
             break;
+        }
         case ToggleGroup::HistView:
+        {
             histograms.setView(selectedId);
             viewToggles.histView.setSelectedValue(selectedId);
             break;
+        }
     }
 }
