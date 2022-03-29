@@ -13,6 +13,81 @@
 
 #define MaxDecibels 6.f
 #define NegativeInfinity -48.f
+#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
+
+//==============================================================================
+namespace MyColours
+{
+
+enum Palette
+{
+    Red,
+    RedBright,
+    Text,
+    Background,
+    Yellow,
+    GoniometerPath
+};
+
+inline std::map<Palette, juce::Colour> colourMap =
+{
+    { Red,            juce::Colour(187u, 62u, 3u).withAlpha(0.9f) },
+    { RedBright,      juce::Colour(202u, 103u, 2u)                },
+    { Text,           juce::Colour(233u, 216u, 166u)              },
+    { Background,     juce::Colour(0u, 18u, 25u)                  },
+    { Yellow,         juce::Colour(238u, 155u, 0u)                },
+    { GoniometerPath, juce::Colour(153u, 226u, 180u)              }
+};
+
+inline juce::Colour getColour(Palette c) { return colourMap[c]; }
+
+enum GradientOrientation
+{
+    Vertical,
+    Horizontal
+};
+
+inline juce::ColourGradient getMeterGradient(const float startCoord, const float endCoord, const GradientOrientation orientation)
+{
+    juce::ColourGradient gradient;
+    if ( orientation == Vertical )
+    {
+        gradient = juce::ColourGradient().vertical(juce::Colour(153u,226u,180u),
+                          startCoord,
+                          juce::Colour(3u,102u,102u),
+                          endCoord);
+    }
+    else
+    {
+        gradient = juce::ColourGradient().horizontal(juce::Colour(153u,226u,180u),
+                            startCoord,
+                            juce::Colour(3u,102u,102u),
+                            endCoord);
+    }
+    
+    gradient.addColour(0.2, juce::Colour(136u,212u,171u));
+    gradient.addColour(0.3, juce::Colour(120u,198u,163u));
+    gradient.addColour(0.4, juce::Colour(103u,185u,154u));
+    gradient.addColour(0.5, juce::Colour(86u,171u,145u));
+    gradient.addColour(0.6, juce::Colour(70u,157u,137u));
+    gradient.addColour(0.7, juce::Colour(53u,143u,128u));
+    gradient.addColour(0.8, juce::Colour(36u,130u,119u));
+    gradient.addColour(0.9, juce::Colour(20u,116u,111u));
+    
+    return gradient;
+}
+
+inline juce::DropShadow getDropShadow()
+{
+    return juce::DropShadow
+    {
+        getColour(Background).contrasting(0.03f),
+        10,
+        juce::Point<int>(0,0)
+    };
+}
+
+}
 
 //==============================================================================
 struct Goniometer : juce::Component
@@ -80,15 +155,14 @@ enum class HistogramTypes
 
 enum HistView
 {
-    stacked = 1,
-    sideBySide
+    rows = 1,
+    columns
 };
 
 struct Histogram : juce::Component
 {
     Histogram(const juce::String& _label) : label(_label) { }
     void paint(juce::Graphics& g) override;
-    void resized() override;
     void update(const float& inputL, const float& inputR);
     
     void setThreshold(const float& threshAsDecibels);
@@ -100,7 +174,6 @@ private:
     
     juce::String label;
     juce::Value threshold;
-    juce::ColourGradient colourGrad;
     
     HistView view;
 };
@@ -113,7 +186,7 @@ struct HistogramContainer : juce::Component
     void update(const HistogramTypes& histoType, const float& inputL, const float& inputR);
     void setThreshold(const HistogramTypes& histoType, const float& threshAsDecibels);
     
-    void setView(const HistView& v);
+    void setView(const int& selectedId);
     juce::Value& getThresholdValueObject(const HistogramTypes& histoType);
     
 private:
@@ -214,8 +287,8 @@ struct ValueHolderBase : juce::Timer
     ValueHolderBase() { startTimerHz(40); }
     ~ValueHolderBase() { stopTimer(); }
     
-    void setHoldTime(const long long& ms) { holdTime = ms; }
-    long long getHoldTime() { return holdTime; }
+    void setHoldTime(const juce::int64& ms) { holdTime = ms; }
+    juce::int64 getHoldTime() { return holdTime; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
     void reset() { currentValue = NegativeInfinity; }
@@ -229,9 +302,10 @@ private:
     float currentValue = NegativeInfinity;
     float heldValue = NegativeInfinity;
    
-    long long now = juce::Time::currentTimeMillis();
-    long long peakTime = 0;
-    long long holdTime;
+    juce::int64 peakTime = getNow();
+    juce::int64 holdTime = 2000;
+    
+    static juce::int64 getNow() { return juce::Time::currentTimeMillis(); }
 };
 
 //==============================================================================
@@ -242,13 +316,15 @@ struct DecayingValueHolder : ValueHolderBase
     
     void updateHeldValue(const float& input);
     void setDecayRate(const float& dbPerSecond);
-    
     void handleOverHoldTime() override;
     
 private:
-    int timerFrequency = 30;
+    int timerFrequency = 40;
     float initDecayRate = 12.f;
-    float decayRatePerFrame;
+    float decayRatePerFrame = 0.f;
+    float decayRateMultiplier = 1.f;
+    
+    void resetDecayRateMultiplier() { decayRateMultiplier = 1.f; }
 };
 
 //==============================================================================
@@ -259,13 +335,11 @@ struct ValueHolder : ValueHolderBase
     
     void setThreshold(const float& threshAsDecibels);
     void updateHeldValue(const float& input);
-    bool getIsOverThreshold() const { return isOverThreshold; }
-    
+    bool isOverThreshold() const;
     void handleOverHoldTime() override;
     
 private:
     float threshold = 0.f;
-    bool isOverThreshold = false;
 };
 
 //==============================================================================
@@ -411,7 +485,7 @@ struct StereoMeter : juce::Component
     void update(const float& inputL, const float& inputR);
     
     void setThreshold(const float& threshAsDecibels);
-    void setDecayRate(const float& dbPerSecond);
+    void setDecayRate(const int& selectedId);
     
     void setTickVisibility(const bool& toggleState);
     void setTickHoldTime(const int& selectedId);
@@ -467,17 +541,10 @@ struct CustomTextBtn : juce::TextButton
 private:
     CustomLookAndFeel lnf;
     
-    enum Colours
-    {
-        standardRed,
-        brighterRed
-    };
-    
-    int selectedColour = Colours::standardRed;
-    
+    bool inClickState = false;
     std::function<void()> resetColour = [this]()
     {
-        selectedColour = Colours::standardRed;
+        inClickState = false;
         repaint();
     };
 };
@@ -492,46 +559,139 @@ private:
 };
 
 //==============================================================================
-struct GuiControlsGroupA : juce::Component
+enum class ToggleGroup
 {
-    GuiControlsGroupA();
-    void resized() override;
-    
-    float getCurrentDecayRate();
-    
-    juce::StringArray decayRateChoices { "-3dB/s", "-6dB/s", "-12dB/s", "-24dB/s", "-36dB/s" };
-    juce::StringArray avgDurationChoices { "100ms", "250ms", "500ms", "1000ms", "2000ms" };
-    juce::StringArray meterViewChoices { "Both", "Peak", "Avg" };
-    
-    CustomComboBox decayRateCombo { decayRateChoices };
-    CustomComboBox avgDurationCombo { avgDurationChoices };
-    CustomComboBox meterViewCombo { meterViewChoices };
+    DecayRate,
+    AverageTime,
+    MeterView,
+    HoldTime,
+    HistView
+};
+
+struct ToggleGroupBase
+{
+    virtual ~ToggleGroupBase() { }
+    virtual juce::Grid generateGrid(std::vector<CustomToggle*>& toggles);
+    juce::Value& getValueObject() { return selectedValue; }
+    void setSelectedValue(const int& selectedId) { selectedValue.setValue(selectedId); }
     
 private:
-    CustomLabel decayRateLabel { "DECAY" };
-    CustomLabel avgDurationLabel { "AVG" };
-    CustomLabel meterViewLabel { "METER" };
+    juce::Value selectedValue;
+};
+
+struct DecayRateToggleGroup : ToggleGroupBase, juce::Component
+{
+    DecayRateToggleGroup();
+    void resized() override;
+    void setSelectedToggleFromState();
+    
+    CustomToggle optionA{"-3"}, optionB{"-6"}, optionC{"-12"}, optionD{"-24"}, optionE{"-36"};
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE };
+};
+
+struct AverageTimeToggleGroup : ToggleGroupBase, juce::Component
+{
+    AverageTimeToggleGroup();
+    void resized() override;
+    void setSelectedToggleFromState();
+    
+    CustomToggle optionA{"100"}, optionB{"250"}, optionC{"500"}, optionD{"1000"}, optionE{"2000"};
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE };
+};
+
+struct MeterViewToggleGroup : ToggleGroupBase, juce::Component
+{
+    MeterViewToggleGroup();
+    void resized() override;
+    void setSelectedToggleFromState();
+    
+    CustomToggle optionA{"Both"}, optionB{"Peak"}, optionC{"Avg"};
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC };
+};
+
+struct HoldTimeToggleGroup : ToggleGroupBase, juce::Component
+{
+    HoldTimeToggleGroup();
+    void resized() override;
+    void setSelectedToggleFromState();
+    
+    CustomToggle optionA{"0s"}, optionB{"0.5s"}, optionC{"2s"}, optionD{"4s"}, optionE{"6s"}, optionF{"inf"};
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB, &optionC, &optionD, &optionE, &optionF };
+};
+
+struct HistViewToggleGroup : ToggleGroupBase, juce::Component
+{
+    HistViewToggleGroup();
+    void resized() override;
+    void setSelectedToggleFromState();
+    
+    juce::Grid generateGrid(std::vector<CustomToggle*>& toggles) override;
+    
+    CustomToggle optionA{"Rows"}, optionB{"Columns"};
+    std::vector<CustomToggle*> toggles = { &optionA, &optionB };
 };
 
 //==============================================================================
-struct GuiControlsGroupB : juce::Component
+struct HoldResetButtons : juce::Component
 {
-    GuiControlsGroupB();
+    HoldResetButtons();
+    void resized() override;
+    
+    CustomToggle holdButton { "HOLD" };
+    CustomTextBtn resetButton { "RESET" };
+};
+
+struct LineBreak : juce::Component
+{
+    void paint(juce::Graphics& g) override;
+};
+
+struct TimeControls : juce::Component
+{
+    TimeControls();
+    void resized() override;
+    
+    HoldTimeToggleGroup holdTime;
+    CustomToggle holdButton { "HOLD" };
+    CustomTextBtn holdResetButton { "RESET" };
+    
+    DecayRateToggleGroup decayRate;
+    AverageTimeToggleGroup avgDuration;
+    
+private:
+    CustomLabel holdTimeLabel { "Hold Time" };
+    CustomLabel decayRateLabel { "Decay Rate (dB/s)" };
+    CustomLabel avgDurationLabel { "Average Duration (ms)" };
+    
+    LineBreak lineBreak1, lineBreak2;
+};
+
+//==============================================================================
+struct GonioScaleControl : juce::Component
+{
+    GonioScaleControl();
     void resized() override;
     
     CustomRotary gonioScaleKnob;
     
-    CustomToggle holdButton { "HOLD" };
-    juce::StringArray holdTimeChoices {"0s", "0.5s", "2s", "4s", "6s", "inf"};
-    CustomComboBox holdTimeCombo { holdTimeChoices };
-    CustomTextBtn holdResetButton { "RESET" };
-    
-    juce::StringArray histViewChoices { "Stacked", "Side-by-Side" };
-    CustomComboBox histViewCombo { histViewChoices };
+private:
+    CustomLabel gonioScaleLabel { "Scale" };
+};
+
+//==============================================================================
+struct ViewControls : juce::Component
+{
+    ViewControls();
+    void resized() override;
+            
+    MeterViewToggleGroup meterView;
+    HistViewToggleGroup histView;
     
 private:
-    CustomLabel gonioScaleLabel { "SCALE" };
-    CustomLabel histViewLabel { "HIST VIEW" };
+    CustomLabel meterViewLabel { "Meter View" };
+    CustomLabel histViewLabel { "Histogram View" };
+    
+    LineBreak lineBreak;
 };
 
 //==============================================================================
@@ -563,8 +723,15 @@ private:
     
     StereoImageMeter stereoImageMeter;
     
-    GuiControlsGroupA guiControlsA;
-    GuiControlsGroupB guiControlsB;
+    HoldResetButtons holdResetBtns;
+    TimeControls timeToggles;
+    
+    GonioScaleControl gonioControl;
+    ViewControls viewToggles;
+    
+    void initToggleGroupCallbacks(const ToggleGroup& toggleGroup, const std::vector<CustomToggle*>& togglePtrs);
+    
+    void updateParams(const ToggleGroup& toggleGroup, const int& selectedId);
     
 #if defined(GAIN_TEST_ACTIVE)
     juce::Slider gainSlider;

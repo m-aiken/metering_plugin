@@ -23,7 +23,7 @@ void Goniometer::paint(juce::Graphics& g)
     
     g.drawImage(this->canvas, bounds.toFloat());
     
-    g.setColour(Colour(96u, 188u, 224u));
+    g.setColour(MyColours::getColour(MyColours::GoniometerPath));
     
     Path p;
     
@@ -61,10 +61,10 @@ void Goniometer::resized()
     auto padding = width / 10;
     auto diameter = width - (padding * 2);
     
-    auto backgroundColour = Colour(13u, 17u, 23u);
-    auto textColour = Colour(201u, 209u, 217u);
-    auto ellipseColour = Colour(201u, 209u, 217u).withAlpha(0.1f);
-    auto lineColour = Colour(201u, 209u, 217u).withAlpha(0.025f);
+    auto backgroundColour = MyColours::getColour(MyColours::Background);
+    auto textColour = MyColours::getColour(MyColours::Text);
+    auto ellipseColour = textColour.withAlpha(0.1f);
+    auto lineColour = textColour.withAlpha(0.025f);
     
     canvas = Image(Image::RGB, width, height, true);
     
@@ -147,29 +147,46 @@ void Histogram::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
     auto height = bounds.getHeight();
-
-    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
+    auto width = bounds.getWidth();
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
-    g.setFont(16.0f);
-    g.drawFittedText(label,                              // text
-                     bounds,                             // area
-                     juce::Justification::centredBottom, // justification
-                     1);                                 // max num lines
+    /*
+    Filling the entire container with the gradient and threshold colours
+    The path to fill is the negative of the buffer data
+    That path hides anything not from the proper signal with "Background Colour"
+    */
+    auto gradient = MyColours::getMeterGradient(bounds.getHeight(), 0, MyColours::GradientOrientation::Vertical);
+    
+    g.setGradientFill(gradient);
+    g.fillAll();
+
+    auto mappedThresh = juce::jmap<float>(threshold.getValue(),
+                                          NegativeInfinity,
+                                          MaxDecibels,
+                                          bounds.getHeight(),
+                                          0);
+    
+    juce::Rectangle<float> redRect (0,
+                                    0,
+                                    bounds.getWidth(),
+                                    mappedThresh);
+    
+    g.setColour(MyColours::getColour(MyColours::Red));
+    g.fillRect(redRect);
     
     auto& data = circularBuffer.getData();
     auto readIdx = circularBuffer.getReadIndex();
     auto bufferSize = circularBuffer.getSize();
 
-    if ( view == HistView::sideBySide )
+    if ( view == HistView::columns )
     {
         readIdx = (readIdx + (bufferSize / 2)) % bufferSize;
     }
     
+    g.setColour(MyColours::getColour(MyColours::Background));
     juce::Path p;
     
     // manually setting first and last pixel's column (x) outside of the loops
-    p.startNewSubPath(0, height);
+    p.startNewSubPath(0, 0);
     
     auto x = 1;
     
@@ -192,33 +209,25 @@ void Histogram::paint(juce::Graphics& g)
         ++x;
     }
     
-    p.lineTo(bufferSize - 1, height);
+    p.lineTo(bufferSize - 1, 0);
     p.closeSubPath();
-    
-    auto green = juce::Colour(89u, 255u, 103u).withAlpha(0.6f);
-    auto red = juce::Colour(196u, 55u, 55u);
-    
-    auto thresholdProportion = juce::jmap<float>(threshold.getValue(),
-                                                 NegativeInfinity,
-                                                 MaxDecibels,
-                                                 0.f,
-                                                 1.f);
-    
-    colourGrad.clearColours();
-    
-    // bottom to boundary = green, boundary+ = red
-    colourGrad.addColour(0, green);                   // negative infinity
-    colourGrad.addColour(thresholdProportion, green); // threshold boundary
-    colourGrad.addColour(thresholdProportion, red);   // threshold boundary
-
-    g.setGradientFill(colourGrad);
     g.fillPath(p);
-}
-
-void Histogram::resized()
-{
-    colourGrad.point1 = juce::Point<float>(0, getLocalBounds().getHeight()); // bottom
-    colourGrad.point2 = juce::Point<float>(0, 0);      // top
+    
+    g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(GlobalFont);
+    g.drawFittedText(label,                           // text
+                     bounds.reduced(4),               // area
+                     juce::Justification::centredTop, // justification
+                     1);                              // max num lines
+    
+    
+    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
+    // startX, startY, endX, endY, thickness
+    g.drawLine(0, 0, 0, height, 2.f);
+    g.drawLine(width, 0, width, height, 2.f);
+    
+    g.drawLine(0, 0, width, 0, 2.f);
+    g.drawLine(0, height, width, height, 2.f);
 }
 
 void Histogram::update(const float& inputL, const float& inputR)
@@ -250,8 +259,8 @@ HistogramContainer::HistogramContainer()
 void HistogramContainer::resized()
 {
     juce::FlexBox fb;
-    fb.flexDirection = ( view == stacked ? juce::FlexBox::Direction::column
-                                         : juce::FlexBox::Direction::row);
+    fb.flexDirection = ( view == rows ? juce::FlexBox::Direction::column
+                                      : juce::FlexBox::Direction::row);
     
     auto rms = juce::FlexItem(rmsHistogram).withFlex(1.f).withMargin(2.f);
     auto peak = juce::FlexItem(peakHistogram).withFlex(1.f).withMargin(2.f);
@@ -281,8 +290,9 @@ void HistogramContainer::setThreshold(const HistogramTypes& histoType,
         peakHistogram.setThreshold(threshAsDecibels);
 }
 
-void HistogramContainer::setView(const HistView& v)
+void HistogramContainer::setView(const int& selectedId)
 {
+    auto v = (selectedId == HistView::rows) ? HistView::rows : HistView::columns;
     view = v;
     resized();
     
@@ -334,23 +344,23 @@ void CorrelationMeter::paint(juce::Graphics& g)
     auto meterWidth = width - (padding * 2);
     
     // labels
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
     // draw fitted text args = text, x, y, width, height, justification, maxNumLines
     g.drawFittedText("-1", 0, 0, padding, height, juce::Justification::centred, 1);
     g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);
     
     // meter background
-    g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background
-    
     auto meterBounds = juce::Rectangle<int>(bounds.getCentreX() - (meterWidth / 2), // x
                                             bounds.getY(),                          // y
                                             meterWidth,                             // width
                                             height);                                // height
 
-    g.fillRect(meterBounds);
+    auto shadow = MyColours::getDropShadow();
+    shadow.drawForRectangle(g, meterBounds);
     
     // meters
-    g.setColour(juce::Colour(89u, 255u, 103u).withAlpha(0.6f)); // green
+    auto gradient = MyColours::getMeterGradient(bounds.getCentreX(), bounds.getRight(), MyColours::GradientOrientation::Horizontal);
+    g.setGradientFill(gradient);
     
     juce::Rectangle<int> averageCorrelationMeter = paintMeter(meterBounds,            // container bounds
                                                    meterBounds.getY(),                // y
@@ -450,8 +460,7 @@ void StereoImageMeter::setGoniometerScale(const double& rotaryValue)
 //==============================================================================
 void ValueHolderBase::timerCallback()
 {
-    now = juce::Time::currentTimeMillis();
-    if ( now - peakTime > holdTime )
+    if ( getNow() - peakTime > holdTime )
         handleOverHoldTime();
 }
 
@@ -460,8 +469,9 @@ void DecayingValueHolder::updateHeldValue(const float& input)
 {
     if (input > currentValue)
     {
+        peakTime = getNow();
         currentValue = input;
-        peakTime = juce::Time::currentTimeMillis();
+        resetDecayRateMultiplier();
     }
 }
 
@@ -474,12 +484,12 @@ void DecayingValueHolder::handleOverHoldTime()
 {
     currentValue = juce::jlimit(NegativeInfinity,
                                 MaxDecibels,
-                                currentValue - decayRatePerFrame);
-        
+                                currentValue - (decayRatePerFrame * decayRateMultiplier));
+    
+    decayRateMultiplier *= 1.04f;
+    
     if ( currentValue == NegativeInfinity )
-        setDecayRate(initDecayRate); // reset decayRatePerFrame
-    else
-        decayRatePerFrame *= 1.04f;
+        resetDecayRateMultiplier();
 }
 
 //==============================================================================
@@ -492,18 +502,21 @@ void ValueHolder::updateHeldValue(const float& input)
 {
     currentValue = input;
     
-    if (input > threshold)
+    if (isOverThreshold())
     {
-        isOverThreshold = true;
         peakTime = juce::Time::currentTimeMillis();
         if (input > heldValue)
             heldValue = input;
     }
 }
 
+bool ValueHolder::isOverThreshold() const
+{
+    return currentValue > threshold;
+}
+
 void ValueHolder::handleOverHoldTime()
 {
-    isOverThreshold = currentValue > threshold;
     heldValue = NegativeInfinity;
 }
 
@@ -512,18 +525,18 @@ void TextMeter::paint(juce::Graphics& g)
 {
     juce::String str;
     
-    if ( valueHolder.getIsOverThreshold() )
+    if ( valueHolder.isOverThreshold() )
     {
         str = juce::String(valueHolder.getHeldValue(), 1);
-        g.fillAll(juce::Colour(196u, 55u, 55u)); // red background
+        g.fillAll(MyColours::getColour(MyColours::Red)); // background
     }
     else
     {
         str = juce::String(valueHolder.getCurrentValue(), 1);
     }
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
-    g.setFont(14.0f);
+    g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(GlobalFont);
     g.drawFittedText(str,                                      // text
                      getLocalBounds(),                         // area
                      juce::Justification::horizontallyCentred, // justification
@@ -546,9 +559,10 @@ void DbScale::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
 
-    int textHeight = 8;
+    int textHeight = 12;
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(GlobalFont);
     
     for ( int i = 0; i < ticks.size(); ++i)
     {
@@ -570,21 +584,23 @@ void Meter::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     auto h = bounds.getHeight();
     
-    g.setColour(juce::Colour(13u, 17u, 23u).contrasting(0.05f)); // background colour
-    g.fillRect(bounds);
+    auto shadow = MyColours::getDropShadow();
+    shadow.drawForRectangle(g, bounds);
     
-    auto green = juce::Colour(89u, 255u, 103u).withAlpha(0.6f);
-    auto red = juce::Colour(196u, 55u, 55u);
-    g.setColour(green); // green
+    auto overThreshColour = MyColours::getColour(MyColours::Red);
+
     auto levelJmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
     auto thrshJmap = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, h, 0);
     
-    g.setColour(green);
+    auto underThreshGradient = MyColours::getMeterGradient(bounds.getHeight(), bounds.getHeight() / 3, MyColours::GradientOrientation::Vertical);
+    
+    g.setGradientFill(underThreshGradient);
     if ( threshold <= level )
     {
-        g.setColour(red);
+        g.setColour(overThreshColour);
         g.fillRect(bounds.withHeight((h * levelJmap) - (thrshJmap - 1)).withY(levelJmap));
-        g.setColour(green);
+        
+        g.setGradientFill(underThreshGradient);
         g.fillRect(bounds.withHeight(h * (thrshJmap + 1)).withY(thrshJmap + 1));
     }
     else
@@ -595,8 +611,7 @@ void Meter::paint(juce::Graphics& g)
     // falling tick
     if ( fallingTickEnabled )
     {
-        auto yellow = juce::Colour(217, 193, 56);
-        g.setColour(yellow);
+        g.setColour(MyColours::getColour(MyColours::Yellow));
         
         auto tickValue = fallingTick.getHoldTime() == 0 ? level :   fallingTick.getCurrentValue();
         
@@ -685,8 +700,8 @@ void MacroMeter::resized()
     // setBounds args (int x, int y, int width, int height)
     textMeter.setBounds(0, 0, w, textBoxHeight);
     
-    auto averageMeterWidth = static_cast<int>(w * 0.75f);
-    auto instantMeterWidth = static_cast<int>(w * 0.20f);
+    auto averageMeterWidth = static_cast<int>(w * 0.7f);
+    auto instantMeterWidth = static_cast<int>(w * 0.25f);
     auto meterPadding = static_cast<int>(w * 0.05f);
     
     auto avgMeterX = (channel == Channel::Left ? 0 : instantMeterWidth + meterPadding);
@@ -804,7 +819,7 @@ void CustomLookAndFeel::drawLinearSlider(juce::Graphics& g,
     slider.setSliderStyle(style);
     
     auto threshold = juce::Rectangle<float>(x, sliderPos, width, 2.f);
-    g.setColour(juce::Colour(196u, 55u, 55u)); // red
+    g.setColour(MyColours::getColour(MyColours::Red));
     g.fillRect(threshold);
 }
 
@@ -815,9 +830,8 @@ void CustomLookAndFeel::drawComboBox(juce::Graphics& g,
                                      int buttonW, int buttonH,
                                      juce::ComboBox& comboBox)
 {
-    g.fillAll(juce::Colour(13u, 17u, 23u).contrasting(0.05f));
-    auto lightGrey = juce::Colour(201u, 209u, 217u);
-    comboBox.setColour(juce::ComboBox::textColourId, lightGrey);
+    g.fillAll(MyColours::getColour(MyColours::Background).contrasting(0.05f));
+    comboBox.setColour(juce::ComboBox::textColourId, MyColours::getColour(MyColours::Text));
 }
 
 void CustomLookAndFeel::drawToggleButton(juce::Graphics& g,
@@ -827,15 +841,15 @@ void CustomLookAndFeel::drawToggleButton(juce::Graphics& g,
 {
     auto bounds = toggleButton.getLocalBounds();
     
-    auto yellow = juce::Colour(217, 193, 56);
-    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
-    auto lightGrey = juce::Colour(201u, 209u, 217u);
-    
     // background
-    g.fillAll( toggleButton.getToggleState() ? yellow : darkGrey );
+    g.fillAll(toggleButton.getToggleState()
+              ? MyColours::getColour(MyColours::Yellow)
+              : MyColours::getColour(MyColours::Background).contrasting(0.05f));
     
     // text colour
-    g.setColour( toggleButton.getToggleState() ? darkGrey : lightGrey );
+    g.setColour(toggleButton.getToggleState()
+                ? MyColours::getColour(MyColours::Background).contrasting(0.05f)
+                : MyColours::getColour(MyColours::Text));
     
     g.drawFittedText(toggleButton.getButtonText(),
                      bounds.getX(),
@@ -856,7 +870,7 @@ void CustomLookAndFeel::drawButtonBackground(juce::Graphics& g,
     
     g.fillAll(backgroundColour);
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
     g.drawFittedText(button.getButtonText(),
                      bounds.getX(),
                      bounds.getY(),
@@ -875,15 +889,10 @@ void CustomLookAndFeel::drawRotarySlider(juce::Graphics& g,
 {
     auto bounds = juce::Rectangle<float>(x, y, width, height);
     
-    auto yellow = juce::Colour(217, 193, 56);
-    auto darkGrey = juce::Colour(13u, 17u, 23u).contrasting(0.05f);
-    auto lightGrey = juce::Colour(201u, 209u, 217u);
-    
-    g.setColour(darkGrey);
+    g.setColour(MyColours::getColour(MyColours::Background).contrasting(0.05f));
     g.fillEllipse(bounds);
     
-    g.setColour(lightGrey);
-    g.drawEllipse(bounds, 1.f);
+    g.setColour(MyColours::getColour(MyColours::Text));
     
     juce::Path p;
     
@@ -957,7 +966,8 @@ void StereoMeter::paint(juce::Graphics& g)
     auto labelContainerY = static_cast<int>(h * dbScaleLabelCrossover);
     auto labelContainerH = static_cast<int>(h - labelContainerY);
     
-    g.setColour(juce::Colour(201u, 209u, 217u)); // text colour
+    g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(GlobalFont);
     
     std::vector<juce::String> labels{"L", label, "R"};
     std::vector<int> xPositions{0, static_cast<int>(w / 3), static_cast<int>(w - (w / 3))};
@@ -1015,8 +1025,20 @@ void StereoMeter::setThreshold(const float& threshAsDecibels)
     macroMeterR.setThreshold(threshAsDecibels);
 }
 
-void StereoMeter::setDecayRate(const float& dbPerSecond)
+void StereoMeter::setDecayRate(const int& selectedId)
 {
+    float dbPerSecond;
+    
+    switch (selectedId)
+    {
+        case 1:  dbPerSecond = 3.f;  break;
+        case 2:  dbPerSecond = 6.f;  break;
+        case 3:  dbPerSecond = 12.f; break;
+        case 4:  dbPerSecond = 24.f; break;
+        case 5:  dbPerSecond = 36.f; break;
+        default: dbPerSecond = 12.f; break;
+    }
+    
     macroMeterL.setDecayRate(dbPerSecond);
     macroMeterR.setDecayRate(dbPerSecond);
 }
@@ -1033,27 +1055,13 @@ void StereoMeter::setTickHoldTime(const int& selectedId)
     
     switch (selectedId)
     {
-        case 1:
-            holdTimeMs = 0;
-            break;
-        case 2:
-            holdTimeMs = 500;
-            break;
-        case 3:
-            holdTimeMs = 2000;
-            break;
-        case 4:
-            holdTimeMs = 4000;
-            break;
-        case 5:
-            holdTimeMs = 6000;
-            break;
-        case 6:
-            holdTimeMs = INFINITY;
-            break;
-        default:
-            holdTimeMs = 500;
-            break;
+        case 1:  holdTimeMs = 0;        break;
+        case 2:  holdTimeMs = 500;      break;
+        case 3:  holdTimeMs = 2000;     break;
+        case 4:  holdTimeMs = 4000;     break;
+        case 5:  holdTimeMs = 6000;     break;
+        case 6:  holdTimeMs = INFINITY; break;
+        default: holdTimeMs = 500;      break;
     }
     
     macroMeterL.setHoldTime(holdTimeMs);
@@ -1108,8 +1116,8 @@ void CustomLabel::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
     
-    g.setColour(juce::Colour(201u, 209u, 217u));
-    
+    g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(GlobalFont);
     g.drawFittedText(getText(),
                      bounds.getX(),
                      bounds.getY(),
@@ -1127,6 +1135,7 @@ CustomToggle::CustomToggle(const juce::String& buttonText)
 
 void CustomToggle::paint(juce::Graphics& g)
 {
+    g.setFont(GlobalFont);
     getLookAndFeel().drawToggleButton(g,
                                       *this, // toggle button
                                       true,  // draw as highlighted
@@ -1141,7 +1150,11 @@ CustomTextBtn::CustomTextBtn(const juce::String& buttonText)
 
 void CustomTextBtn::paint(juce::Graphics& g)
 {
-    auto buttonColour = (selectedColour == Colours::standardRed ? juce::Colour(196u, 55u, 55u) : juce::Colour(255u, 55u, 55u));
+    auto buttonColour = (inClickState
+                         ? MyColours::getColour(MyColours::RedBright)
+                         : MyColours::getColour(MyColours::Red));
+    
+    g.setFont(GlobalFont);
     
     getLookAndFeel().drawButtonBackground(g,
                                           *this,        // button
@@ -1152,7 +1165,7 @@ void CustomTextBtn::paint(juce::Graphics& g)
 
 void CustomTextBtn::animateButton()
 {
-    selectedColour = Colours::brighterRed;
+    inClickState = true;
     repaint();
     
     juce::Timer::callAfterDelay(100, resetColour);
@@ -1166,7 +1179,7 @@ CustomRotary::CustomRotary()
 void CustomRotary::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
-    auto diameter = bounds.getWidth() * 0.8f;
+    auto diameter = bounds.getWidth() * 0.7f;
     auto radius = diameter / 2;
     
     auto startAngle = juce::degreesToRadians(180.f + 45.f);
@@ -1192,72 +1205,265 @@ void CustomRotary::paint(juce::Graphics& g)
 }
 
 //==============================================================================
-GuiControlsGroupA::GuiControlsGroupA()
+juce::Grid ToggleGroupBase::generateGrid(std::vector<CustomToggle*>& toggles)
 {
-    addAndMakeVisible(decayRateLabel);
-    addAndMakeVisible(avgDurationLabel);
-    addAndMakeVisible(meterViewLabel);
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
     
-    addAndMakeVisible(decayRateCombo);
-    addAndMakeVisible(avgDurationCombo);
-    addAndMakeVisible(meterViewCombo);
+    grid.templateColumns = { Track(Fr(1)), Track(Fr(1)), Track(Fr(1)) };
+    grid.autoRows = Track(Fr(1));
+    
+    for ( auto& toggle : toggles )
+        grid.items.add(juce::GridItem(*toggle));
+    
+    grid.setGap(juce::Grid::Px{4});
+    return grid;
 }
 
-void GuiControlsGroupA::resized()
+DecayRateToggleGroup::DecayRateToggleGroup()
 {
-    auto bounds = getLocalBounds();
-    auto boundsHeight = bounds.getHeight();
-    
-    auto boxHeight = 30;
-    auto width = bounds.getWidth();
-
-    decayRateLabel.setBounds(0,
-                             (boundsHeight * 0.15f) - boxHeight,
-                             width,
-                             boxHeight);
-    decayRateCombo.setBounds(0,
-                             (boundsHeight * 0.15f),
-                             width,
-                             boxHeight);
-    
-    avgDurationLabel.setBounds(0,
-                               (boundsHeight * 0.5f) - boxHeight,
-                               width,
-                               boxHeight);
-    avgDurationCombo.setBounds(0,
-                               (boundsHeight * 0.5f),
-                               width,
-                               boxHeight);
-    
-    meterViewLabel.setBounds(0,
-                             (boundsHeight * 0.85f) - boxHeight,
-                             width,
-                             boxHeight);
-    meterViewCombo.setBounds(0,
-                             (boundsHeight * 0.85f),
-                             width,
-                             boxHeight);
-}
-
-float GuiControlsGroupA::getCurrentDecayRate()
-{
-    float dbPerSecond;
-    
-    switch (decayRateCombo.getSelectedId())
+    for ( auto& toggle : toggles )
     {
-        case 1:  dbPerSecond = 3.f;  break;
-        case 2:  dbPerSecond = 6.f;  break;
-        case 3:  dbPerSecond = 12.f; break;
-        case 4:  dbPerSecond = 24.f; break;
-        case 5:  dbPerSecond = 36.f; break;
-        default: dbPerSecond = 12.f; break;
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(1);
     }
+}
+
+void DecayRateToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void DecayRateToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(getValueObject().getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        case 4:  optionD.setToggleState(true, nt::dontSendNotification); break;
+        case 5:  optionE.setToggleState(true, nt::dontSendNotification); break;
+        default: optionC.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
+AverageTimeToggleGroup::AverageTimeToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(2);
+    }
+}
+
+void AverageTimeToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void AverageTimeToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(getValueObject().getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        case 4:  optionD.setToggleState(true, nt::dontSendNotification); break;
+        case 5:  optionE.setToggleState(true, nt::dontSendNotification); break;
+        default: optionC.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
+MeterViewToggleGroup::MeterViewToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(3);
+    }
+}
+
+void MeterViewToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void MeterViewToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(getValueObject().getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        default: optionA.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
+HoldTimeToggleGroup::HoldTimeToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(4);
+    }
+}
+
+void HoldTimeToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void HoldTimeToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(getValueObject().getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        case 3:  optionC.setToggleState(true, nt::dontSendNotification); break;
+        case 4:  optionD.setToggleState(true, nt::dontSendNotification); break;
+        case 5:  optionE.setToggleState(true, nt::dontSendNotification); break;
+        case 6:  optionF.setToggleState(true, nt::dontSendNotification); break;
+        default: optionB.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
+HistViewToggleGroup::HistViewToggleGroup()
+{
+    for ( auto& toggle : toggles )
+    {
+        addAndMakeVisible(toggle);
+        toggle->setRadioGroupId(5);
+    }
+}
+
+void HistViewToggleGroup::resized()
+{
+    juce::Grid grid = generateGrid(toggles);
+    grid.performLayout(getLocalBounds());
+}
+
+void HistViewToggleGroup::setSelectedToggleFromState()
+{
+    using nt = juce::NotificationType;
+    switch (static_cast<int>(getValueObject().getValue()))
+    {
+        case 1:  optionA.setToggleState(true, nt::dontSendNotification); break;
+        case 2:  optionB.setToggleState(true, nt::dontSendNotification); break;
+        default: optionA.setToggleState(true, nt::dontSendNotification); break;
+    }
+}
+
+juce::Grid HistViewToggleGroup::generateGrid(std::vector<CustomToggle*>& toggles)
+{
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
     
-    return dbPerSecond;
+    grid.templateColumns = { Track(Fr(1)), Track(Fr(1)) };
+    grid.autoRows = Track(Fr(1));
+    
+    for ( auto& toggle : toggles )
+        grid.items.add(juce::GridItem(*toggle));
+    
+    grid.setGap(juce::Grid::Px{4});
+    return grid;
 }
 
 //==============================================================================
-GuiControlsGroupB::GuiControlsGroupB()
+HoldResetButtons::HoldResetButtons()
+{
+    addAndMakeVisible(holdButton);
+    addAndMakeVisible(resetButton);
+}
+
+void HoldResetButtons::resized()
+{
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Fr = juce::Grid::Fr;
+    
+    grid.templateColumns = { Track(Fr(2)), Track(Fr(1)) };
+    grid.autoRows = Track(Fr(1));
+    grid.items = { juce::GridItem(holdButton), juce::GridItem(resetButton) };
+    
+    grid.setGap(juce::Grid::Px{4});
+    grid.performLayout(getLocalBounds());
+}
+
+//==============================================================================
+void LineBreak::paint(juce::Graphics& g)
+{
+    auto bounds = getLocalBounds();
+    g.setColour(MyColours::getColour(MyColours::Text).withAlpha(0.025f));
+    g.drawLine(0, bounds.getCentreY(), bounds.getRight(), bounds.getCentreY(), 2.f);
+}
+
+TimeControls::TimeControls()
+{
+    addAndMakeVisible(holdTimeLabel);
+    addAndMakeVisible(decayRateLabel);
+    addAndMakeVisible(avgDurationLabel);
+    
+    addAndMakeVisible(holdTime);
+    addAndMakeVisible(decayRate);
+    addAndMakeVisible(avgDuration);
+    
+    addAndMakeVisible(lineBreak1);
+    addAndMakeVisible(lineBreak2);
+}
+
+void TimeControls::resized()
+{
+    auto bounds = getLocalBounds();
+    auto buttonHeight = bounds.getHeight() / 10;
+    
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Px = juce::Grid::Px;
+    
+    grid.autoColumns = Track(Px(bounds.getWidth()));
+    grid.templateRows =
+    {
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight * 2)),
+        Track(Px(buttonHeight / 2)), // line break
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight * 2)),
+        Track(Px(buttonHeight / 2)), // line break
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight * 2))
+    };
+    
+    grid.items =
+    {
+        juce::GridItem(holdTimeLabel),
+        juce::GridItem(holdTime),
+        juce::GridItem(lineBreak1),
+        juce::GridItem(decayRateLabel),
+        juce::GridItem(decayRate),
+        juce::GridItem(lineBreak2),
+        juce::GridItem(avgDurationLabel),
+        juce::GridItem(avgDuration)
+    };
+    
+    grid.performLayout(bounds);
+}
+
+//==============================================================================
+GonioScaleControl::GonioScaleControl()
 {
     addAndMakeVisible(gonioScaleLabel);
     addAndMakeVisible(gonioScaleKnob);
@@ -1265,59 +1471,60 @@ GuiControlsGroupB::GuiControlsGroupB()
     gonioScaleKnob.setRange(50.0, 200.0);
     gonioScaleKnob.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     gonioScaleKnob.setValue(100.0);
-    
-    addAndMakeVisible(holdButton);
-    addAndMakeVisible(holdTimeCombo);
-    addAndMakeVisible(holdResetButton);
-    
-    addAndMakeVisible(histViewLabel);
-    addAndMakeVisible(histViewCombo);
 }
 
-void GuiControlsGroupB::resized()
+void GonioScaleControl::resized()
 {
     auto bounds = getLocalBounds();
-    auto boundsHeight = bounds.getHeight();
-    
-    auto boxHeight = 30;
     auto width = bounds.getWidth();
-    auto rotaryDiameter = width * 0.8f;
-    auto rotaryRadius = rotaryDiameter / 2;
+    auto block = bounds.getHeight() / 4;
     
-    gonioScaleLabel.setBounds(0,
-                              (boundsHeight * 0.15f) - boxHeight,
-                              width,
-                              boxHeight);
+    gonioScaleLabel.setBounds(0, 0, width, block);
+    gonioScaleKnob.setBounds(0, gonioScaleLabel.getBottom(), width, block * 3);
+}
+
+//==============================================================================
+ViewControls::ViewControls()
+{
+    addAndMakeVisible(meterViewLabel);
+    addAndMakeVisible(meterView);
+    addAndMakeVisible(histViewLabel);
+    addAndMakeVisible(histView);
     
-    gonioScaleKnob.setBounds(bounds.getCentreX() - rotaryRadius,
-                             (boundsHeight * 0.15f),
-                             rotaryDiameter,
-                             rotaryDiameter);
+    addAndMakeVisible(lineBreak);
+}
+
+void ViewControls::resized()
+{
+    auto bounds = getLocalBounds();
+    auto buttonHeight = bounds.getHeight() / 4.5f;
     
-    holdButton.setBounds(0,
-                         (boundsHeight * 0.5f) - boxHeight - 3,
-                         width,
-                         boxHeight);
+    juce::Grid grid;
+     
+    using Track = juce::Grid::TrackInfo;
+    using Px = juce::Grid::Px;
     
-    holdTimeCombo.setBounds(0,
-                            (boundsHeight * 0.5f),
-                            width,
-                            boxHeight);
+    grid.autoColumns = Track(Px(bounds.getWidth()));
     
-    holdResetButton.setBounds(bounds.getCentreX() - (width / 4),
-                              (boundsHeight * 0.5f) + boxHeight + 3,
-                              width / 2,
-                              boxHeight);
+    grid.templateRows =
+    {
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight / 2)), // line break
+        Track(Px(buttonHeight)),
+        Track(Px(buttonHeight))
+    };
     
-    histViewLabel.setBounds(0,
-                            (boundsHeight * 0.85f) - boxHeight,
-                            width,
-                            boxHeight);
+    grid.items =
+    {
+        juce::GridItem(meterViewLabel),
+        juce::GridItem(meterView),
+        juce::GridItem(lineBreak),
+        juce::GridItem(histViewLabel),
+        juce::GridItem(histView)
+    };
     
-    histViewCombo.setBounds(0,
-                            (boundsHeight * 0.85f),
-                            width,
-                            boxHeight);
+    grid.performLayout(bounds);
 }
 
 //==============================================================================
@@ -1332,52 +1539,52 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
     addAndMakeVisible(stereoMeterPeak);
     addAndMakeVisible(histograms);
     addAndMakeVisible(stereoImageMeter);
-    addAndMakeVisible(guiControlsA);
-    addAndMakeVisible(guiControlsB);
+    addAndMakeVisible(holdResetBtns);
+    addAndMakeVisible(timeToggles);
+    addAndMakeVisible(gonioControl);
+    addAndMakeVisible(viewToggles);
     
     auto& state = audioProcessor.valueTree;
     
     // link widgets to valueTree
-    guiControlsA.decayRateCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("DecayTime", nullptr));
-    guiControlsA.avgDurationCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("AverageTime", nullptr));
-    guiControlsA.meterViewCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
-    guiControlsB.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
-    guiControlsB.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
-    guiControlsB.holdTimeCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HoldTime", nullptr));
-    guiControlsB.histViewCombo.getSelectedIdAsValue().referTo(state.getPropertyAsValue("HistogramView", nullptr));
+    holdResetBtns.holdButton.getToggleStateValue().referTo(state.getPropertyAsValue("EnableHold", nullptr));
+    
+    timeToggles.decayRate.getValueObject().referTo(state.getPropertyAsValue("DecayTime", nullptr));
+    timeToggles.avgDuration.getValueObject().referTo(state.getPropertyAsValue("AverageTime", nullptr));
+    timeToggles.holdTime.getValueObject().referTo(state.getPropertyAsValue("HoldTime", nullptr));
+    
+    gonioControl.gonioScaleKnob.getValueObject().referTo(state.getPropertyAsValue("GoniometerScale", nullptr));
+    viewToggles.meterView.getValueObject().referTo(state.getPropertyAsValue("MeterViewMode", nullptr));
+    viewToggles.histView.getValueObject().referTo(state.getPropertyAsValue("HistogramView", nullptr));
+    
     stereoMeterRms.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
     stereoMeterPeak.threshCtrl.getValueObject().referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
+    
     histograms.getThresholdValueObject(HistogramTypes::RMS).referTo(state.getPropertyAsValue("RMSThreshold", nullptr));
     histograms.getThresholdValueObject(HistogramTypes::PEAK).referTo(state.getPropertyAsValue("PeakThreshold", nullptr));
     
     // set initial values
-    int decayRate = state.getPropertyAsValue("DecayTime", nullptr).getValue();
-    stereoMeterRms.setDecayRate(decayRate);
-    stereoMeterPeak.setDecayRate(decayRate);
-    
-    int avgTime = state.getPropertyAsValue("AverageTime", nullptr).getValue();
-    stereoMeterRms.resizeAverager(avgTime);
-    stereoMeterPeak.resizeAverager(avgTime);
-    
-    int meterView = state.getPropertyAsValue("MeterViewMode", nullptr).getValue();
-    stereoMeterRms.setMeterView(meterView);
-    stereoMeterPeak.setMeterView(meterView);
-    
-    double gonioScale = state.getPropertyAsValue("GoniometerScale", nullptr).getValue();
-    stereoImageMeter.setGoniometerScale(gonioScale);
-    
     bool holdButtonState = state.getPropertyAsValue("EnableHold", nullptr).getValue();
     stereoMeterRms.setTickVisibility(holdButtonState);
     stereoMeterPeak.setTickVisibility(holdButtonState);
     
-    int holdTime = state.getPropertyAsValue("HoldTime", nullptr).getValue();
-    stereoMeterRms.setTickHoldTime(holdTime);
-    stereoMeterPeak.setTickHoldTime(holdTime);
-    guiControlsB.holdResetButton.setVisible( (holdTime == 6) );
+    updateParams(ToggleGroup::DecayRate, state.getPropertyAsValue("DecayTime", nullptr).getValue());
+    timeToggles.decayRate.setSelectedToggleFromState();
     
-    int histView = state.getPropertyAsValue("HistogramView", nullptr).getValue();
-    histograms.setView(histView == HistView::stacked ? HistView::stacked
-                                                     : HistView::sideBySide);
+    updateParams(ToggleGroup::AverageTime, state.getPropertyAsValue("AverageTime", nullptr).getValue());
+    timeToggles.avgDuration.setSelectedToggleFromState();
+    
+    updateParams(ToggleGroup::HoldTime, state.getPropertyAsValue("HoldTime", nullptr).getValue());
+    timeToggles.holdTime.setSelectedToggleFromState();
+    
+    double gonioScale = state.getPropertyAsValue("GoniometerScale", nullptr).getValue();
+    stereoImageMeter.setGoniometerScale(gonioScale);
+    
+    updateParams(ToggleGroup::MeterView, state.getPropertyAsValue("MeterViewMode", nullptr).getValue());
+    viewToggles.meterView.setSelectedToggleFromState();
+    
+    updateParams(ToggleGroup::HistView, state.getPropertyAsValue("HistogramView", nullptr).getValue());
+    viewToggles.histView.setSelectedToggleFromState();
     
     float rmsThresh = state.getPropertyAsValue("RMSThreshold", nullptr).getValue();
     stereoMeterRms.setThreshold(rmsThresh);
@@ -1398,74 +1605,42 @@ PFMProject10AudioProcessorEditor::PFMProject10AudioProcessorEditor (PFMProject10
         stereoMeterPeak.setThreshold(stereoMeterPeak.threshCtrl.getValue());
     };
     
-    guiControlsA.decayRateCombo.onChange = [this]
+    holdResetBtns.holdButton.onClick = [this]
     {
-        auto dbPerSecond = guiControlsA.getCurrentDecayRate();
-        stereoMeterRms.setDecayRate(dbPerSecond);
-        stereoMeterPeak.setDecayRate(dbPerSecond);
-    };
-    
-    guiControlsA.avgDurationCombo.onChange = [this]
-    {
-        auto durationId = guiControlsA.avgDurationCombo.getSelectedId();
-        stereoMeterRms.resizeAverager(durationId);
-        stereoMeterPeak.resizeAverager(durationId);
-    };
-    
-    guiControlsA.meterViewCombo.onChange = [this]
-    {
-        auto selectedId = guiControlsA.meterViewCombo.getSelectedId();
-        stereoMeterRms.setMeterView(selectedId);
-        stereoMeterPeak.setMeterView(selectedId);
-    };
-    
-    guiControlsB.gonioScaleKnob.onValueChange = [this]
-    {
-        auto rotaryValue = guiControlsB.gonioScaleKnob.getValue();
-        stereoImageMeter.setGoniometerScale(rotaryValue);
-    };
-    
-    guiControlsB.holdButton.onClick = [this]
-    {
-        auto toggleState = guiControlsB.holdButton.getToggleState();
+        auto toggleState = holdResetBtns.holdButton.getToggleState();
         stereoMeterRms.setTickVisibility(toggleState);
         stereoMeterPeak.setTickVisibility(toggleState);
         
-        auto resetIsVisible = guiControlsB.holdResetButton.isVisible();
-        auto holdTimeId = guiControlsB.holdTimeCombo.getSelectedId();;
+        auto resetIsVisible = holdResetBtns.resetButton.isVisible();
+        auto holdTimeId = timeToggles.holdTime.getValueObject().getValue();
         if ( !toggleState && resetIsVisible )
         {
-            guiControlsB.holdResetButton.setVisible(false);
+            holdResetBtns.resetButton.setVisible(false);
         }
-        else if ( toggleState && holdTimeId == 6 && !resetIsVisible )
+        else if ( toggleState && static_cast<int>(holdTimeId) == 6 && !resetIsVisible )
         {
-            guiControlsB.holdResetButton.setVisible(true);
+            holdResetBtns.resetButton.setVisible(true);
         }
     };
     
-    guiControlsB.holdTimeCombo.onChange = [this]
-    {
-        auto selectedId = guiControlsB.holdTimeCombo.getSelectedId();
-        stereoMeterRms.setTickHoldTime(selectedId);
-        stereoMeterPeak.setTickHoldTime(selectedId);
-        
-        auto holdEnabled = guiControlsB.holdButton.getToggleState();
-        guiControlsB.holdResetButton.setVisible( (selectedId == 6 && holdEnabled) );
-    };
-    
-    guiControlsB.holdResetButton.onClick = [this]
+    holdResetBtns.resetButton.onClick = [this]
     {
         stereoMeterRms.resetValueHolder();
         stereoMeterPeak.resetValueHolder();
-        guiControlsB.holdResetButton.animateButton();
+        holdResetBtns.resetButton.animateButton();
     };
     
-    guiControlsB.histViewCombo.onChange = [this]
+    gonioControl.gonioScaleKnob.onValueChange = [this]
     {
-        auto selectedId = guiControlsB.histViewCombo.getSelectedId();
-        histograms.setView(selectedId == HistView::stacked ? HistView::stacked
-                                                           : HistView::sideBySide);
+        auto rotaryValue = gonioControl.gonioScaleKnob.getValue();
+        stereoImageMeter.setGoniometerScale(rotaryValue);
     };
+    
+    initToggleGroupCallbacks(ToggleGroup::DecayRate,   timeToggles.decayRate.toggles);
+    initToggleGroupCallbacks(ToggleGroup::AverageTime, timeToggles.avgDuration.toggles);
+    initToggleGroupCallbacks(ToggleGroup::HoldTime,    timeToggles.holdTime.toggles);
+    initToggleGroupCallbacks(ToggleGroup::MeterView,   viewToggles.meterView.toggles);
+    initToggleGroupCallbacks(ToggleGroup::HistView,    viewToggles.histView.toggles);
     
 #if defined(GAIN_TEST_ACTIVE)
     addAndMakeVisible(gainSlider);
@@ -1483,7 +1658,7 @@ PFMProject10AudioProcessorEditor::~PFMProject10AudioProcessorEditor()
 //==============================================================================
 void PFMProject10AudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll(juce::Colour(13u, 17u, 23u));
+    g.fillAll(MyColours::getColour(MyColours::Background));
 }
 
 void PFMProject10AudioProcessorEditor::resized()
@@ -1492,47 +1667,60 @@ void PFMProject10AudioProcessorEditor::resized()
     // subcomponents in your editor..
     auto bounds = getLocalBounds();
     auto width = bounds.getWidth();
-    auto margin = 10;
-    auto stereoMeterWidth = 100;
+    auto padding = 10;
+    auto stereoMeterWidth = 90;
     auto stereoMeterHeight = 350;
     
     // setBounds args (int x, int y, int width, int height)
-    stereoMeterRms.setBounds(margin,
-                             margin,
+    stereoMeterRms.setBounds(padding,
+                             padding,
                              stereoMeterWidth,
                              stereoMeterHeight);
     
-    stereoMeterPeak.setBounds(width - (stereoMeterWidth + margin),
-                              margin,
+    stereoMeterPeak.setBounds(width - (stereoMeterWidth + padding),
+                              padding,
                               stereoMeterWidth,
                               stereoMeterHeight);
     
-    histograms.setBounds(margin,
-                         stereoMeterRms.getBottom() + (margin * 2),
-                         width - (margin * 2),
+    histograms.setBounds(padding,
+                         stereoMeterRms.getBottom() + (padding * 2),
+                         width - (padding * 2),
                          210);
     
-    auto stereoImageMeterWidth = 300; // this will also be the height of the goniometer
-    stereoImageMeter.setBounds((width / 2) - (stereoImageMeterWidth / 2),
-                              (histograms.getY() - stereoImageMeterWidth) / 2,
+    auto stereoImageMeterWidth = 280; // this will also be the height of the goniometer
+    auto stereoImageMeterHeight = 300;
+    
+    stereoImageMeter.setBounds(bounds.getCentreX() - (stereoImageMeterWidth / 2),
+                              (histograms.getY() / 2) - (stereoImageMeterHeight / 2),
                               stereoImageMeterWidth,
-                              stereoImageMeterWidth + 20); // +20 to account for correlation meter
+                              stereoImageMeterHeight);
     
-    auto comboPadding = 20;
-    auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (comboPadding * 2);
+    auto comboWidth = stereoImageMeter.getX() - stereoMeterRms.getRight() - (padding * 4);
     
-    guiControlsA.setBounds(stereoMeterRms.getRight() + comboPadding,
-                           margin,
+    auto toggleContainerHeight = 300;
+    timeToggles.setBounds(stereoMeterRms.getRight() + (padding * 2),
+                          stereoImageMeter.getBottom() - toggleContainerHeight,
+                          comboWidth,
+                          toggleContainerHeight);
+    
+    auto btnHeight = timeToggles.getY() - (padding * 2);
+    holdResetBtns.setBounds(timeToggles.getX(),
+                            timeToggles.getY() - btnHeight,
+                            comboWidth,
+                            btnHeight);
+    
+    gonioControl.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
+                           padding,
                            comboWidth,
-                           stereoMeterHeight);
+                           120);
     
-    guiControlsB.setBounds(stereoMeterPeak.getX() - comboPadding - comboWidth,
-                           margin,
+    viewToggles.setBounds(stereoMeterPeak.getX() - (padding * 2) - comboWidth,
+                           stereoImageMeter.getBottom() - 135,
                            comboWidth,
-                           stereoMeterHeight);
+                           135);
     
 #if defined(GAIN_TEST_ACTIVE)
-    gainSlider.setBounds(stereoMeterRms.getRight(), margin * 2, 20, 320);
+    gainSlider.setBounds(stereoMeterRms.getRight(), padding * 2, 20, 320);
 #endif
 }
 
@@ -1563,5 +1751,55 @@ void PFMProject10AudioProcessorEditor::timerCallback()
         histograms.update(HistogramTypes::PEAK, peakDbL, peakDbR);
         
         stereoImageMeter.update(incomingBuffer);
+    }
+}
+
+void PFMProject10AudioProcessorEditor::initToggleGroupCallbacks(const ToggleGroup& toggleGroup, const std::vector<CustomToggle*>& togglePtrs)
+{
+    for ( size_t i = 0; i < togglePtrs.size(); ++i )
+    {
+        togglePtrs[i]->onClick = [i, this, toggleGroup] { updateParams(toggleGroup, i+1); };
+    }
+}
+
+void PFMProject10AudioProcessorEditor::updateParams(const ToggleGroup& toggleGroup, const int& selectedId)
+{
+    switch (toggleGroup)
+    {
+        case ToggleGroup::DecayRate:
+        {
+            stereoMeterRms.setDecayRate(selectedId);
+            stereoMeterPeak.setDecayRate(selectedId);
+            timeToggles.decayRate.setSelectedValue(selectedId);
+            break;
+        }
+        case ToggleGroup::AverageTime:
+        {
+            stereoMeterRms.resizeAverager(selectedId);
+            stereoMeterPeak.resizeAverager(selectedId);
+            timeToggles.avgDuration.setSelectedValue(selectedId);
+            break;
+        }
+        case ToggleGroup::MeterView:
+        {
+            stereoMeterRms.setMeterView(selectedId);
+            stereoMeterPeak.setMeterView(selectedId);
+            viewToggles.meterView.setSelectedValue(selectedId);
+            break;
+        }
+        case ToggleGroup::HoldTime:
+        {
+            stereoMeterRms.setTickHoldTime(selectedId);
+            stereoMeterPeak.setTickHoldTime(selectedId);
+            timeToggles.holdTime.setSelectedValue(selectedId);
+            holdResetBtns.resetButton.setVisible( (selectedId == 6 && holdResetBtns.holdButton.getToggleState()) );
+            break;
+        }
+        case ToggleGroup::HistView:
+        {
+            histograms.setView(selectedId);
+            viewToggles.histView.setSelectedValue(selectedId);
+            break;
+        }
     }
 }
