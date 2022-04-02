@@ -5,6 +5,111 @@
               cppLanguageStandard="17">
   <MAINGROUP id="adc6za" name="PFMProject10">
     <GROUP id="{549C789E-356E-9573-7E3A-994A8284C9B3}" name="Source">
+      <FILE id="j9cunY" name="ViewControls.cpp" compile="1" resource="0"
+            file="Source/ViewControls.cpp"/>
+      <FILE id="ZaF0q1" name="ViewControls.h" compile="0" resource="0" file="Source/ViewControls.h"/>
+      <FILE id="iZg5NW" name="GonioScaleControl.cpp" compile="1" resource="0"
+            file="Source/GonioScaleControl.cpp"/>
+      <FILE id="TitPxo" name="GonioScaleControl.h" compile="0" resource="0"
+            file="Source/GonioScaleControl.h"/>
+      <FILE id="vxC5SH" name="TimeControls.cpp" compile="1" resource="0"
+            file="Source/TimeControls.cpp"/>
+      <FILE id="vuecSu" name="TimeControls.h" compile="0" resource="0" file="Source/TimeControls.h"/>
+      <FILE id="UH1grb" name="LineBreak.h" compile="0" resource="0" file="Source/LineBreak.h"/>
+      <FILE id="O5yDnc" name="HoldResetButtons.cpp" compile="1" resource="0"
+            file="Source/HoldResetButtons.cpp"/>
+      <FILE id="AnVtXT" name="HoldResetButtons.h" compile="0" resource="0"
+            file="Source/HoldResetButtons.h"/>
+      <FILE id="mlybri" name="HistViewToggleGroup.cpp" compile="1" resource="0"
+            file="Source/HistViewToggleGroup.cpp"/>
+      <FILE id="HtILtY" name="HistViewToggleGroup.h" compile="0" resource="0"
+            file="Source/HistViewToggleGroup.h"/>
+      <FILE id="FiHEqg" name="HoldTimeToggleGroup.cpp" compile="1" resource="0"
+            file="Source/HoldTimeToggleGroup.cpp"/>
+      <FILE id="ORvTpy" name="HoldTimeToggleGroup.h" compile="0" resource="0"
+            file="Source/HoldTimeToggleGroup.h"/>
+      <FILE id="JROnzD" name="MeterViewToggleGroup.cpp" compile="1" resource="0"
+            file="Source/MeterViewToggleGroup.cpp"/>
+      <FILE id="BqO9cc" name="MeterViewToggleGroup.h" compile="0" resource="0"
+            file="Source/MeterViewToggleGroup.h"/>
+      <FILE id="sfAmUo" name="AverageTimeToggleGroup.cpp" compile="1" resource="0"
+            file="Source/AverageTimeToggleGroup.cpp"/>
+      <FILE id="CklHlz" name="AverageTimeToggleGroup.h" compile="0" resource="0"
+            file="Source/AverageTimeToggleGroup.h"/>
+      <FILE id="qLS0OD" name="DecayRateToggleGroup.cpp" compile="1" resource="0"
+            file="Source/DecayRateToggleGroup.cpp"/>
+      <FILE id="Bgiwr5" name="DecayRateToggleGroup.h" compile="0" resource="0"
+            file="Source/DecayRateToggleGroup.h"/>
+      <FILE id="qdUP2o" name="ToggleGroupBase.cpp" compile="1" resource="0"
+            file="Source/ToggleGroupBase.cpp"/>
+      <FILE id="ITyDOF" name="ToggleGroupBase.h" compile="0" resource="0"
+            file="Source/ToggleGroupBase.h"/>
+      <FILE id="fABpYP" name="ToggleGroup.h" compile="0" resource="0" file="Source/ToggleGroup.h"/>
+      <FILE id="TQv7Js" name="CustomRotary.cpp" compile="1" resource="0"
+            file="Source/CustomRotary.cpp"/>
+      <FILE id="VZt4G2" name="CustomRotary.h" compile="0" resource="0" file="Source/CustomRotary.h"/>
+      <FILE id="BD4Mtu" name="CustomTextBtn.cpp" compile="1" resource="0"
+            file="Source/CustomTextBtn.cpp"/>
+      <FILE id="Z3PwDj" name="CustomTextBtn.h" compile="0" resource="0" file="Source/CustomTextBtn.h"/>
+      <FILE id="TPfiRs" name="CustomToggle.cpp" compile="1" resource="0"
+            file="Source/CustomToggle.cpp"/>
+      <FILE id="QG7nXz" name="CustomToggle.h" compile="0" resource="0" file="Source/CustomToggle.h"/>
+      <FILE id="MTiV94" name="CustomLabel.cpp" compile="1" resource="0" file="Source/CustomLabel.cpp"/>
+      <FILE id="AnEhQA" name="CustomLabel.h" compile="0" resource="0" file="Source/CustomLabel.h"/>
+      <FILE id="GeNOiP" name="CustomComboBox.cpp" compile="1" resource="0"
+            file="Source/CustomComboBox.cpp"/>
+      <FILE id="YdTSDX" name="CustomComboBox.h" compile="0" resource="0"
+            file="Source/CustomComboBox.h"/>
+      <FILE id="wDz8Nn" name="StereoMeter.cpp" compile="1" resource="0" file="Source/StereoMeter.cpp"/>
+      <FILE id="S5JZrW" name="StereoMeter.h" compile="0" resource="0" file="Source/StereoMeter.h"/>
+      <FILE id="GJ7o8M" name="ThresholdSlider.cpp" compile="1" resource="0"
+            file="Source/ThresholdSlider.cpp"/>
+      <FILE id="b3hgl5" name="ThresholdSlider.h" compile="0" resource="0"
+            file="Source/ThresholdSlider.h"/>
+      <FILE id="O10D6d" name="CustomLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/CustomLookAndFeel.cpp"/>
+      <FILE id="icmyFC" name="CustomLookAndFeel.h" compile="0" resource="0"
+            file="Source/CustomLookAndFeel.h"/>
+      <FILE id="dNB0hA" name="MacroMeter.cpp" compile="1" resource="0" file="Source/MacroMeter.cpp"/>
+      <FILE id="Y9iTV6" name="MacroMeter.h" compile="0" resource="0" file="Source/MacroMeter.h"/>
+      <FILE id="GFIriv" name="Channel.h" compile="0" resource="0" file="Source/Channel.h"/>
+      <FILE id="BzMwyW" name="Meter.cpp" compile="1" resource="0" file="Source/Meter.cpp"/>
+      <FILE id="tlOuGC" name="Meter.h" compile="0" resource="0" file="Source/Meter.h"/>
+      <FILE id="aHezS7" name="DbScale.cpp" compile="1" resource="0" file="Source/DbScale.cpp"/>
+      <FILE id="G4QfQI" name="DbScale.h" compile="0" resource="0" file="Source/DbScale.h"/>
+      <FILE id="TswyNZ" name="Tick.h" compile="0" resource="0" file="Source/Tick.h"/>
+      <FILE id="l2DoE2" name="TextMeter.cpp" compile="1" resource="0" file="Source/TextMeter.cpp"/>
+      <FILE id="a5gqnA" name="TextMeter.h" compile="0" resource="0" file="Source/TextMeter.h"/>
+      <FILE id="lMlhw0" name="ValueHolder.cpp" compile="1" resource="0" file="Source/ValueHolder.cpp"/>
+      <FILE id="BCE614" name="ValueHolder.h" compile="0" resource="0" file="Source/ValueHolder.h"/>
+      <FILE id="ntBj2J" name="DecayingValueHolder.cpp" compile="1" resource="0"
+            file="Source/DecayingValueHolder.cpp"/>
+      <FILE id="iSvbI1" name="DecayingValueHolder.h" compile="0" resource="0"
+            file="Source/DecayingValueHolder.h"/>
+      <FILE id="WBJebY" name="ValueHolderBase.h" compile="0" resource="0"
+            file="Source/ValueHolderBase.h"/>
+      <FILE id="iUPsrQ" name="StereoImageMeter.cpp" compile="1" resource="0"
+            file="Source/StereoImageMeter.cpp"/>
+      <FILE id="tvO2uJ" name="StereoImageMeter.h" compile="0" resource="0"
+            file="Source/StereoImageMeter.h"/>
+      <FILE id="hYgEER" name="CorrelationMeter.cpp" compile="1" resource="0"
+            file="Source/CorrelationMeter.cpp"/>
+      <FILE id="F24LqD" name="CorrelationMeter.h" compile="0" resource="0"
+            file="Source/CorrelationMeter.h"/>
+      <FILE id="fDnAIP" name="Averager.h" compile="0" resource="0" file="Source/Averager.h"/>
+      <FILE id="eObWYz" name="HistogramEnums.h" compile="0" resource="0"
+            file="Source/HistogramEnums.h"/>
+      <FILE id="cHRUbS" name="HistogramContainer.cpp" compile="1" resource="0"
+            file="Source/HistogramContainer.cpp"/>
+      <FILE id="Z1hoQG" name="HistogramContainer.h" compile="0" resource="0"
+            file="Source/HistogramContainer.h"/>
+      <FILE id="w19Lfr" name="Histogram.cpp" compile="1" resource="0" file="Source/Histogram.cpp"/>
+      <FILE id="DfflO5" name="Histogram.h" compile="0" resource="0" file="Source/Histogram.h"/>
+      <FILE id="dzVquS" name="CircularBuffer.h" compile="0" resource="0"
+            file="Source/CircularBuffer.h"/>
+      <FILE id="VM9HMA" name="MyColours.h" compile="0" resource="0" file="Source/MyColours.h"/>
+      <FILE id="iCP9Qu" name="Goniometer.cpp" compile="1" resource="0" file="Source/Goniometer.cpp"/>
+      <FILE id="Wnp98C" name="Goniometer.h" compile="0" resource="0" file="Source/Goniometer.h"/>
       <FILE id="L2b67X" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="aTYP6v" name="PluginProcessor.h" compile="0" resource="0"
