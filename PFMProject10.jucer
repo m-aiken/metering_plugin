@@ -5,6 +5,7 @@
               cppLanguageStandard="17">
   <MAINGROUP id="adc6za" name="PFMProject10">
     <GROUP id="{549C789E-356E-9573-7E3A-994A8284C9B3}" name="Source">
+      <FILE id="ABjgWI" name="Globals.h" compile="0" resource="0" file="Source/Globals.h"/>
       <FILE id="j9cunY" name="ViewControls.cpp" compile="1" resource="0"
             file="Source/ViewControls.cpp"/>
       <FILE id="ZaF0q1" name="ViewControls.h" compile="0" resource="0" file="Source/ViewControls.h"/>

@@ -10,7 +10,7 @@
 
 #include "StereoMeter.h"
 #include "MyColours.h"
-#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
+#include "Globals.h"
 
 //==============================================================================
 StereoMeter::StereoMeter(const juce::String& labelText)
@@ -31,7 +31,7 @@ void StereoMeter::paint(juce::Graphics& g)
     auto labelContainerH = static_cast<int>(h - labelContainerY);
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    g.setFont(GlobalFont);
+    g.setFont(Globals::font());
     
     std::vector<juce::String> labels{"L", label, "R"};
     std::vector<int> xPositions{0, static_cast<int>(w / 3), static_cast<int>(w - (w / 3))};

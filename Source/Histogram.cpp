@@ -10,10 +10,7 @@
 
 #include "Histogram.h"
 #include "MyColours.h"
-
-#define MaxDecibels 6.f
-#define NegativeInfinity -48.f
-#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
+#include "Globals.h"
 
 //==============================================================================
 void Histogram::paint(juce::Graphics& g)
@@ -33,8 +30,8 @@ void Histogram::paint(juce::Graphics& g)
     g.fillAll();
 
     auto mappedThresh = juce::jmap<float>(threshold.getValue(),
-                                          NegativeInfinity,
-                                          MaxDecibels,
+                                          Globals::negInf(),
+                                          Globals::maxDb(),
                                           bounds.getHeight(),
                                           0);
     
@@ -65,7 +62,7 @@ void Histogram::paint(juce::Graphics& g)
     
     for ( auto i = readIdx; i < bufferSize - 1; ++i )
     {
-        auto scaledValue = juce::jmap<float>(data[i], NegativeInfinity, MaxDecibels, height, 0);
+        auto scaledValue = juce::jmap<float>(data[i], Globals::negInf(), Globals::maxDb(), height, 0);
         
         p.lineTo(x, scaledValue);
         
@@ -75,7 +72,7 @@ void Histogram::paint(juce::Graphics& g)
     for ( auto j = 0; j < readIdx; ++j )
     {
         
-        auto scaledValue = juce::jmap<float>(data[j], NegativeInfinity, MaxDecibels, height, 0);
+        auto scaledValue = juce::jmap<float>(data[j], Globals::negInf(), Globals::maxDb(), height, 0);
         
         p.lineTo(x, scaledValue);
 
@@ -87,7 +84,7 @@ void Histogram::paint(juce::Graphics& g)
     g.fillPath(p);
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    g.setFont(GlobalFont);
+    g.setFont(Globals::font());
     g.drawFittedText(label,                           // text
                      bounds.reduced(4),               // area
                      juce::Justification::centredTop, // justification

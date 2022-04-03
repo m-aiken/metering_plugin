@@ -10,6 +10,7 @@
 
 #include "CorrelationMeter.h"
 #include "MyColours.h"
+#include "Globals.h"
 
 //==============================================================================
 CorrelationMeter::CorrelationMeter(double _sampleRate, size_t _blockSize)
@@ -48,6 +49,7 @@ void CorrelationMeter::paint(juce::Graphics& g)
     
     // labels
     g.setColour(MyColours::getColour(MyColours::Text));
+    g.setFont(Globals::font());
     // draw fitted text args = text, x, y, width, height, justification, maxNumLines
     g.drawFittedText("-1", 0, 0, padding, height, juce::Justification::centred, 1);
     g.drawFittedText("+1", width - padding, 0, padding, height, juce::Justification::centred, 1);

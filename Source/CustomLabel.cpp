@@ -10,7 +10,7 @@
 
 #include "CustomLabel.h"
 #include "MyColours.h"
-#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
+#include "Globals.h"
 
 //==============================================================================
 CustomLabel::CustomLabel(const juce::String& labelText)
@@ -23,7 +23,7 @@ void CustomLabel::paint(juce::Graphics& g)
     auto bounds = getLocalBounds();
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    g.setFont(GlobalFont);
+    g.setFont(Globals::font());
     g.drawFittedText(getText(),
                      bounds.getX(),
                      bounds.getY(),

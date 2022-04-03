@@ -10,7 +10,7 @@
 
 #include "TextMeter.h"
 #include "MyColours.h"
-#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
+#include "Globals.h"
 
 //==============================================================================
 void TextMeter::paint(juce::Graphics& g)
@@ -28,7 +28,7 @@ void TextMeter::paint(juce::Graphics& g)
     }
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    g.setFont(GlobalFont);
+    g.setFont(Globals::font());
     g.drawFittedText(str,                                      // text
                      getLocalBounds(),                         // area
                      juce::Justification::horizontallyCentred, // justification
