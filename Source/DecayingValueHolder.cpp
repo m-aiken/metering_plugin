@@ -9,9 +9,7 @@
 */
 
 #include "DecayingValueHolder.h"
-
-#define MaxDecibels 6.f
-#define NegativeInfinity -48.f
+#include "Globals.h"
 
 //==============================================================================
 void DecayingValueHolder::updateHeldValue(const float& input)
@@ -31,12 +29,12 @@ void DecayingValueHolder::setDecayRate(const float& dbPerSecond)
 
 void DecayingValueHolder::handleOverHoldTime()
 {
-    currentValue = juce::jlimit(NegativeInfinity,
-                                MaxDecibels,
+    currentValue = juce::jlimit(Globals::negInf(),
+                                Globals::maxDb(),
                                 currentValue - (decayRatePerFrame * decayRateMultiplier));
     
     decayRateMultiplier *= 1.04f;
     
-    if ( currentValue == NegativeInfinity )
+    if ( currentValue == Globals::negInf() )
         resetDecayRateMultiplier();
 }

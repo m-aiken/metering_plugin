@@ -11,9 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-
-#define MaxDecibels 6.f
-#define NegativeInfinity -48.f
+#include "Globals.h"
 
 //==============================================================================
 struct ValueHolderBase : juce::Timer
@@ -25,7 +23,7 @@ struct ValueHolderBase : juce::Timer
     juce::int64 getHoldTime() { return holdTime; }
     float getCurrentValue() const { return currentValue; }
     float getHeldValue() const { return heldValue; }
-    void reset() { currentValue = NegativeInfinity; }
+    void reset() { currentValue = Globals::negInf(); }
     
     void timerCallback() override
     {
@@ -38,8 +36,8 @@ struct ValueHolderBase : juce::Timer
     friend struct DecayingValueHolder;
     friend struct ValueHolder;
 private:
-    float currentValue = NegativeInfinity;
-    float heldValue = NegativeInfinity;
+    float currentValue = Globals::negInf();
+    float heldValue = Globals::negInf();
    
     juce::int64 peakTime = getNow();
     juce::int64 holdTime = 2000;

@@ -14,8 +14,6 @@
 #include "HistogramEnums.h"
 #include "CircularBuffer.h"
 
-#define NegativeInfinity -48.f
-
 //==============================================================================
 struct Histogram : juce::Component
 {
@@ -28,7 +26,7 @@ struct Histogram : juce::Component
     juce::Value& getThresholdValueObject() { return threshold; }
     
 private:
-    CircularBuffer<float> circularBuffer{776, NegativeInfinity};
+    CircularBuffer<float> circularBuffer{776, -48.f};
     
     juce::String label;
     juce::Value threshold;

@@ -10,6 +10,7 @@
 
 #include "Meter.h"
 #include "MyColours.h"
+#include "Globals.h"
 
 //==============================================================================
 void Meter::paint(juce::Graphics& g)
@@ -22,8 +23,8 @@ void Meter::paint(juce::Graphics& g)
     
     auto overThreshColour = MyColours::getColour(MyColours::Red);
 
-    auto levelJmap = juce::jmap<float>(level, NegativeInfinity, MaxDecibels, h, 0);
-    auto thrshJmap = juce::jmap<float>(threshold, NegativeInfinity, MaxDecibels, h, 0);
+    auto levelJmap = juce::jmap<float>(level, Globals::negInf(), Globals::maxDb(), h, 0);
+    auto thrshJmap = juce::jmap<float>(threshold, Globals::negInf(), Globals::maxDb(), h, 0);
     
     auto underThreshGradient = MyColours::getMeterGradient(bounds.getHeight(), bounds.getHeight() / 3, MyColours::GradientOrientation::Vertical);
     
@@ -49,8 +50,8 @@ void Meter::paint(juce::Graphics& g)
         auto tickValue = fallingTick.getHoldTime() == 0 ? level :   fallingTick.getCurrentValue();
         
         auto ftJmap = juce::jmap<float>(tickValue,
-                                        NegativeInfinity,
-                                        MaxDecibels,
+                                        Globals::negInf(),
+                                        Globals::maxDb(),
                                         h,
                                         0);
         
@@ -67,13 +68,13 @@ void Meter::resized()
     ticks.clear();
     int h = getHeight();
     
-    for ( int i = static_cast<int>(NegativeInfinity); i <= static_cast<int>(MaxDecibels); ++i ) // <= maxDb to include max value
+    for ( int i = static_cast<int>(Globals::negInf()); i <= static_cast<int>(Globals::maxDb()); ++i ) // <= maxDb to include max value
     {
         Tick tick;
         if ( i % 6 == 0 )
         {
             tick.db = static_cast<float>(i);
-            tick.y = juce::jmap<int>(i, NegativeInfinity, MaxDecibels, h, 0);
+            tick.y = juce::jmap<int>(i, Globals::negInf(), Globals::maxDb(), h, 0);
             ticks.push_back(tick);
         }
     }

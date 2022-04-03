@@ -9,12 +9,13 @@
 */
 
 #include "ThresholdSlider.h"
+#include "Globals.h"
 
 //==============================================================================
 ThresholdSlider::ThresholdSlider()
 {
     setLookAndFeel(&lnf);
-    setRange(NegativeInfinity, MaxDecibels);
+    setRange(Globals::negInf(), Globals::maxDb());
     setValue(0.f);
 }
 
@@ -24,8 +25,8 @@ void ThresholdSlider::paint(juce::Graphics& g)
 {
     auto bounds = getLocalBounds();
     auto valueToDraw = juce::jmap<float>(getValue(),
-                                         NegativeInfinity,
-                                         MaxDecibels,
+                                         Globals::negInf(),
+                                         Globals::maxDb(),
                                          bounds.getBottom(),
                                          bounds.getY());
     

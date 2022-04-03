@@ -219,14 +219,14 @@ void PFMProject10AudioProcessorEditor::timerCallback()
                 
         auto rmsL = incomingBuffer.getRMSLevel(0, 0, numSamples);
         auto rmsR = incomingBuffer.getRMSLevel(1, 0, numSamples);
-        auto rmsDbL = juce::Decibels::gainToDecibels(rmsL, NegativeInfinity);
-        auto rmsDbR = juce::Decibels::gainToDecibels(rmsR, NegativeInfinity);
+        auto rmsDbL = juce::Decibels::gainToDecibels(rmsL, Globals::negInf());
+        auto rmsDbR = juce::Decibels::gainToDecibels(rmsR, Globals::negInf());
         stereoMeterRms.update(rmsDbL, rmsDbR);
         
         auto peakL = incomingBuffer.getMagnitude(0, 0, numSamples);
         auto peakR = incomingBuffer.getMagnitude(1, 0, numSamples);
-        auto peakDbL = juce::Decibels::gainToDecibels(peakL, NegativeInfinity);
-        auto peakDbR = juce::Decibels::gainToDecibels(peakR, NegativeInfinity);
+        auto peakDbL = juce::Decibels::gainToDecibels(peakL, Globals::negInf());
+        auto peakDbR = juce::Decibels::gainToDecibels(peakR, Globals::negInf());
         stereoMeterPeak.update(peakDbL, peakDbR);
         
         histograms.update(HistogramTypes::RMS, rmsDbL, rmsDbR);

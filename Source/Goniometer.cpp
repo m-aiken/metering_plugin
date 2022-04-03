@@ -10,6 +10,7 @@
 
 #include "Goniometer.h"
 #include "MyColours.h"
+#include "Globals.h"
 
 //==============================================================================
 void Goniometer::paint(juce::Graphics& g)
@@ -110,6 +111,7 @@ void Goniometer::resized()
     // draw labels separately - if drawn in the same loop as lines and text boxes 90 degrees doesn't draw??
     std::vector<String> labels { "M", "R", "-S", "", "", "", "+S", "L" };
     g.setColour(textColour);
+    g.setFont(Globals::font());
     for ( auto i = 0; i < 8; ++i)
     {
         angle = degreesToRadians( i * 45.f );

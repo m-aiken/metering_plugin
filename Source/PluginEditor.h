@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+#include "Globals.h"
 #include "StereoMeter.h"
 #include "HistogramContainer.h"
 #include "StereoImageMeter.h"
@@ -19,10 +20,6 @@
 #include "GonioScaleControl.h"
 #include "ViewControls.h"
 #include "ToggleGroup.h"
-
-#define MaxDecibels 6.f
-#define NegativeInfinity -48.f
-#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
 
 //==============================================================================
 /**

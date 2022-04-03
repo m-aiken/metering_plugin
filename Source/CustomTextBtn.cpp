@@ -10,7 +10,7 @@
 
 #include "CustomTextBtn.h"
 #include "MyColours.h"
-#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
+#include "Globals.h"
 
 //==============================================================================
 CustomTextBtn::CustomTextBtn(const juce::String& buttonText)
@@ -25,7 +25,7 @@ void CustomTextBtn::paint(juce::Graphics& g)
                          ? MyColours::getColour(MyColours::RedBright)
                          : MyColours::getColour(MyColours::Red));
     
-    g.setFont(GlobalFont);
+    g.setFont(Globals::font());
     
     getLookAndFeel().drawButtonBackground(g,
                                           *this,        // button

@@ -9,8 +9,7 @@
 */
 
 #include "CustomToggle.h"
-
-#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
+#include "Globals.h"
 
 //==============================================================================
 CustomToggle::CustomToggle(const juce::String& buttonText)
@@ -21,7 +20,7 @@ CustomToggle::CustomToggle(const juce::String& buttonText)
 
 void CustomToggle::paint(juce::Graphics& g)
 {
-    g.setFont(GlobalFont);
+    g.setFont(Globals::font());
     getLookAndFeel().drawToggleButton(g,
                                       *this, // toggle button
                                       true,  // draw as highlighted

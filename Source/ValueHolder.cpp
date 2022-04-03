@@ -9,6 +9,7 @@
 */
 
 #include "ValueHolder.h"
+#include "Globals.h"
 
 //==============================================================================
 void ValueHolder::setThreshold(const float& threshAsDecibels)
@@ -35,5 +36,5 @@ bool ValueHolder::isOverThreshold() const
 
 void ValueHolder::handleOverHoldTime()
 {
-    heldValue = NegativeInfinity;
+    heldValue = Globals::negInf();
 }

@@ -17,9 +17,6 @@
 #include "Averager.h"
 #include "Tick.h"
 
-#define MaxDecibels 6.f
-#define NegativeInfinity -48.f
-
 //==============================================================================
 struct MacroMeter : juce::Component
 {
@@ -44,7 +41,7 @@ private:
     Meter averageMeter;
     Meter instantMeter;
     
-    Averager<float> averager{20, NegativeInfinity};
+    Averager<float> averager{20, -48.f};
     
     Channel channel;
 };

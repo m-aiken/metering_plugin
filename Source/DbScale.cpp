@@ -10,7 +10,7 @@
 
 #include "DbScale.h"
 #include "MyColours.h"
-#define GlobalFont juce::Font(juce::Font::getDefaultMonospacedFontName(), 12.f, 0)
+#include "Globals.h"
 
 //==============================================================================
 void DbScale::paint(juce::Graphics& g)
@@ -20,7 +20,7 @@ void DbScale::paint(juce::Graphics& g)
     int textHeight = 12;
     
     g.setColour(MyColours::getColour(MyColours::Text));
-    g.setFont(GlobalFont);
+    g.setFont(Globals::font());
     
     for ( int i = 0; i < ticks.size(); ++i)
     {
